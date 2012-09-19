@@ -26,9 +26,9 @@ func stack(skip int) []stackEntry {
 	return stack
 }
 
-func proto(n Notifier) string {
+func scheme(n Notifier) string {
 	if n.IsSecure() {
-		return "https:"
+		return "https"
 	}
-	return "http:"
+	return "http"
 }

@@ -8,11 +8,6 @@ import (
 	. "launchpad.net/gocheck"
 )
 
-func init() {
-	deployURL = "//localhost:8080/deploys.txt"
-	notifyURL = "//localhost:8080/notifier_api/v2/notices/"
-}
-
 // Hook up gocheck into the gotest runner.
 func Test(t *testing.T) { TestingT(t) }
 
@@ -24,7 +19,15 @@ type NotifierTest struct {
 var _ = Suite(&NotifierTest{})
 
 func (t *NotifierTest) SetUpTest(c *C) {
-	t.notifier = NewNotifier("apikey", "production", "1.0", "/approot")
+	t.notifier = NewNotifier(Config{
+		APIKey:     "apikey",
+		EnvName:    "production",
+		AppVersion: "1.0",
+		AppRoot:    "/approot",
+
+		DeployURL:       "://localhost:8080/deploys.txt",
+		CreateNoticeURL: "://localhost:8080/notifier_api/v2/notices",
+	})
 	t.err = errors.New("unexpected error")
 }
 
@@ -58,6 +61,6 @@ func (t *NotifierTest) TestDeploy(c *C) {
 	c.Assert(t.notifier.Deploy("", "", ""), IsNil)
 }
 
-var expectedXML = `<notice version="2.0"><api-key>apikey</api-key><notifier><name>Airbrake Go notifier</name><version>1.0</version><url>http://github.com/airbrake/goairbrake</url></notifier><error><class>*errors.errorString</class><message>unexpected error</message><backtrace><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="521" method="reflect.Value.call"></line><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="334" method="reflect.Value.Call"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="709" method="launchpad.net/gocheck._func_006"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="608" method="launchpad.net/gocheck._func_004"></line><line file="/home/vmihailenco/workspace/go/src/pkg/runtime/proc.c" number="271" method="runtime.goexit"></line></backtrace></error><request><url></url><component></component><action></action><cgi-data></cgi-data></request><server-environment><environment-name>production</environment-name><project-root>/approot</project-root><app-version>1.0</app-version></server-environment></notice>`
+var expectedXML = `<notice version="2.0"><api-key>apikey</api-key><notifier><name>Airbrake Go notifier</name><version>1.0</version><url>http://github.com/airbrake/gobrake</url></notifier><error><class>*errors.errorString</class><message>unexpected error</message><backtrace><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="521" method="reflect.Value.call"></line><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="334" method="reflect.Value.Call"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="709" method="launchpad.net/gocheck._func_006"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="608" method="launchpad.net/gocheck._func_004"></line><line file="/home/vmihailenco/workspace/go/src/pkg/runtime/proc.c" number="271" method="runtime.goexit"></line></backtrace></error><request><url></url><component></component><action></action><cgi-data></cgi-data></request><server-environment><environment-name>production</environment-name><project-root>/approot</project-root><app-version>1.0</app-version></server-environment></notice>`
 
-var expectedXMLWithRequest = `<notice version="2.0"><api-key>apikey</api-key><notifier><name>Airbrake Go notifier</name><version>1.0</version><url>http://github.com/airbrake/goairbrake</url></notifier><error><class>*errors.errorString</class><message>unexpected error</message><backtrace><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="521" method="reflect.Value.call"></line><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="334" method="reflect.Value.Call"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="709" method="launchpad.net/gocheck._func_006"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="608" method="launchpad.net/gocheck._func_004"></line><line file="/home/vmihailenco/workspace/go/src/pkg/runtime/proc.c" number="271" method="runtime.goexit"></line></backtrace></error><request><url>http://airbrake.io/</url><component></component><action></action><cgi-data><var key="METHOD">GET</var><var key="REMOTE_ADDR">127.0.0.1</var></cgi-data></request><server-environment><environment-name>production</environment-name><project-root>/approot</project-root><app-version>1.0</app-version></server-environment></notice>`
+var expectedXMLWithRequest = `<notice version="2.0"><api-key>apikey</api-key><notifier><name>Airbrake Go notifier</name><version>1.0</version><url>http://github.com/airbrake/gobrake</url></notifier><error><class>*errors.errorString</class><message>unexpected error</message><backtrace><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="521" method="reflect.Value.call"></line><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="334" method="reflect.Value.Call"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="709" method="launchpad.net/gocheck._func_006"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="608" method="launchpad.net/gocheck._func_004"></line><line file="/home/vmihailenco/workspace/go/src/pkg/runtime/proc.c" number="271" method="runtime.goexit"></line></backtrace></error><request><url>http://airbrake.io/</url><component></component><action></action><cgi-data><var key="METHOD">GET</var><var key="REMOTE_ADDR">127.0.0.1</var></cgi-data></request><server-environment><environment-name>production</environment-name><project-root>/approot</project-root><app-version>1.0</app-version></server-environment></notice>`

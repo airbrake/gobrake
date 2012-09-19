@@ -11,11 +11,12 @@ import (
 const (
 	notifierName    = "Airbrake Go notifier"
 	notifierVersion = "1.0"
-	notifierURL     = "http://github.com/airbrake/goairbrake"
+	notifierURL     = "http://github.com/airbrake/gobrake"
 )
 
 var (
-	deployURL = "//go-airbrake.appspot.com/deploys.txt"
+	deployURL       = "://go-airbrake.appspot.com/deploys.txt"
+	createNoticeURL = "://go-airbrake.appspot.com/notifier_api/v2/notices"
 
 	Logger = log.New(os.Stderr, "", log.LstdFlags)
 )
@@ -33,88 +34,90 @@ type Notifier interface {
 	EnvName() string
 	AppVersion() string
 	AppRoot() string
-
 	IsSecure() bool
-	SetIsSecure(bool)
+
+	DeployURL() string
+	CreateNoticeURL() string
 
 	Notify(error, *http.Request) error
 	Deploy(string, string, string) error
 }
 
-func NewNotifierTransport(apiKey, envName, appVersion, appRoot string, transport Transporter) Notifier {
-	if apiKey == "" {
-		panic("goairbrake: apiKey is empty")
-	}
+type Config struct {
+	APIKey     string
+	EnvName    string
+	AppVersion string
+	AppRoot    string
+	IsSecure   bool
 
-	if appRoot == "" {
+	Transport Transporter
+
+	DeployURL       string
+	CreateNoticeURL string
+}
+
+func NewNotifier(c Config) Notifier {
+	if c.APIKey == "" {
+		panic("gobrake: API key is empty")
+	}
+	if c.AppRoot == "" {
 		if wd, err := os.Getwd(); err == nil {
-			appRoot = wd
+			c.AppRoot = wd
 		}
+	}
+	if c.Transport == nil {
+		c.Transport = NewXMLTransport()
+	}
+	if c.DeployURL == "" {
+		c.DeployURL = deployURL
+	}
+	if c.CreateNoticeURL == "" {
+		c.CreateNoticeURL = createNoticeURL
 	}
 
 	return &StdNotifier{
 		name:    notifierName,
 		version: notifierVersion,
 		url:     notifierURL,
-
-		apiKey:     apiKey,
-		envName:    envName,
-		appVersion: appVersion,
-		appRoot:    appRoot,
-
-		transport: transport,
-
-		deployURL: deployURL,
+		config:  &c,
 	}
-}
-
-func NewNotifier(apiKey, envName, appVersion, appRoot string) Notifier {
-	return NewNotifierTransport(apiKey, envName, appVersion, appRoot, NewXMLTransport())
 }
 
 type StdNotifier struct {
 	name    string
 	version string
 	url     string
-
-	apiKey     string
-	envName    string
-	appVersion string
-	appRoot    string
-
-	transport Transporter
-
-	secure    bool
-	deployURL string
+	config  *Config
 }
 
 func (n *StdNotifier) Name() string    { return n.name }
 func (n *StdNotifier) Version() string { return n.version }
 func (n *StdNotifier) URL() string     { return n.url }
 
-func (n *StdNotifier) SetIsSecure(secure bool) { n.secure = secure }
-func (n *StdNotifier) IsSecure() bool          { return n.secure }
+func (n *StdNotifier) APIKey() string     { return n.config.APIKey }
+func (n *StdNotifier) EnvName() string    { return n.config.EnvName }
+func (n *StdNotifier) AppVersion() string { return n.config.AppVersion }
+func (n *StdNotifier) AppRoot() string    { return n.config.AppRoot }
+func (n *StdNotifier) IsSecure() bool     { return n.config.IsSecure }
 
-func (n *StdNotifier) APIKey() string     { return n.apiKey }
-func (n *StdNotifier) EnvName() string    { return n.envName }
-func (n *StdNotifier) AppVersion() string { return n.appVersion }
-func (n *StdNotifier) AppRoot() string    { return n.appRoot }
+func (n *StdNotifier) DeployURL() string       { return n.config.DeployURL }
+func (n *StdNotifier) CreateNoticeURL() string { return n.config.CreateNoticeURL }
 
 func (n *StdNotifier) Notify(e error, r *http.Request) error {
 	if e == nil {
-		Logger.Printf("goairbrake: error is nil")
+		Logger.Printf("gobrake: error is nil")
 		return nil
 	}
 
-	if err := n.transport.Transport(n, e, r); err != nil {
-		Logger.Printf("goairbrake error: %v", err)
+	if err := n.config.Transport.Transport(n, e, r); err != nil {
+		Logger.Printf("gobrake error: %v", err)
 		return err
 	}
 	return nil
 }
 
 func (n *StdNotifier) fullDeployURL() string {
-	return proto(n) + n.deployURL
+	return scheme(n) + n.config.DeployURL
 }
 
 func (n *StdNotifier) Deploy(repository, revision, username string) error {
@@ -136,7 +139,7 @@ func (n *StdNotifier) Deploy(repository, revision, username string) error {
 	}
 	defer resp.Body.Close()
 	if code := resp.StatusCode; code != http.StatusOK {
-		return fmt.Errorf("goairbrake: got %v response, expected 200 OK", code)
+		return fmt.Errorf("gobrake: got %v response, expected 200 OK", code)
 	}
 
 	return nil

@@ -7,7 +7,11 @@ Example:
         "github.com/airbrake/gobrake"
     )
 
-    var notifier = gobrake.NewNotifier("apikey", "production", "1.0", "")
+    var notifier = gobrake.NewNotifier(gobrake.Config{
+        APIKey: "apikey",
+        AppEnv: "production",
+        AppVersion: "1.0",
+    })
 
     func handler(w http.ResponseWriter, r *http.Request) {
         if err := process(r); err != nil {

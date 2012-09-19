@@ -8,26 +8,14 @@ import (
 	"reflect"
 )
 
-var (
-	notifyURL = "//go-airbrake.appspot.com/notifier_api/v2/notices/"
-)
-
-type XMLTransport struct {
-	url string
-}
+type XMLTransport struct{}
 
 func NewXMLTransport() Transporter {
-	return NewXMLTransportURL(notifyURL)
+	return &XMLTransport{}
 }
 
-func NewXMLTransportURL(url string) Transporter {
-	return &XMLTransport{
-		url: url,
-	}
-}
-
-func (t *XMLTransport) fullNotifyURL(n Notifier) string {
-	return proto(n) + t.url
+func (t *XMLTransport) fullCreateNoticeURL(n Notifier) string {
+	return scheme(n) + n.CreateNoticeURL()
 }
 
 func (t *XMLTransport) marshal(n Notifier, err error, r *http.Request) ([]byte, error) {
@@ -88,13 +76,13 @@ func (t *XMLTransport) Transport(n Notifier, err error, r *http.Request) error {
 		return err
 	}
 
-	resp, err := http.Post(t.fullNotifyURL(n), "text/xml", bytes.NewBuffer(b))
+	resp, err := http.Post(t.fullCreateNoticeURL(n), "text/xml", bytes.NewBuffer(b))
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 	if code := resp.StatusCode; code != http.StatusOK {
-		return fmt.Errorf("goairbrake: got %v response, expected 200 OK", code)
+		return fmt.Errorf("gobrake: got %v response, expected 200 OK", code)
 	}
 
 	return nil
