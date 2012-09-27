@@ -8,8 +8,8 @@ Example:
     )
 
     var notifier = gobrake.NewNotifier(gobrake.Config{
-        APIKey: "apikey",
-        AppEnv: "production",
+        APIKey:     "apikey",
+        AppEnv:     "production",
         AppVersion: "1.0",
     })
 

@@ -67,6 +67,9 @@ func (t *XMLTransport) marshal(n Notifier, err error, r *http.Request) ([]byte, 
 		return nil, err
 	}
 
+	// Go currently ignores omitempty on CGIData.
+	b = bytes.Replace(b, []byte("<cgi-data></cgi-data>"), []byte{}, -1)
+
 	return b, nil
 }
 
@@ -76,11 +79,15 @@ func (t *XMLTransport) Transport(n Notifier, err error, r *http.Request) error {
 		return err
 	}
 
-	resp, err := http.Post(t.fullCreateNoticeURL(n), "text/xml", bytes.NewBuffer(b))
+	buf := bytes.NewBufferString(xml.Header)
+	buf.Write(b)
+
+	resp, err := http.Post(t.fullCreateNoticeURL(n), "text/xml", buf)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	resp.Body.Close()
+
 	if code := resp.StatusCode; code != http.StatusOK {
 		return fmt.Errorf("gobrake: got %v response, expected 200 OK", code)
 	}
@@ -110,7 +117,7 @@ type xmlRequest struct {
 	URL       string   `xml:"url"`
 	Component string   `xml:"component"`
 	Action    string   `xml:"action"`
-	CGIData   []xmlVar `xml:"cgi-data>var"`
+	CGIData   []xmlVar `xml:"cgi-data>var,omitempty"`
 }
 
 type xmlVar struct {
@@ -118,9 +125,10 @@ type xmlVar struct {
 	Value string `xml:",chardata"`
 }
 
+// Order of the fields matters.
 type xmlServerEnv struct {
-	EnvName    string `xml:"environment-name"`
 	AppRoot    string `xml:"project-root"`
+	EnvName    string `xml:"environment-name"`
 	AppVersion string `xml:"app-version"`
 }
 
