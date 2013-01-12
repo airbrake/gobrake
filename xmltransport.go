@@ -8,88 +8,50 @@ import (
 	"reflect"
 )
 
-type XMLTransport struct{}
+var (
+	createNoticeAPIV2URL = "//collect.airbrake.io/notifier_api/v2/notices"
+)
 
-func NewXMLTransport() Transporter {
-	return &XMLTransport{}
+type XMLTransport struct {
+	CreateAPIURL string
+	Client       *http.Client
+	key          string
 }
 
-func (t *XMLTransport) fullCreateNoticeURL(n Notifier) string {
-	return scheme(n) + n.CreateNoticeURL()
+func NewXMLTransport(client *http.Client, key string, isSecure bool) *XMLTransport {
+	url := scheme(isSecure) + createNoticeAPIV2URL
+	return &XMLTransport{
+		CreateAPIURL: url,
+		Client:       client,
+
+		key: key,
+	}
 }
 
-func (t *XMLTransport) marshal(n Notifier, err error, r *http.Request) ([]byte, error) {
-	stack := stack(3)
-	backtrace := make([]xmlBacktrace, 0, len(stack))
-	for _, s := range stack {
-		backtrace = append(backtrace, xmlBacktrace{s.File, s.Line, s.Func})
-	}
+func (t *XMLTransport) Transport(
+	e error, r *http.Request, context map[string]string, session map[string]interface{},
+) error {
+	xmln := t.newXMLNotice(e, r, context, session)
 
-	xmln := &xmlNotice{
-		Version: "2.0",
+	buf := bytes.NewBufferString(xml.Header)
+	enc := xml.NewEncoder(buf)
 
-		APIKey: n.APIKey(),
-		Notifier: xmlNotifier{
-			Name:    n.Name(),
-			Version: n.Version(),
-			URL:     n.URL(),
-		},
-		Error: xmlError{
-			Type:      reflect.TypeOf(err).String(),
-			Message:   err.Error(),
-			Backtrace: backtrace,
-		},
-		ServerEnv: xmlServerEnv{
-			EnvName:    n.EnvName(),
-			AppRoot:    n.AppRoot(),
-			AppVersion: n.AppVersion(),
-		},
-	}
-	if r != nil {
-		xmln.Request = xmlRequest{
-			URL:       r.URL.String(),
-			Component: "",
-			Action:    "",
-			CGIData:   []xmlVar{{"METHOD", r.Method}},
-		}
-		if r.RemoteAddr != "" {
-			xmln.Request.CGIData = append(
-				xmln.Request.CGIData, xmlVar{"REMOTE_ADDR", r.RemoteAddr})
-		}
-		if ua := r.Header.Get("User-Agent"); ua != "" {
-			xmln.Request.CGIData = append(
-				xmln.Request.CGIData, xmlVar{"HTTP_USER_AGENT", ua})
-		}
-	}
-
-	b, err := xml.Marshal(xmln)
-	if err != nil {
-		return nil, err
-	}
-
-	// Go currently ignores omitempty on CGIData.
-	b = bytes.Replace(b, []byte("<cgi-data></cgi-data>"), []byte{}, -1)
-
-	return b, nil
-}
-
-func (t *XMLTransport) Transport(n Notifier, err error, r *http.Request) error {
-	b, err := t.marshal(n, err, r)
-	if err != nil {
+	if err := enc.Encode(xmln); err != nil {
 		return err
 	}
 
-	buf := bytes.NewBufferString(xml.Header)
-	buf.Write(b)
+	// Go currently ignores omitempty on CGIData.
+	// b = bytes.Replace(b, []byte("<cgi-data></cgi-data>"), []byte{}, 1)
 
-	resp, err := http.Post(t.fullCreateNoticeURL(n), "text/xml", buf)
+	resp, err := t.Client.Post(t.CreateAPIURL, "text/xml", buf)
 	if err != nil {
 		return err
 	}
 	resp.Body.Close()
 
-	if code := resp.StatusCode; code != http.StatusOK {
-		return fmt.Errorf("gobrake: got %v response, expected 200 OK", code)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf(
+			"gobrake: got %v response, expected 200 OK", resp.StatusCode)
 	}
 
 	return nil
@@ -102,22 +64,17 @@ type xmlNotifier struct {
 }
 
 type xmlError struct {
-	Type      string         `xml:"class"`
-	Message   string         `xml:"message"`
-	Backtrace []xmlBacktrace `xml:"backtrace>line"`
-}
-
-type xmlBacktrace struct {
-	File string `xml:"file,attr"`
-	Line int    `xml:"number,attr"`
-	Func string `xml:"method,attr"`
+	Type      string        `xml:"class"`
+	Message   string        `xml:"message"`
+	Backtrace []*stackEntry `xml:"backtrace>line"`
 }
 
 type xmlRequest struct {
-	URL       string   `xml:"url"`
-	Component string   `xml:"component"`
-	Action    string   `xml:"action"`
-	CGIData   []xmlVar `xml:"cgi-data>var,omitempty"`
+	URL       string    `xml:"url"`
+	Component string    `xml:"component"`
+	Action    string    `xml:"action"`
+	Env       []*xmlVar `xml:"cgi-data>var,omitempty"`
+	Params    []*xmlVar `xml:"params>var"`
 }
 
 type xmlVar struct {
@@ -136,9 +93,58 @@ type xmlNotice struct {
 	XMLName xml.Name `xml:"notice"`
 	Version string   `xml:"version,attr"`
 
-	APIKey    string       `xml:"api-key"`
-	Notifier  xmlNotifier  `xml:"notifier"`
-	Error     xmlError     `xml:"error"`
-	Request   xmlRequest   `xml:"request"`
-	ServerEnv xmlServerEnv `xml:"server-environment"`
+	Key       string        `xml:"api-key"`
+	Notifier  *xmlNotifier  `xml:"notifier"`
+	Error     *xmlError     `xml:"error"`
+	Request   *xmlRequest   `xml:"request"`
+	ServerEnv *xmlServerEnv `xml:"server-environment"`
+}
+
+func (t *XMLTransport) newXMLNotice(
+	e error, r *http.Request, context map[string]string, session map[string]interface{},
+) *xmlNotice {
+	xmln := &xmlNotice{
+		Version: "2.0",
+
+		Key: t.key,
+		Notifier: &xmlNotifier{
+			Name:    "Airbrake GO XML Notifier",
+			Version: notifierVersion,
+			URL:     notifierURL,
+		},
+		Error: &xmlError{
+			Type:      reflect.TypeOf(e).String(),
+			Message:   e.Error(),
+			Backtrace: stack(3),
+		},
+		ServerEnv: &xmlServerEnv{
+			EnvName:    context["environment"],
+			AppRoot:    context["rootDirectory"],
+			AppVersion: context["version"],
+		},
+	}
+
+	if r != nil {
+		xmln.Request = &xmlRequest{
+			URL:       r.URL.String(),
+			Component: "",
+			Action:    "",
+		}
+
+		env := make([]*xmlVar, 0, len(r.Header))
+		for k, v := range r.Header {
+			env = append(env, &xmlVar{k, v[0]})
+		}
+		xmln.Request.Env = env
+
+		if err := r.ParseForm(); err == nil {
+			params := make([]*xmlVar, 0, len(r.Form))
+			for k, _ := range r.Form {
+				params = append(params, &xmlVar{k, r.Form.Get(k)})
+			}
+			xmln.Request.Params = params
+		}
+	}
+
+	return xmln
 }

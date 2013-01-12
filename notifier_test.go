@@ -12,55 +12,61 @@ import (
 func Test(t *testing.T) { TestingT(t) }
 
 type NotifierTest struct {
-	notifier Notifier
-	err      error
+	xmlTransport  *XMLTransport
+	jsonTransport *JSONTransport
+
+	xmlNotifier, jsonNotifier *StdNotifier
+
+	err error
+	req *http.Request
 }
 
 var _ = Suite(&NotifierTest{})
 
 func (t *NotifierTest) SetUpTest(c *C) {
-	t.notifier = NewNotifier(Config{
-		APIKey:     "apikey",
-		EnvName:    "production",
-		AppVersion: "1.0",
-		AppRoot:    "/approot",
+	t.xmlTransport = NewXMLTransport(&http.Client{}, "apikey", true)
+	t.xmlTransport.CreateAPIURL = "http://localhost:8080/notifier_api/v2/notices"
 
-		DeployURL:       "://localhost:8080/deploys.txt",
-		CreateNoticeURL: "://localhost:8080/notifier_api/v2/notices",
-	})
+	t.jsonTransport = NewJSONTransport(&http.Client{}, 1, "apikey", true)
+	t.jsonTransport.CreateAPIURL = "http://localhost:8080/api/v3/projects/1/notices?key=apikey"
+
+	t.xmlNotifier = NewNotifier(t.xmlTransport)
+	t.xmlNotifier.SetContext("environment", "production")
+	t.xmlNotifier.SetContext("version", "1.0")
+	t.xmlNotifier.SetContext("rootDirectory", "/approot")
+
+	t.jsonNotifier = NewNotifier(t.jsonTransport)
+	t.jsonNotifier.SetContext("environment", "production")
+	t.jsonNotifier.SetContext("version", "1.0")
+	t.jsonNotifier.SetContext("rootDirectory", "/approot")
+
+	var err error
 	t.err = errors.New("unexpected error")
-}
-
-func (t *NotifierTest) TestNotifyWithoutRequest(c *C) {
-	c.Assert(t.notifier.Notify(t.err, nil), IsNil)
-
-	transport := &XMLTransport{}
-	b, err := transport.marshal(t.notifier, t.err, nil)
+	t.req, err = http.NewRequest("GET", "http://airbrake.io/", nil)
 	c.Assert(err, IsNil)
-	c.Assert(string(b), Equals, expectedXML)
+	t.req.RemoteAddr = "127.0.0.1"
 }
 
-func (t *NotifierTest) TestNotifyWithRequest(c *C) {
-	r, err := http.NewRequest("GET", "http://airbrake.io/", nil)
-	c.Assert(err, IsNil)
-	r.RemoteAddr = "127.0.0.1"
-
-	c.Assert(t.notifier.Notify(t.err, r), IsNil)
-
-	transport := &XMLTransport{}
-	b, err := transport.marshal(t.notifier, t.err, r)
-	c.Assert(err, IsNil)
-	c.Assert(string(b), Equals, expectedXMLWithRequest)
+func (t *NotifierTest) TestXMLNotify(c *C) {
+	c.Assert(t.xmlNotifier.Notify(t.err, nil, nil), IsNil)
 }
 
-func (t *NotifierTest) TestPanicWithNilError(c *C) {
-	t.notifier.Notify(nil, nil)
+func (t *NotifierTest) TestXMLNotifyWithRequest(c *C) {
+	c.Assert(t.xmlNotifier.Notify(t.err, t.req, nil), IsNil)
 }
 
-func (t *NotifierTest) TestDeploy(c *C) {
-	c.Assert(t.notifier.Deploy("", "", ""), IsNil)
+func (t *NotifierTest) TestJSONNotify(c *C) {
+	c.Assert(t.jsonNotifier.Notify(t.err, nil, nil), IsNil)
 }
 
-var expectedXML = `<notice version="2.0"><api-key>apikey</api-key><notifier><name>Airbrake Go notifier</name><version>1.0</version><url>http://github.com/airbrake/gobrake</url></notifier><error><class>*errors.errorString</class><message>unexpected error</message><backtrace><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="521" method="reflect.Value.call"></line><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="334" method="reflect.Value.Call"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="709" method="launchpad.net/gocheck._func_006"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="608" method="launchpad.net/gocheck._func_004"></line><line file="/home/vmihailenco/workspace/go/src/pkg/runtime/proc.c" number="271" method="runtime.goexit"></line></backtrace></error><request><url></url><component></component><action></action><cgi-data></cgi-data></request><server-environment><environment-name>production</environment-name><project-root>/approot</project-root><app-version>1.0</app-version></server-environment></notice>`
+func (t *NotifierTest) TestJSONNotifyWithRequest(c *C) {
+	c.Assert(t.jsonNotifier.Notify(t.err, t.req, nil), IsNil)
+}
 
-var expectedXMLWithRequest = `<notice version="2.0"><api-key>apikey</api-key><notifier><name>Airbrake Go notifier</name><version>1.0</version><url>http://github.com/airbrake/gobrake</url></notifier><error><class>*errors.errorString</class><message>unexpected error</message><backtrace><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="521" method="reflect.Value.call"></line><line file="/home/vmihailenco/workspace/go/src/pkg/reflect/value.go" number="334" method="reflect.Value.Call"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="709" method="launchpad.net/gocheck._func_006"></line><line file="/home/vmihailenco/workspace/gocode/src/launchpad.net/gocheck/gocheck.go" number="608" method="launchpad.net/gocheck._func_004"></line><line file="/home/vmihailenco/workspace/go/src/pkg/runtime/proc.c" number="271" method="runtime.goexit"></line></backtrace></error><request><url>http://airbrake.io/</url><component></component><action></action><cgi-data><var key="METHOD">GET</var><var key="REMOTE_ADDR">127.0.0.1</var></cgi-data></request><server-environment><environment-name>production</environment-name><project-root>/approot</project-root><app-version>1.0</app-version></server-environment></notice>`
+func (t *NotifierTest) TestNilError(c *C) {
+	t.xmlNotifier.Notify(nil, nil, nil)
+}
+
+// func (t *NotifierTest) TestDeploy(c *C) {
+// 	c.Assert(t.xmlNotifier.Deploy("", "", ""), IsNil)
+// }
