@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	createNoticeAPIV3URL = "//collect.airbrake.io/api/v3/[PROJECT_ID]/notices?key=[KEY]"
+	createNoticeAPIV3URL = "//collect.airbrake.io/api/v3/projects/[PROJECT_ID]/notices?key=[KEY]"
 )
 
 type JSONTransport struct {
@@ -90,7 +90,7 @@ func newJSONNotice(
 			&jsonError{
 				Type:      reflect.TypeOf(e).String(),
 				Message:   e.Error(),
-				Backtrace: stack(3),
+				Backtrace: stack(4),
 			},
 		},
 		Context: context,

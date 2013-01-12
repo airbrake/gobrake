@@ -12,9 +12,6 @@ const (
 )
 
 var (
-	deployURL       = "://go-airbrake.appspot.com/deploys.txt"
-	createNoticeURL = "://go-airbrake.appspot.com/notifier_api/v2/notices"
-
 	Logger = log.New(os.Stderr, "", log.LstdFlags)
 
 	_ Notifier = &StdNotifier{}
