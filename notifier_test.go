@@ -2,6 +2,7 @@ package gobrake
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -65,6 +66,20 @@ func (t *NotifierTest) TestJSONNotifyWithRequest(c *C) {
 
 func (t *NotifierTest) TestNilError(c *C) {
 	t.xmlNotifier.Notify(nil, nil, nil)
+}
+
+func (t *NotifierTest) TestPanic(c *C) {
+	defer func() {
+		if iface := recover(); iface != nil {
+			t.jsonNotifier.Panic(iface, nil, nil)
+		}
+	}()
+	panic("hello")
+}
+
+func (t *NotifierTest) TestFmtErrorf(c *C) {
+	err := fmt.Errorf("hello")
+	t.jsonNotifier.Notify(err, nil, nil)
 }
 
 // func (t *NotifierTest) TestDeploy(c *C) {

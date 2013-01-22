@@ -32,9 +32,13 @@ func NewJSONTransport(
 }
 
 func (t *JSONTransport) Transport(
-	e error, r *http.Request, context map[string]string, session map[string]interface{},
+	e error,
+	stack []*stackEntry,
+	r *http.Request,
+	context map[string]string,
+	session map[string]interface{},
 ) error {
-	jsonn := newJSONNotice(e, r, context, session)
+	jsonn := newJSONNotice(e, stack, r, context, session)
 
 	buf := &bytes.Buffer{}
 	enc := json.NewEncoder(buf)
@@ -78,7 +82,11 @@ type jsonNotice struct {
 }
 
 func newJSONNotice(
-	e error, r *http.Request, context map[string]string, session map[string]interface{},
+	e error,
+	stack []*stackEntry,
+	r *http.Request,
+	context map[string]string,
+	session map[string]interface{},
 ) *jsonNotice {
 	notice := &jsonNotice{
 		Notifier: &jsonNotifier{
@@ -90,7 +98,7 @@ func newJSONNotice(
 			&jsonError{
 				Type:      reflect.TypeOf(e).String(),
 				Message:   e.Error(),
-				Backtrace: stack(4),
+				Backtrace: stack,
 			},
 		},
 		Context: context,

@@ -29,9 +29,13 @@ func NewXMLTransport(client *http.Client, key string, isSecure bool) *XMLTranspo
 }
 
 func (t *XMLTransport) Transport(
-	e error, r *http.Request, context map[string]string, session map[string]interface{},
+	e error,
+	stack []*stackEntry,
+	r *http.Request,
+	context map[string]string,
+	session map[string]interface{},
 ) error {
-	xmln := t.newXMLNotice(e, r, context, session)
+	xmln := t.newXMLNotice(e, stack, r, context, session)
 
 	buf := bytes.NewBufferString(xml.Header)
 	enc := xml.NewEncoder(buf)
@@ -101,7 +105,11 @@ type xmlNotice struct {
 }
 
 func (t *XMLTransport) newXMLNotice(
-	e error, r *http.Request, context map[string]string, session map[string]interface{},
+	e error,
+	stack []*stackEntry,
+	r *http.Request,
+	context map[string]string,
+	session map[string]interface{},
 ) *xmlNotice {
 	xmln := &xmlNotice{
 		Version: "2.0",
@@ -115,7 +123,7 @@ func (t *XMLTransport) newXMLNotice(
 		Error: &xmlError{
 			Type:      reflect.TypeOf(e).String(),
 			Message:   e.Error(),
-			Backtrace: stack(3),
+			Backtrace: stack,
 		},
 		ServerEnv: &xmlServerEnv{
 			EnvName:    context["environment"],
