@@ -93,8 +93,8 @@ Appengine
 
     func (h *RecoverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         defer func() {
-            c := appengine.NewContext(r)
             if iface := recover(); iface != nil {
+                c := appengine.NewContext(r)
                 Notifier.Panic(c, iface, r, nil)
                 panic(iface)
             }

@@ -11,7 +11,9 @@ import (
 )
 
 var (
-	createNoticeAPIV3URL = "//collect.airbrake.io/api/v3/projects/[PROJECT_ID]/notices?key=[KEY]"
+	createNoticeAPIV3URL = "//airbrake.io/api/v3/projects/[PROJECT_ID]/notices?key=[KEY]"
+
+	_ Transporter = &JSONTransport{}
 )
 
 type JSONTransport struct {
@@ -20,18 +22,18 @@ type JSONTransport struct {
 }
 
 func NewJSONTransport(
-	client *http.Client, projectID int64, key string, isSecure bool,
+	projectId int, key string, isSecure bool,
 ) *JSONTransport {
 	url := scheme(isSecure) + createNoticeAPIV3URL
-	url = strings.Replace(url, "[PROJECT_ID]", strconv.FormatInt(projectID, 10), 1)
+	url = strings.Replace(url, "[PROJECT_ID]", strconv.Itoa(projectId), 1)
 	url = strings.Replace(url, "[KEY]", key, 1)
 	return &JSONTransport{
 		CreateAPIURL: url,
-		Client:       client,
+		Client:       http.DefaultClient,
 	}
 }
 
-func (t *JSONTransport) Transport(
+func (t *JSONTransport) transport(
 	e error,
 	stack []*stackEntry,
 	r *http.Request,
@@ -54,7 +56,7 @@ func (t *JSONTransport) Transport(
 
 	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf(
-			"gobrake: got %v response, expected 201 CREATED", resp.StatusCode)
+			"gobrake: got %d response, expected 201 CREATED", resp.StatusCode)
 	}
 
 	return nil

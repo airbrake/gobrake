@@ -12,23 +12,27 @@ var (
 	createNoticeAPIV2URL = "//collect.airbrake.io/notifier_api/v2/notices"
 )
 
+var (
+	_ Transporter = &JSONTransport{}
+)
+
 type XMLTransport struct {
 	CreateAPIURL string
 	Client       *http.Client
 	key          string
 }
 
-func NewXMLTransport(client *http.Client, key string, isSecure bool) *XMLTransport {
+func NewXMLTransport(key string, isSecure bool) *XMLTransport {
 	url := scheme(isSecure) + createNoticeAPIV2URL
 	return &XMLTransport{
 		CreateAPIURL: url,
-		Client:       client,
+		Client:       http.DefaultClient,
 
 		key: key,
 	}
 }
 
-func (t *XMLTransport) Transport(
+func (t *XMLTransport) transport(
 	e error,
 	stack []*stackEntry,
 	r *http.Request,

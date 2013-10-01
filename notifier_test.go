@@ -9,7 +9,6 @@ import (
 	. "launchpad.net/gocheck"
 )
 
-// Hook up gocheck into the gotest runner.
 func Test(t *testing.T) { TestingT(t) }
 
 type NotifierTest struct {
@@ -25,10 +24,10 @@ type NotifierTest struct {
 var _ = Suite(&NotifierTest{})
 
 func (t *NotifierTest) SetUpTest(c *C) {
-	t.xmlTransport = NewXMLTransport(&http.Client{}, "apikey", true)
+	t.xmlTransport = NewXMLTransport("apikey", true)
 	t.xmlTransport.CreateAPIURL = "http://localhost:8080/notifier_api/v2/notices"
 
-	t.jsonTransport = NewJSONTransport(&http.Client{}, 1, "apikey", true)
+	t.jsonTransport = NewJSONTransport(1, "apikey", true)
 	t.jsonTransport.CreateAPIURL = "http://localhost:8080/api/v3/projects/1/notices?key=apikey"
 
 	t.xmlNotifier = NewNotifier(t.xmlTransport)
@@ -71,7 +70,7 @@ func (t *NotifierTest) TestNilError(c *C) {
 func (t *NotifierTest) TestPanic(c *C) {
 	defer func() {
 		if iface := recover(); iface != nil {
-			t.jsonNotifier.Panic(iface, nil, nil)
+			t.jsonNotifier.NotifyPanic(iface, nil, nil)
 		}
 	}()
 	panic("hello")
@@ -81,7 +80,3 @@ func (t *NotifierTest) TestFmtErrorf(c *C) {
 	err := fmt.Errorf("hello")
 	t.jsonNotifier.Notify(err, nil, nil)
 }
-
-// func (t *NotifierTest) TestDeploy(c *C) {
-// 	c.Assert(t.xmlNotifier.Deploy("", "", ""), IsNil)
-// }
