@@ -27,7 +27,7 @@ Example:
     func handler(w http.ResponseWriter, r *http.Request) {
         defer func() {
             if iface := recover(); iface != nil {
-                Notifier.Panic(iface, r, nil)
+                Notifier.NotifyPanic(iface, r, nil)
             }
         }()
 
@@ -82,7 +82,7 @@ Appengine
         if v, ok := n.N.Transport().(*gobrake.JSONTransport); ok {
             v.Client = urlfetch.Client(c)
         }
-        if err := n.N.Panic(e, r, session); err != nil {
+        if err := n.N.NotifyPanic(e, r, session); err != nil {
             c.Errorf("Notify failed: %v", err)
         }
     }
@@ -95,7 +95,7 @@ Appengine
         defer func() {
             if iface := recover(); iface != nil {
                 c := appengine.NewContext(r)
-                Notifier.Panic(c, iface, r, nil)
+                Notifier.NotifyPanic(c, iface, r, nil)
                 panic(iface)
             }
         }()
