@@ -3,10 +3,11 @@ package gobrake
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"testing"
+	"net/http"
+	"net/http/httptest"
 
-	. "launchpad.net/gocheck"
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -19,16 +20,27 @@ type NotifierTest struct {
 
 	err error
 	req *http.Request
+	fakeServer  *httptest.Server
 }
 
 var _ = Suite(&NotifierTest{})
 
 func (t *NotifierTest) SetUpTest(c *C) {
+
+	t.fakeServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Content-Type") == "application/json" {
+			w.WriteHeader(http.StatusCreated)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+		fmt.Sprintf("%v", 1)
+	}))
+
 	t.xmlTransport = NewXMLTransport("apikey", true)
-	t.xmlTransport.CreateAPIURL = "http://localhost:8080/notifier_api/v2/notices"
+	t.xmlTransport.CreateAPIURL = t.fakeServer.URL
 
 	t.jsonTransport = NewJSONTransport(1, "apikey", true)
-	t.jsonTransport.CreateAPIURL = "http://localhost:8080/api/v3/projects/1/notices?key=apikey"
+	t.jsonTransport.CreateAPIURL = t.fakeServer.URL
 
 	t.xmlNotifier = NewNotifier(t.xmlTransport)
 	t.xmlNotifier.SetContext("environment", "production")
@@ -47,12 +59,17 @@ func (t *NotifierTest) SetUpTest(c *C) {
 	t.req.RemoteAddr = "127.0.0.1"
 }
 
+func (t *NotifierTest) TearDownTest(c *C) {
+	t.fakeServer.Close()
+}
+
 func (t *NotifierTest) TestXMLNotify(c *C) {
 	c.Assert(t.xmlNotifier.Notify(t.err, nil, nil), IsNil)
 }
 
 func (t *NotifierTest) TestXMLNotifyWithRequest(c *C) {
 	c.Assert(t.xmlNotifier.Notify(t.err, t.req, nil), IsNil)
+
 }
 
 func (t *NotifierTest) TestJSONNotify(c *C) {
@@ -64,7 +81,8 @@ func (t *NotifierTest) TestJSONNotifyWithRequest(c *C) {
 }
 
 func (t *NotifierTest) TestNilError(c *C) {
-	t.xmlNotifier.Notify(nil, nil, nil)
+	e := errors.New("")
+	t.xmlNotifier.Notify(e, nil, nil)
 }
 
 func (t *NotifierTest) TestPanic(c *C) {
