@@ -1,6 +1,9 @@
 Airbrake Golang Notifier
 ========================
 
+<img src="http://f.cl.ly/items/290g3f0L330u2Y2R3119/Photoshop-2014-04-30-at-8.03.47-pm.png  " width=800px>
+
+
 Example:
 
     import (
