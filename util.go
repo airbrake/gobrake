@@ -15,9 +15,9 @@ type StackFrame struct {
 	Func string `json:"function"`
 }
 
-func stack(skip int, filter func(string, int, string, string) bool) []*StackFrame {
-	stack := make([]*StackFrame, 0, 10)
-	for i := skip; ; i++ {
+func stack(startFrame int, filter func(string, int, string, string) bool) []*StackFrame {
+	stack := make([]*StackFrame, 0)
+	for i := startFrame; ; i++ {
 		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
 			break
