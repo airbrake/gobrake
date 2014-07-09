@@ -15,7 +15,7 @@ func getCreateNoticeURL(projectId int64, key string) string {
 type Error struct {
 	Type      string        `json:"type"`
 	Message   string        `json:"message"`
-	Backtrace []*StackEntry `json:"backtrace"`
+	Backtrace []*StackFrame `json:"backtrace"`
 }
 
 type Notice struct {
@@ -31,11 +31,7 @@ type Notice struct {
 	Params  map[string]interface{} `json:"params"`
 }
 
-func NewNotice(
-	e interface{},
-	stack []*StackEntry,
-	req *http.Request,
-) *Notice {
+func NewNotice(e interface{}, stack []*StackFrame, req *http.Request) *Notice {
 	notice := &Notice{
 		Errors: []*Error{
 			&Error{

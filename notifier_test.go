@@ -59,7 +59,7 @@ var _ = Describe("Notifier", func() {
 	})
 
 	It("reports context, env, session and params", func() {
-		wanted := notifier.Notice("hello", nil)
+		wanted := notifier.Notice("hello", nil, 3)
 		wanted.Context["context1"] = "context1"
 		wanted.Env["env1"] = "value1"
 		wanted.Session["session1"] = "value1"

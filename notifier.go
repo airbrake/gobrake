@@ -45,7 +45,7 @@ func (n *Notifier) SetContext(name, value string) {
 }
 
 func (n *Notifier) Notify(e interface{}, req *http.Request) error {
-	notice := n.Notice(e, req)
+	notice := n.Notice(e, req, 3)
 	if err := n.SendNotice(notice); err != nil {
 		glog.Errorf("gobrake failed (%s) reporting error: %v", err, e)
 		return err
@@ -53,8 +53,8 @@ func (n *Notifier) Notify(e interface{}, req *http.Request) error {
 	return nil
 }
 
-func (n *Notifier) Notice(e interface{}, req *http.Request) *Notice {
-	stack := stack(3, n.StackFilter)
+func (n *Notifier) Notice(e interface{}, req *http.Request, startFrame int) *Notice {
+	stack := stack(startFrame, n.StackFilter)
 	notice := NewNotice(e, stack, req)
 	for k, v := range n.context {
 		notice.Context[k] = v

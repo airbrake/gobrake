@@ -9,14 +9,14 @@ func stackFilter(file string, line int, packageName, funcName string) bool {
 	return packageName == "runtime" && funcName == "panic"
 }
 
-type StackEntry struct {
+type StackFrame struct {
 	File string `json:"file"`
 	Line int    `json:"line"`
 	Func string `json:"function"`
 }
 
-func stack(skip int, filter func(string, int, string, string) bool) []*StackEntry {
-	stack := make([]*StackEntry, 0, 10)
+func stack(skip int, filter func(string, int, string, string) bool) []*StackFrame {
+	stack := make([]*StackFrame, 0, 10)
 	for i := skip; ; i++ {
 		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
@@ -27,7 +27,7 @@ func stack(skip int, filter func(string, int, string, string) bool) []*StackEntr
 			stack = stack[:0]
 			continue
 		}
-		stack = append(stack, &StackEntry{
+		stack = append(stack, &StackFrame{
 			File: file,
 			Line: line,
 			Func: funcName,
