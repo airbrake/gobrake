@@ -55,11 +55,11 @@ func (n *Notifier) Notify(e interface{}, req *http.Request) error {
 
 func (n *Notifier) Notice(e interface{}, req *http.Request) *Notice {
 	stack := stack(3, n.StackFilter)
-	context := make(map[string]string, len(n.context))
+	notice := NewNotice(e, stack, req)
 	for k, v := range n.context {
-		context[k] = v
+		notice.Context[k] = v
 	}
-	return NewNotice(e, stack, req, context)
+	return notice
 }
 
 func (n *Notifier) SendNotice(notice *Notice) error {

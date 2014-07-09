@@ -35,7 +35,6 @@ func NewNotice(
 	e interface{},
 	stack []*StackEntry,
 	req *http.Request,
-	context map[string]string,
 ) *Notice {
 	notice := &Notice{
 		Errors: []*Error{
@@ -45,7 +44,7 @@ func NewNotice(
 				Backtrace: stack,
 			},
 		},
-		Context: context,
+		Context: make(map[string]string),
 		Env:     make(map[string]interface{}),
 		Session: make(map[string]interface{}),
 		Params:  make(map[string]interface{}),
@@ -57,11 +56,10 @@ func NewNotice(
 	notifier.URL = "https://github.com/airbrake/gobrake"
 
 	if req != nil {
-		context["url"] = req.URL.String()
+		notice.Context["url"] = req.URL.String()
 		if ua := req.Header.Get("User-Agent"); ua != "" {
-			context["userAgent"] = ua
+			notice.Context["userAgent"] = ua
 		}
-		notice.Context = context
 
 		for k, v := range req.Header {
 			if len(v) == 1 {
