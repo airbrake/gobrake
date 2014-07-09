@@ -1,100 +1,111 @@
 package gobrake
 
 import (
-	"errors"
-	"fmt"
-	"testing"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"testing"
 
-	. "gopkg.in/check.v1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func Test(t *testing.T) { TestingT(t) }
-
-type NotifierTest struct {
-	xmlTransport  *XMLTransport
-	jsonTransport *JSONTransport
-
-	xmlNotifier, jsonNotifier *StdNotifier
-
-	err error
-	req *http.Request
-	fakeServer  *httptest.Server
+func TestGobrake(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "gobrake")
 }
 
-var _ = Suite(&NotifierTest{})
+func TestCreateNoticeURL(t *testing.T) {
+	notifier := NewNotifier(1, "key")
+	wanted := "https://airbrake.io/api/v3/projects/1/notices?key=key"
+	if notifier.createNoticeURL != wanted {
+		t.Fatalf("got %q, wanted %q", notifier.createNoticeURL, wanted)
+	}
+}
 
-func (t *NotifierTest) SetUpTest(c *C) {
+var _ = Describe("Notifier", func() {
+	var notifier *Notifier
+	var notice *Notice
 
-	t.fakeServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Content-Type") == "application/json" {
+	BeforeEach(func() {
+		handler := func(w http.ResponseWriter, req *http.Request) {
+			b, err := ioutil.ReadAll(req.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			notice = &Notice{}
+			err = json.Unmarshal(b, notice)
+			Expect(err).To(BeNil())
+
 			w.WriteHeader(http.StatusCreated)
-		} else {
-			w.WriteHeader(http.StatusOK)
 		}
-		fmt.Sprintf("%v", 1)
-	}))
+		server := httptest.NewServer(http.HandlerFunc(handler))
 
-	t.xmlTransport = NewXMLTransport("apikey", true)
-	t.xmlTransport.CreateAPIURL = t.fakeServer.URL
+		notifier = NewNotifier(1, "key")
+		notifier.createNoticeURL = server.URL
+	})
 
-	t.jsonTransport = NewJSONTransport(1, "apikey", true)
-	t.jsonTransport.CreateAPIURL = t.fakeServer.URL
+	It("reports error and backtrace", func() {
+		err := notifier.Notify("hello", nil)
+		Expect(err).To(BeNil())
 
-	t.xmlNotifier = NewNotifier(t.xmlTransport)
-	t.xmlNotifier.SetContext("environment", "production")
-	t.xmlNotifier.SetContext("version", "1.0")
-	t.xmlNotifier.SetContext("rootDirectory", "/approot")
+		e := notice.Errors[0]
+		Expect(e.Type).To(Equal("string"))
+		Expect(e.Message).To(Equal("hello"))
+		Expect(e.Backtrace[0].File).To(ContainSubstring("notifier_test.go"))
+	})
 
-	t.jsonNotifier = NewNotifier(t.jsonTransport)
-	t.jsonNotifier.SetContext("environment", "production")
-	t.jsonNotifier.SetContext("version", "1.0")
-	t.jsonNotifier.SetContext("rootDirectory", "/approot")
+	It("reports context, env, session and params", func() {
+		wanted := notifier.Notice("hello", nil)
+		wanted.Context["context1"] = "context1"
+		wanted.Env["env1"] = "value1"
+		wanted.Session["session1"] = "value1"
+		wanted.Params["param1"] = "value1"
+		err := notifier.SendNotice(wanted)
+		Expect(err).To(BeNil())
+		Expect(notice).To(Equal(wanted))
+	})
 
-	var err error
-	t.err = errors.New("unexpected error")
-	t.req, err = http.NewRequest("GET", "http://airbrake.io/", nil)
-	c.Assert(err, IsNil)
-	t.req.RemoteAddr = "127.0.0.1"
-}
+	It("reports context using SetContext", func() {
+		notifier.SetContext("environment", "production")
+		err := notifier.Notify("hello", nil)
+		Expect(err).To(BeNil())
+		Expect(notice.Context["environment"]).To(Equal("production"))
+	})
 
-func (t *NotifierTest) TearDownTest(c *C) {
-	t.fakeServer.Close()
-}
+	It("reports request", func() {
+		u, err := url.Parse("http://foo/bar")
+		Expect(err).To(BeNil())
 
-func (t *NotifierTest) TestXMLNotify(c *C) {
-	c.Assert(t.xmlNotifier.Notify(t.err, nil, nil), IsNil)
-}
-
-func (t *NotifierTest) TestXMLNotifyWithRequest(c *C) {
-	c.Assert(t.xmlNotifier.Notify(t.err, t.req, nil), IsNil)
-
-}
-
-func (t *NotifierTest) TestJSONNotify(c *C) {
-	c.Assert(t.jsonNotifier.Notify(t.err, nil, nil), IsNil)
-}
-
-func (t *NotifierTest) TestJSONNotifyWithRequest(c *C) {
-	c.Assert(t.jsonNotifier.Notify(t.err, t.req, nil), IsNil)
-}
-
-func (t *NotifierTest) TestNilError(c *C) {
-	e := errors.New("")
-	t.xmlNotifier.Notify(e, nil, nil)
-}
-
-func (t *NotifierTest) TestPanic(c *C) {
-	defer func() {
-		if iface := recover(); iface != nil {
-			t.jsonNotifier.NotifyPanic(iface, nil, nil)
+		req := &http.Request{
+			URL: u,
+			Header: http.Header{
+				"h1":         {"h1v1", "h1v2"},
+				"h2":         {"h2v1"},
+				"User-Agent": {"my_user_agent"},
+			},
+			Form: url.Values{
+				"f1": {"f1v1"},
+				"f2": {"f2v1", "f2v2"},
+			},
 		}
-	}()
-	panic("hello")
-}
 
-func (t *NotifierTest) TestFmtErrorf(c *C) {
-	err := fmt.Errorf("hello")
-	t.jsonNotifier.Notify(err, nil, nil)
-}
+		err = notifier.Notify("hello", req)
+		Expect(err).To(BeNil())
+
+		ctx := notice.Context
+		Expect(ctx["url"]).To(Equal("http://foo/bar"))
+		Expect(ctx["userAgent"]).To(Equal("my_user_agent"))
+
+		params := notice.Params
+		Expect(params["f1"]).To(Equal("f1v1"))
+		Expect(params["f2"]).To(Equal([]interface{}{"f2v1", "f2v2"}))
+
+		env := notice.Env
+		Expect(env["h1"]).To(Equal([]interface{}{"h1v1", "h1v2"}))
+		Expect(env["h2"]).To(Equal("h2v1"))
+	})
+})

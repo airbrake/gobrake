@@ -9,14 +9,14 @@ func stackFilter(file string, line int, packageName, funcName string) bool {
 	return packageName == "runtime" && funcName == "panic"
 }
 
-type stackEntry struct {
-	File string `xml:"file,attr" json:"file"`
-	Line int    `xml:"number,attr" json:"line"`
-	Func string `xml:"method,attr" json:"function"`
+type StackEntry struct {
+	File string `json:"file"`
+	Line int    `json:"line"`
+	Func string `json:"function"`
 }
 
-func stack(skip int, filter func(string, int, string, string) bool) []*stackEntry {
-	stack := make([]*stackEntry, 0, 10)
+func stack(skip int, filter func(string, int, string, string) bool) []*StackEntry {
+	stack := make([]*StackEntry, 0, 10)
 	for i := skip; ; i++ {
 		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
@@ -27,7 +27,7 @@ func stack(skip int, filter func(string, int, string, string) bool) []*stackEntr
 			stack = stack[:0]
 			continue
 		}
-		stack = append(stack, &stackEntry{
+		stack = append(stack, &StackEntry{
 			File: file,
 			Line: line,
 			Func: funcName,
@@ -40,7 +40,7 @@ func stack(skip int, filter func(string, int, string, string) bool) []*stackEntr
 func packageFuncName(pc uintptr) (string, string) {
 	f := runtime.FuncForPC(pc)
 	if f == nil {
-		return "???", "???"
+		return "", ""
 	}
 
 	packageName := ""
@@ -56,11 +56,4 @@ func packageFuncName(pc uintptr) (string, string) {
 	}
 
 	return packageName, funcName
-}
-
-func scheme(isSecure bool) string {
-	if isSecure {
-		return "https:"
-	}
-	return "http:"
 }
