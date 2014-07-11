@@ -119,7 +119,7 @@ var _ = Describe("Notifier", func() {
 		wd, _ := os.Getwd()
 		Expect(notice.Context["language"]).To(Equal(runtime.Version()))
 		Expect(notice.Context["os"]).To(Equal(runtime.GOOS))
-		Expect(notice.Context["arch"]).To(Equal(runtime.GOARCH))
+		Expect(notice.Context["architecture"]).To(Equal(runtime.GOARCH))
 		Expect(notice.Context["hostname"]).To(Equal(hostname))
 		Expect(notice.Context["rootDirectory"]).To(Equal(wd))
 	})

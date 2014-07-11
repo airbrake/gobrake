@@ -42,7 +42,7 @@ func NewNotifier(projectId int64, key string) *Notifier {
 	}
 	n.context["language"] = runtime.Version()
 	n.context["os"] = runtime.GOOS
-	n.context["arch"] = runtime.GOARCH
+	n.context["architecture"] = runtime.GOARCH
 	if hostname, err := os.Hostname(); err == nil {
 		n.context["hostname"] = hostname
 	}
