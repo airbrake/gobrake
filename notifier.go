@@ -7,6 +7,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"runtime"
 	"time"
 
 	"github.com/golang/glog"
@@ -31,13 +33,23 @@ type Notifier struct {
 }
 
 func NewNotifier(projectId int64, key string) *Notifier {
-	return &Notifier{
+	n := &Notifier{
 		Client:      client,
 		StackFilter: stackFilter,
 
 		createNoticeURL: getCreateNoticeURL(projectId, key),
 		context:         make(map[string]string),
 	}
+	n.context["language"] = runtime.Version()
+	n.context["os"] = runtime.GOOS
+	n.context["arch"] = runtime.GOARCH
+	if hostname, err := os.Hostname(); err == nil {
+		n.context["hostname"] = hostname
+	}
+	if wd, err := os.Getwd(); err == nil {
+		n.context["rootDirectory"] = wd
+	}
+	return n
 }
 
 func (n *Notifier) SetContext(name, value string) {

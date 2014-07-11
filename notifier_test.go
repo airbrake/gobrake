@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"runtime"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -107,5 +109,18 @@ var _ = Describe("Notifier", func() {
 		env := notice.Env
 		Expect(env["h1"]).To(Equal([]interface{}{"h1v1", "h1v2"}))
 		Expect(env["h2"]).To(Equal("h2v1"))
+	})
+
+	It("collects and reports context", func() {
+		err := notifier.Notify("hello", nil)
+		Expect(err).To(BeNil())
+
+		hostname, _ := os.Hostname()
+		wd, _ := os.Getwd()
+		Expect(notice.Context["language"]).To(Equal(runtime.Version()))
+		Expect(notice.Context["os"]).To(Equal(runtime.GOOS))
+		Expect(notice.Context["arch"]).To(Equal(runtime.GOARCH))
+		Expect(notice.Context["hostname"]).To(Equal(hostname))
+		Expect(notice.Context["rootDirectory"]).To(Equal(wd))
 	})
 })
