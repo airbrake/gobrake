@@ -6,6 +6,8 @@ Example
 ---
 
 ```go
+import "gopkg.in/airbrake/gobrake.v1"
+
 airbrake = gobrake.NewNotifier(projectId, apiKey)
 airbrake.SetContext("environment", "production")
 
