@@ -7,21 +7,24 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"runtime"
 	"time"
-
-	"github.com/mreiferson/go-httpclient"
 )
 
 var (
-	transport = &httpclient.Transport{
-		ConnectTimeout:        1 * time.Second,
-		ResponseHeaderTimeout: 5 * time.Second,
-		RequestTimeout:        10 * time.Second,
+	client = &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			Dial: func(netw, addr string) (net.Conn, error) {
+				return net.DialTimeout(netw, addr, 3*time.Second)
+			},
+			ResponseHeaderTimeout: 5 * time.Second,
+		},
+		Timeout: 10 * time.Second,
 	}
-	client = &http.Client{Transport: transport}
 )
 
 type Notifier struct {
