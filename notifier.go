@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"runtime"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/mreiferson/go-httpclient"
 )
 
@@ -59,7 +59,7 @@ func (n *Notifier) SetContext(name, value string) {
 func (n *Notifier) Notify(e interface{}, req *http.Request) error {
 	notice := n.Notice(e, req, 3)
 	if err := n.SendNotice(notice); err != nil {
-		glog.Errorf("gobrake failed (%s) reporting error: %v", err, e)
+		log.Printf("gobrake failed (%s) reporting error: %v", err, e)
 		return err
 	}
 	return nil
