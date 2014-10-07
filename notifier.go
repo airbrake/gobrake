@@ -6,22 +6,25 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
+	"net"
 	"net/http"
 	"os"
 	"runtime"
 	"time"
-
-	"github.com/golang/glog"
-	"github.com/mreiferson/go-httpclient"
 )
 
 var (
-	transport = &httpclient.Transport{
-		ConnectTimeout:        1 * time.Second,
-		ResponseHeaderTimeout: 5 * time.Second,
-		RequestTimeout:        10 * time.Second,
+	client = &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			Dial: func(netw, addr string) (net.Conn, error) {
+				return net.DialTimeout(netw, addr, 3*time.Second)
+			},
+			ResponseHeaderTimeout: 5 * time.Second,
+		},
+		Timeout: 10 * time.Second,
 	}
-	client = &http.Client{Transport: transport}
 )
 
 type Notifier struct {
@@ -59,7 +62,7 @@ func (n *Notifier) SetContext(name, value string) {
 func (n *Notifier) Notify(e interface{}, req *http.Request) error {
 	notice := n.Notice(e, req, 3)
 	if err := n.SendNotice(notice); err != nil {
-		glog.Errorf("gobrake failed (%s) reporting error: %v", err, e)
+		log.Printf("gobrake failed (%s) reporting error: %v", err, e)
 		return err
 	}
 	return nil
