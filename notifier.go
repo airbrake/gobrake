@@ -14,38 +14,35 @@ import (
 	"time"
 )
 
-var (
-	client = &http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			Dial: func(netw, addr string) (net.Conn, error) {
-				return net.DialTimeout(netw, addr, 3*time.Second)
-			},
-			ResponseHeaderTimeout: 5 * time.Second,
+var httpClient = &http.Client{
+	Transport: &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		Dial: func(netw, addr string) (net.Conn, error) {
+			return net.DialTimeout(netw, addr, 3*time.Second)
 		},
-		Timeout: 10 * time.Second,
-	}
-)
+		ResponseHeaderTimeout: 5 * time.Second,
+	},
+	Timeout: 10 * time.Second,
+}
 
 type Notifier struct {
-	Client      *http.Client
-	StackFilter func(string, int, string, string) bool
-
+	Client          *http.Client
+	StackFilter     func(string, int, string, string) bool
 	createNoticeURL string
 	context         map[string]string
 }
 
-func NewNotifier(projectId int64, key string) *Notifier {
+func NewNotifier(projectID int64, key string) *Notifier {
 	n := &Notifier{
-		Client:      client,
-		StackFilter: stackFilter,
-
-		createNoticeURL: getCreateNoticeURL(projectId, key),
-		context:         make(map[string]string),
+		Client:          httpClient,
+		StackFilter:     stackFilter,
+		createNoticeURL: getCreateNoticeURL(projectID, key),
+		context: map[string]string{
+			"language":     runtime.Version(),
+			"os":           runtime.GOOS,
+			"architecture": runtime.GOARCH,
+		},
 	}
-	n.context["language"] = runtime.Version()
-	n.context["os"] = runtime.GOOS
-	n.context["architecture"] = runtime.GOARCH
 	if hostname, err := os.Hostname(); err == nil {
 		n.context["hostname"] = hostname
 	}
@@ -94,8 +91,7 @@ func (n *Notifier) SendNotice(notice *Notice) error {
 	resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf(
-			"gobrake: got %d response, wanted 201", resp.StatusCode)
+		return fmt.Errorf("gobrake: got %d response, wanted 201", resp.StatusCode)
 	}
 
 	return nil

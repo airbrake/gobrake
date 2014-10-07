@@ -15,8 +15,8 @@ type StackFrame struct {
 	Func string `json:"function"`
 }
 
-func stack(startFrame int, filter func(string, int, string, string) bool) []*StackFrame {
-	stack := make([]*StackFrame, 0)
+func stack(startFrame int, filter func(string, int, string, string) bool) []StackFrame {
+	stack := []StackFrame{}
 	for i := startFrame; ; i++ {
 		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
@@ -27,7 +27,7 @@ func stack(startFrame int, filter func(string, int, string, string) bool) []*Sta
 			stack = stack[:0]
 			continue
 		}
-		stack = append(stack, &StackFrame{
+		stack = append(stack, StackFrame{
 			File: file,
 			Line: line,
 			Func: funcName,

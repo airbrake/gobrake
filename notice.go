@@ -5,51 +5,52 @@ import (
 	"net/http"
 )
 
-func getCreateNoticeURL(projectId int64, key string) string {
+func getCreateNoticeURL(projectID int64, key string) string {
 	return fmt.Sprintf(
 		"https://airbrake.io/api/v3/projects/%d/notices?key=%s",
-		projectId, key,
-	)
+		projectID, key)
 }
 
 type Error struct {
-	Type      string        `json:"type"`
-	Message   string        `json:"message"`
-	Backtrace []*StackFrame `json:"backtrace"`
+	Type      string       `json:"type"`
+	Message   string       `json:"message"`
+	Backtrace []StackFrame `json:"backtrace"`
+}
+
+type notifier struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+	URL     string `json:"url"`
 }
 
 type Notice struct {
-	Notifier struct {
-		Name    string `json:"name"`
-		Version string `json:"version"`
-		URL     string `json:"url"`
-	} `json:"notifier"`
-	Errors  []*Error               `json:"errors"`
-	Context map[string]string      `json:"context"`
-	Env     map[string]interface{} `json:"environment"`
-	Session map[string]interface{} `json:"session"`
-	Params  map[string]interface{} `json:"params"`
+	Notifier notifier               `json:"notifier"`
+	Errors   []Error                `json:"errors"`
+	Context  map[string]string      `json:"context"`
+	Env      map[string]interface{} `json:"environment"`
+	Session  map[string]interface{} `json:"session"`
+	Params   map[string]interface{} `json:"params"`
 }
 
-func NewNotice(e interface{}, stack []*StackFrame, req *http.Request) *Notice {
+func NewNotice(e interface{}, stack []StackFrame, req *http.Request) *Notice {
 	notice := &Notice{
-		Errors: []*Error{
-			&Error{
+		Notifier: notifier{
+			Name:    "gobrake",
+			Version: "1.0",
+			URL:     "https://github.com/airbrake/gobrake",
+		},
+		Errors: []Error{
+			{
 				Type:      fmt.Sprintf("%T", e),
 				Message:   fmt.Sprint(e),
 				Backtrace: stack,
 			},
 		},
-		Context: make(map[string]string),
-		Env:     make(map[string]interface{}),
-		Session: make(map[string]interface{}),
-		Params:  make(map[string]interface{}),
+		Context: map[string]string{},
+		Env:     map[string]interface{}{},
+		Session: map[string]interface{}{},
+		Params:  map[string]interface{}{},
 	}
-
-	notifier := &notice.Notifier
-	notifier.Name = "gobrake"
-	notifier.Version = "1.0"
-	notifier.URL = "https://github.com/airbrake/gobrake"
 
 	if req != nil {
 		notice.Context["url"] = req.URL.String()
