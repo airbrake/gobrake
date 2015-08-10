@@ -1,4 +1,4 @@
-package gobrake
+package gobrake_test
 
 import (
 	"encoding/json"
@@ -12,6 +12,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"gopkg.in/airbrake/gobrake.v2"
 )
 
 func TestGobrake(t *testing.T) {
@@ -19,17 +21,14 @@ func TestGobrake(t *testing.T) {
 	RunSpecs(t, "gobrake")
 }
 
-func TestCreateNoticeURL(t *testing.T) {
-	notifier := NewNotifier(1, "key")
-	wanted := "https://airbrake.io/api/v3/projects/1/notices?key=key"
-	if notifier.createNoticeURL != wanted {
-		t.Fatalf("got %q, wanted %q", notifier.createNoticeURL, wanted)
-	}
-}
-
 var _ = Describe("Notifier", func() {
-	var notifier *Notifier
-	var notice *Notice
+	var notifier *gobrake.Notifier
+	var sentNotice *gobrake.Notice
+
+	notify := func(e interface{}, req *http.Request) {
+		notifier.Notify(e, req)
+		notifier.Flush()
+	}
 
 	BeforeEach(func() {
 		handler := func(w http.ResponseWriter, req *http.Request) {
@@ -38,25 +37,32 @@ var _ = Describe("Notifier", func() {
 				panic(err)
 			}
 
-			notice = &Notice{}
-			err = json.Unmarshal(b, notice)
+			sentNotice = &gobrake.Notice{}
+			err = json.Unmarshal(b, sentNotice)
 			Expect(err).To(BeNil())
 
 			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(`{"id":"123"}`))
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
 
-		notifier = NewNotifier(1, "key")
-		notifier.createNoticeURL = server.URL
+		notifier = gobrake.NewNotifier(1, "key")
+		notifier.SetCreateNoticeURL(server.URL)
 	})
 
 	It("reports error and backtrace", func() {
-		err := notifier.Notify("hello", nil)
-		Expect(err).To(BeNil())
+		notify("hello", nil)
 
-		e := notice.Errors[0]
+		e := sentNotice.Errors[0]
 		Expect(e.Type).To(Equal("string"))
 		Expect(e.Message).To(Equal("hello"))
+		Expect(e.Backtrace[0].File).To(ContainSubstring("notifier_test.go"))
+	})
+
+	It("Notice returns proper backtrace", func() {
+		notice := notifier.Notice("hello", nil, 0)
+
+		e := notice.Errors[0]
 		Expect(e.Backtrace[0].File).To(ContainSubstring("notifier_test.go"))
 	})
 
@@ -66,16 +72,22 @@ var _ = Describe("Notifier", func() {
 		wanted.Env["env1"] = "value1"
 		wanted.Session["session1"] = "value1"
 		wanted.Params["param1"] = "value1"
-		err := notifier.SendNotice(wanted)
+
+		id, err := notifier.SendNotice(wanted)
 		Expect(err).To(BeNil())
-		Expect(notice).To(Equal(wanted))
+		Expect(id).To(Equal("123"))
+
+		Expect(sentNotice).To(Equal(wanted))
 	})
 
 	It("reports context using SetContext", func() {
-		notifier.SetContext("environment", "production")
-		err := notifier.Notify("hello", nil)
-		Expect(err).To(BeNil())
-		Expect(notice.Context["environment"]).To(Equal("production"))
+		notifier.AddFilter(func(notice *gobrake.Notice) *gobrake.Notice {
+			notice.Context["environment"] = "production"
+			return notice
+		})
+		notify("hello", nil)
+
+		Expect(sentNotice.Context["environment"]).To(Equal("production"))
 	})
 
 	It("reports request", func() {
@@ -95,32 +107,30 @@ var _ = Describe("Notifier", func() {
 			},
 		}
 
-		err = notifier.Notify("hello", req)
-		Expect(err).To(BeNil())
+		notify("hello", req)
 
-		ctx := notice.Context
+		ctx := sentNotice.Context
 		Expect(ctx["url"]).To(Equal("http://foo/bar"))
 		Expect(ctx["userAgent"]).To(Equal("my_user_agent"))
 
-		params := notice.Params
+		params := sentNotice.Params
 		Expect(params["f1"]).To(Equal("f1v1"))
 		Expect(params["f2"]).To(Equal([]interface{}{"f2v1", "f2v2"}))
 
-		env := notice.Env
+		env := sentNotice.Env
 		Expect(env["h1"]).To(Equal([]interface{}{"h1v1", "h1v2"}))
 		Expect(env["h2"]).To(Equal("h2v1"))
 	})
 
 	It("collects and reports context", func() {
-		err := notifier.Notify("hello", nil)
-		Expect(err).To(BeNil())
+		notify("hello", nil)
 
 		hostname, _ := os.Hostname()
 		wd, _ := os.Getwd()
-		Expect(notice.Context["language"]).To(Equal(runtime.Version()))
-		Expect(notice.Context["os"]).To(Equal(runtime.GOOS))
-		Expect(notice.Context["architecture"]).To(Equal(runtime.GOARCH))
-		Expect(notice.Context["hostname"]).To(Equal(hostname))
-		Expect(notice.Context["rootDirectory"]).To(Equal(wd))
+		Expect(sentNotice.Context["language"]).To(Equal(runtime.Version()))
+		Expect(sentNotice.Context["os"]).To(Equal(runtime.GOOS))
+		Expect(sentNotice.Context["architecture"]).To(Equal(runtime.GOARCH))
+		Expect(sentNotice.Context["hostname"]).To(Equal(hostname))
+		Expect(sentNotice.Context["rootDirectory"]).To(Equal(wd))
 	})
 })
