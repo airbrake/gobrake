@@ -2,8 +2,7 @@
 
 <img src="http://f.cl.ly/items/3J3h1L05222X3o1w2l2L/golang.jpg" width=800px>
 
-Example
----
+# Example
 
 ```go
 package main
@@ -26,6 +25,18 @@ func init() {
 func main() {
 	defer airbrake.Flush()
 
-	airbrake.Notify(errors.New("qqq"), nil)
+	airbrake.Notify(errors.New("operation failed"), nil)
 }
+```
+
+## Ignoring notices
+
+```go
+airbrake.AddFilter(func(notice *gobrake.Notice) *gobrake.Notice {
+	if notice.Context["environment"] == "development" {
+		// Ignore notices in development environment.
+		return nil
+	}
+	return notice
+})
 ```
