@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func stackFilter(file string, line int, packageName, funcName string) bool {
+func stackFilter(packageName, funcName string, file string, line int) bool {
 	return packageName == "runtime" && funcName == "panic"
 }
 
@@ -15,15 +15,15 @@ type StackFrame struct {
 	Func string `json:"function"`
 }
 
-func stack(startFrame int, filter func(string, int, string, string) bool) []StackFrame {
+func stack(depth int) []StackFrame {
 	stack := []StackFrame{}
-	for i := startFrame; ; i++ {
+	for i := depth; ; i++ {
 		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
 			break
 		}
 		packageName, funcName := packageFuncName(pc)
-		if filter(file, line, packageName, funcName) {
+		if stackFilter(packageName, funcName, file, line) {
 			stack = stack[:0]
 			continue
 		}

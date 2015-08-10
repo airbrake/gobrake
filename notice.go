@@ -32,7 +32,8 @@ type Notice struct {
 	Params   map[string]interface{} `json:"params"`
 }
 
-func NewNotice(e interface{}, stack []StackFrame, req *http.Request) *Notice {
+func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
+	stack := stack(depth)
 	notice := &Notice{
 		Notifier: notifier{
 			Name:    "gobrake",

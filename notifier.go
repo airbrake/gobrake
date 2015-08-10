@@ -1,42 +1,51 @@
-package gobrake
+package gobrake // import "gopkg.in/airbrake/gobrake.v2"
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"runtime"
+	"sync"
 	"time"
 )
+
+type filter func(*Notice) *Notice
 
 var httpClient = &http.Client{
 	Transport: &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
-		Dial: func(netw, addr string) (net.Conn, error) {
-			return net.DialTimeout(netw, addr, 3*time.Second)
+		Dial: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout: 10 * time.Second,
+		TLSClientConfig: &tls.Config{
+			ClientSessionCache: tls.NewLRUClientSessionCache(1024),
 		},
-		ResponseHeaderTimeout: 5 * time.Second,
+		MaxIdleConnsPerHost:   100,
+		ResponseHeaderTimeout: 10 * time.Second,
 	},
 	Timeout: 10 * time.Second,
 }
 
 type Notifier struct {
 	Client          *http.Client
-	StackFilter     func(string, int, string, string) bool
 	createNoticeURL string
 	context         map[string]string
+	filters         []filter
+	wg              sync.WaitGroup
 }
 
-func NewNotifier(projectID int64, key string) *Notifier {
+func NewNotifier(projectId int64, projectKey string) *Notifier {
 	n := &Notifier{
 		Client:          httpClient,
-		StackFilter:     stackFilter,
-		createNoticeURL: getCreateNoticeURL(projectID, key),
+		createNoticeURL: getCreateNoticeURL(projectId, projectKey),
 		context: map[string]string{
 			"language":     runtime.Version(),
 			"os":           runtime.GOOS,
@@ -52,47 +61,78 @@ func NewNotifier(projectID int64, key string) *Notifier {
 	return n
 }
 
-func (n *Notifier) SetContext(name, value string) {
-	n.context[name] = value
+// AddFilter adds filter that can modify or ignore notice.
+func (n *Notifier) AddFilter(fn filter) {
+	n.filters = append(n.filters, fn)
 }
 
-func (n *Notifier) Notify(e interface{}, req *http.Request) error {
-	notice := n.Notice(e, req, 3)
-	if err := n.SendNotice(notice); err != nil {
-		log.Printf("gobrake failed (%s) reporting error: %v", err, e)
-		return err
-	}
-	return nil
+// Notify notifies Airbrake about the error.
+func (n *Notifier) Notify(e interface{}, req *http.Request) {
+	notice := n.Notice(e, req, 1)
+	n.wg.Add(1)
+	go func() {
+		if _, err := n.SendNotice(notice); err != nil {
+			log.Printf("gobrake failed (%s) reporting error: %v", err, e)
+		}
+		n.wg.Done()
+	}()
 }
 
-func (n *Notifier) Notice(e interface{}, req *http.Request, startFrame int) *Notice {
-	stack := stack(startFrame, n.StackFilter)
-	notice := NewNotice(e, stack, req)
+// Notice returns Aibrake notice created from error and request. depth
+// determines which call frame to use.
+func (n *Notifier) Notice(err interface{}, req *http.Request, depth int) *Notice {
+	notice := NewNotice(err, req, depth+3)
 	for k, v := range n.context {
 		notice.Context[k] = v
 	}
 	return notice
 }
 
-func (n *Notifier) SendNotice(notice *Notice) error {
+type sendResponse struct {
+	Id string `json:"id"`
+}
+
+// SendNotice sends notice to Airbrake.
+func (n *Notifier) SendNotice(notice *Notice) (string, error) {
+	for _, fn := range n.filters {
+		notice = fn(notice)
+		if notice == nil {
+			// Notice is ignored.
+			return "", nil
+		}
+	}
+
 	buf := &bytes.Buffer{}
 	enc := json.NewEncoder(buf)
 	if err := enc.Encode(notice); err != nil {
-		return err
+		return "", err
 	}
 
 	resp, err := n.Client.Post(n.createNoticeURL, "application/json", buf)
 	if err != nil {
-		return err
+		return "", err
 	}
+	defer resp.Body.Close()
 
-	// Read response so underlying connection can be reused.
-	io.Copy(ioutil.Discard, resp.Body)
-	resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("gobrake: got %d response, wanted 201", resp.StatusCode)
+		return "", fmt.Errorf("gobrake: got %d response, wanted 201 CREATED", resp.StatusCode)
 	}
 
-	return nil
+	var sendResp sendResponse
+	err = json.Unmarshal(b, &sendResp)
+	if err != nil {
+		return "", err
+	}
+
+	return sendResp.Id, nil
+}
+
+// Flush flushes all pending I/O.
+func (n *Notifier) Flush() {
+	n.wg.Wait()
 }
