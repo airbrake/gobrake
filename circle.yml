@@ -1,5 +1,6 @@
 checkout:
   post:
+    - rm -rf /home/ubuntu/.go_workspace/src/gopkg.in/airbrake/gobrake.v2
     - mkdir -p /home/ubuntu/.go_workspace/src/gopkg.in/airbrake
     - mv /home/ubuntu/gobrake /home/ubuntu/.go_workspace/src/gopkg.in/airbrake/gobrake.v2
 
