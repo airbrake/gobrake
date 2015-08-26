@@ -23,6 +23,12 @@ func init() {
 }
 
 func main() {
+	defer func() {
+		if v := recover(); v != nil {
+			notifier.Notify(v, nil)
+			panic(v)
+		}
+	}()
 	defer airbrake.Flush()
 
 	airbrake.Notify(errors.New("operation failed"), nil)
