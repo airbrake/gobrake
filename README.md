@@ -25,7 +25,7 @@ func init() {
 func main() {
 	defer func() {
 		if v := recover(); v != nil {
-			notifier.Notify(v, nil)
+			airbrake.Notify(v, nil)
 			panic(v)
 		}
 	}()
