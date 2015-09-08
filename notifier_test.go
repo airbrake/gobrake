@@ -47,7 +47,7 @@ var _ = Describe("Notifier", func() {
 		server := httptest.NewServer(http.HandlerFunc(handler))
 
 		notifier = gobrake.NewNotifier(1, "key")
-		notifier.SetCreateNoticeURL(server.URL)
+		notifier.SetHost(server.URL)
 	})
 
 	It("reports error and backtrace", func() {
