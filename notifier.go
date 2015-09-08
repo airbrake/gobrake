@@ -15,37 +15,54 @@ import (
 	"time"
 )
 
+const defaultAirbrakeHost = "https://airbrake.io"
+
+func getCreateNoticeURL(host string, projectId int64, key string) string {
+	return fmt.Sprintf(
+		"%s/api/v3/projects/%d/notices?key=%s",
+		host, projectId, key,
+	)
+}
+
 type filter func(*Notice) *Notice
 
 var httpClient = &http.Client{
 	Transport: &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		Dial: (&net.Dialer{
-			Timeout:   30 * time.Second,
+			Timeout:   15 * time.Second,
 			KeepAlive: 30 * time.Second,
 		}).Dial,
 		TLSHandshakeTimeout: 10 * time.Second,
 		TLSClientConfig: &tls.Config{
 			ClientSessionCache: tls.NewLRUClientSessionCache(1024),
 		},
-		MaxIdleConnsPerHost:   100,
+		MaxIdleConnsPerHost:   10,
 		ResponseHeaderTimeout: 10 * time.Second,
 	},
 	Timeout: 10 * time.Second,
 }
 
 type Notifier struct {
-	Client          *http.Client
+	projectId       int64
+	projectKey      string
 	createNoticeURL string
-	context         map[string]string
-	filters         []filter
-	wg              sync.WaitGroup
+
+	Client *http.Client
+
+	context map[string]string
+	filters []filter
+	wg      sync.WaitGroup
 }
 
 func NewNotifier(projectId int64, projectKey string) *Notifier {
 	n := &Notifier{
-		Client:          httpClient,
-		createNoticeURL: getCreateNoticeURL(projectId, projectKey),
+		projectId:       projectId,
+		projectKey:      projectKey,
+		createNoticeURL: getCreateNoticeURL(defaultAirbrakeHost, projectId, projectKey),
+
+		Client: httpClient,
+
 		context: map[string]string{
 			"language":     runtime.Version(),
 			"os":           runtime.GOOS,
@@ -59,6 +76,11 @@ func NewNotifier(projectId int64, projectKey string) *Notifier {
 		n.context["rootDirectory"] = wd
 	}
 	return n
+}
+
+// Sets Airbrake host name. Default is https://airbrake.io.
+func (n *Notifier) SetHost(h string) {
+	n.createNoticeURL = getCreateNoticeURL(h, n.projectId, n.projectKey)
 }
 
 // AddFilter adds filter that can modify or ignore notice.
