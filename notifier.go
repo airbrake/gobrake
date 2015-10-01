@@ -91,13 +91,7 @@ func (n *Notifier) AddFilter(fn filter) {
 // Notify notifies Airbrake about the error.
 func (n *Notifier) Notify(e interface{}, req *http.Request) {
 	notice := n.Notice(e, req, 1)
-	n.wg.Add(1)
-	go func() {
-		if _, err := n.SendNotice(notice); err != nil {
-			log.Printf("gobrake failed (%s) reporting error: %v", err, e)
-		}
-		n.wg.Done()
-	}()
+	n.SendNoticeAsync(notice)
 }
 
 // Notice returns Aibrake notice created from error and request. depth
@@ -152,6 +146,18 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 	}
 
 	return sendResp.Id, nil
+}
+
+// SendNoticeAsync acts as SendNotice, but sends notice asynchronously
+// and pending notices can be flushed with Flush.
+func (n *Notifier) SendNoticeAsync(notice *Notice) {
+	n.wg.Add(1)
+	go func() {
+		if _, err := n.SendNotice(notice); err != nil {
+			log.Printf("gobrake failed reporting error: %v", err)
+		}
+		n.wg.Done()
+	}()
 }
 
 // Flush flushes all pending I/O.
