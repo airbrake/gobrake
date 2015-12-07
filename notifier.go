@@ -158,6 +158,7 @@ func (n *Notifier) SendNoticeAsync(notice *Notice) {
 		}
 		n.wg.Done()
 	}()
+	n.wg.Wait()
 }
 
 // Flush flushes all pending I/O.
