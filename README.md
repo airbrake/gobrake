@@ -46,3 +46,7 @@ airbrake.AddFilter(func(notice *gobrake.Notice) *gobrake.Notice {
 	return notice
 })
 ```
+
+## Logging
+
+You can use [glog fork](https://github.com/airbrake/glog) to send your logs to Airbrake.
