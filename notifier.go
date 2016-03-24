@@ -49,6 +49,7 @@ type Notifier struct {
 	createNoticeURL string
 
 	Client *http.Client
+	Printf func(format string, v ...interface{})
 
 	context map[string]string
 	filters []filter
@@ -62,6 +63,7 @@ func NewNotifier(projectId int64, projectKey string) *Notifier {
 		createNoticeURL: getCreateNoticeURL(defaultAirbrakeHost, projectId, projectKey),
 
 		Client: httpClient,
+		Printf: log.Printf,
 
 		context: map[string]string{
 			"language":     runtime.Version(),
@@ -154,7 +156,7 @@ func (n *Notifier) SendNoticeAsync(notice *Notice) {
 	n.wg.Add(1)
 	go func() {
 		if _, err := n.SendNotice(notice); err != nil {
-			log.Printf("gobrake failed reporting error: %v", err)
+			n.Printf("gobrake failed reporting error: %v", err)
 		}
 		n.wg.Done()
 	}()
