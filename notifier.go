@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -17,14 +16,12 @@ import (
 
 const defaultAirbrakeHost = "https://airbrake.io"
 
-func getCreateNoticeURL(host string, projectId int64, key string) string {
-	return fmt.Sprintf(
-		"%s/api/v3/projects/%d/notices?key=%s",
-		host, projectId, key,
-	)
-}
+const statusTooManyRequests = 429
 
-type filter func(*Notice) *Notice
+var (
+	errClosed      = errors.New("gobrake: notifier is closed")
+	errRateLimited = errors.New("gobrake: you are rate limited")
+)
 
 var httpClient = &http.Client{
 	Transport: &http.Transport{
@@ -43,16 +40,28 @@ var httpClient = &http.Client{
 	Timeout: 10 * time.Second,
 }
 
+var buffers = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
+}
+
+type filter func(*Notice) *Notice
+
 type Notifier struct {
+	// http.Client that is used to interact with Airbrake API.
+	Client *http.Client
+
 	projectId       int64
 	projectKey      string
 	createNoticeURL string
 
-	Client *http.Client
-
 	context map[string]string
 	filters []filter
-	wg      sync.WaitGroup
+
+	wg       sync.WaitGroup
+	noticeCh chan *Notice
+	closed   chan struct{}
 }
 
 func NewNotifier(projectId int64, projectKey string) *Notifier {
@@ -68,12 +77,18 @@ func NewNotifier(projectId int64, projectKey string) *Notifier {
 			"os":           runtime.GOOS,
 			"architecture": runtime.GOARCH,
 		},
+
+		noticeCh: make(chan *Notice, 1000),
+		closed:   make(chan struct{}),
 	}
 	if hostname, err := os.Hostname(); err == nil {
 		n.context["hostname"] = hostname
 	}
 	if wd, err := os.Getwd(); err == nil {
 		n.context["rootDirectory"] = wd
+	}
+	for i := 0; i < 10; i++ {
+		go n.worker()
 	}
 	return n
 }
@@ -95,7 +110,7 @@ func (n *Notifier) Notify(e interface{}, req *http.Request) {
 }
 
 // Notice returns Aibrake notice created from error and request. depth
-// determines which call frame to use.
+// determines which call frame to use when constructing backtrace.
 func (n *Notifier) Notice(err interface{}, req *http.Request, depth int) *Notice {
 	notice := NewNotice(err, req, depth+3)
 	for k, v := range n.context {
@@ -118,9 +133,11 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 		}
 	}
 
-	buf := &bytes.Buffer{}
-	enc := json.NewEncoder(buf)
-	if err := enc.Encode(notice); err != nil {
+	buf := buffers.Get().(*bytes.Buffer)
+	defer buffers.Put(buf)
+
+	buf.Reset()
+	if err := json.NewEncoder(buf).Encode(notice); err != nil {
 		return "", err
 	}
 
@@ -130,17 +147,22 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	b, err := ioutil.ReadAll(resp.Body)
+	buf.Reset()
+	_, err = buf.ReadFrom(resp.Body)
 	if err != nil {
 		return "", err
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("gobrake: got %d response, wanted 201 CREATED", resp.StatusCode)
+		if resp.StatusCode == statusTooManyRequests {
+			return "", errRateLimited
+		}
+		err := fmt.Errorf("gobrake: got response code=%d, wanted 201 CREATED", resp.StatusCode)
+		return "", err
 	}
 
 	var sendResp sendResponse
-	err = json.Unmarshal(b, &sendResp)
+	err = json.NewDecoder(buf).Decode(&sendResp)
 	if err != nil {
 		return "", err
 	}
@@ -152,15 +174,67 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 // and pending notices can be flushed with Flush.
 func (n *Notifier) SendNoticeAsync(notice *Notice) {
 	n.wg.Add(1)
-	go func() {
-		if _, err := n.SendNotice(notice); err != nil {
-			log.Printf("gobrake failed reporting error: %v", err)
-		}
+	select {
+	case n.noticeCh <- notice:
+	default:
 		n.wg.Done()
-	}()
+		logger.Printf(
+			"notice=%q is ignored, because queue is full (len=%d)",
+			notice, len(n.noticeCh),
+		)
+	}
 }
 
-// Flush flushes all pending I/O.
+func (n *Notifier) worker() {
+	for {
+		select {
+		case notice := <-n.noticeCh:
+			if _, err := n.SendNotice(notice); err != nil && err != errRateLimited {
+				logger.Printf("gobrake failed reporting notice=%q: error=%q", notice, err)
+			}
+			n.wg.Done()
+		case <-n.closed:
+			return
+		}
+	}
+}
+
+// NotifyOnPanic notifies Airbrake about the panic and should be used
+// with defer statement.
+func (n *Notifier) NotifyOnPanic() {
+	if v := recover(); v != nil {
+		notice := n.Notice(v, nil, 3)
+		n.SendNotice(notice)
+		panic(v)
+	}
+}
+
+// Flush flushes all pending HTTP requests and waits for them to finish.
+//
+// Deprecated. Use CloseAndWait instead.
 func (n *Notifier) Flush() {
-	n.wg.Wait()
+	n.WaitAndClose(5 * time.Second)
+}
+
+// WaitAndClose waits for pending requests to finish and then closes the notifier.
+func (n *Notifier) WaitAndClose(timeout time.Duration) error {
+	done := make(chan struct{})
+	go func() {
+		n.wg.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(timeout):
+	}
+
+	close(n.closed)
+	return nil
+}
+
+func getCreateNoticeURL(host string, projectId int64, key string) string {
+	return fmt.Sprintf(
+		"%s/api/v3/projects/%d/notices?key=%s",
+		host, projectId, key,
+	)
 }
