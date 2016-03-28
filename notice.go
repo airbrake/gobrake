@@ -19,6 +19,14 @@ type Notice struct {
 	Params  map[string]interface{} `json:"params"`
 }
 
+func (n *Notice) String() string {
+	if len(n.Errors) == 0 {
+		return fmt.Sprint(n)
+	}
+	e := n.Errors[0]
+	return fmt.Sprintf("%s: %s", e.Type, e.Message)
+}
+
 func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 	stack := stack(depth)
 	notice := &Notice{
