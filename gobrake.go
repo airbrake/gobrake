@@ -11,6 +11,6 @@ func init() {
 	SetLogger(log.New(os.Stderr, "gobrake: ", log.LstdFlags))
 }
 
-func SetLogger(logger *log.Logger) {
-	logger = logger
+func SetLogger(l *log.Logger) {
+	logger = l
 }
