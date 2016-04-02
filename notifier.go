@@ -209,12 +209,10 @@ func (n *Notifier) NotifyOnPanic() {
 	}
 }
 
-// Flush flushes all pending HTTP requests and waits for them to finish.
+// Flush does nothing.
 //
 // Deprecated. Use CloseAndWait instead.
-func (n *Notifier) Flush() {
-	n.WaitAndClose(5 * time.Second)
-}
+func (n *Notifier) Flush() {}
 
 // WaitAndClose waits for pending requests to finish and then closes the notifier.
 func (n *Notifier) WaitAndClose(timeout time.Duration) error {
