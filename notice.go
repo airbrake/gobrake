@@ -28,7 +28,7 @@ func (n *Notice) String() string {
 }
 
 func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
-	stack := stack(depth)
+	stack := Stack(depth)
 	notice := &Notice{
 		Errors: []Error{
 			{
