@@ -23,7 +23,7 @@ func init() {
 }
 
 func main() {
-	defer airbrake.WaitAndClose(5*time.Second)
+	defer airbrake.Close()
 	defer airbrake.NotifyOnPanic()
 
 	airbrake.Notify(errors.New("operation failed"), nil)

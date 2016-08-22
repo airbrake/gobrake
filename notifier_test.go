@@ -37,7 +37,7 @@ var _ = Describe("Notifier", func() {
 				panic(err)
 			}
 
-			sentNotice = &gobrake.Notice{}
+			sentNotice = new(gobrake.Notice)
 			err = json.Unmarshal(b, sentNotice)
 			Expect(err).To(BeNil())
 
@@ -48,6 +48,10 @@ var _ = Describe("Notifier", func() {
 
 		notifier = gobrake.NewNotifier(1, "key")
 		notifier.SetHost(server.URL)
+	})
+
+	AfterEach(func() {
+		Expect(notifier.Close()).NotTo(HaveOccurred())
 	})
 
 	It("reports error and backtrace", func() {
@@ -132,5 +136,9 @@ var _ = Describe("Notifier", func() {
 		Expect(sentNotice.Context["architecture"]).To(Equal(runtime.GOARCH))
 		Expect(sentNotice.Context["hostname"]).To(Equal(hostname))
 		Expect(sentNotice.Context["rootDirectory"]).To(Equal(wd))
+	})
+
+	It("does not panic on double close", func() {
+		Expect(notifier.Close()).NotTo(HaveOccurred())
 	})
 })
