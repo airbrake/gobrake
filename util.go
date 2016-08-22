@@ -15,7 +15,7 @@ type StackFrame struct {
 	Func string `json:"function"`
 }
 
-func stack(depth int) []StackFrame {
+func Stack(depth int) []StackFrame {
 	stack := []StackFrame{}
 	for i := depth; ; i++ {
 		pc, file, line, ok := runtime.Caller(i)
