@@ -15,12 +15,11 @@ import (
 )
 
 const defaultAirbrakeHost = "https://airbrake.io"
-
-const statusTooManyRequests = 429
+const waitTimeout = 5 * time.Second
 
 var (
 	errClosed      = errors.New("gobrake: notifier is closed")
-	errRateLimited = errors.New("gobrake: you are rate limited")
+	errRateLimited = errors.New("gobrake: rate limited")
 )
 
 var httpClient = &http.Client{
@@ -154,10 +153,10 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		if resp.StatusCode == statusTooManyRequests {
+		if resp.StatusCode == http.StatusTooManyRequests {
 			return "", errRateLimited
 		}
-		err := fmt.Errorf("gobrake: got response code=%d, wanted 201 CREATED", resp.StatusCode)
+		err := fmt.Errorf("gobrake: got response status=%q, wanted 201 CREATED", resp.Status)
 		return "", err
 	}
 
@@ -170,9 +169,22 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 	return sendResp.Id, nil
 }
 
+func (n *Notifier) sendNotice(notice *Notice) {
+	if _, err := n.SendNotice(notice); err != nil && err != errRateLimited {
+		logger.Printf("gobrake failed reporting notice=%q: %s", notice, err)
+	}
+	n.wg.Done()
+}
+
 // SendNoticeAsync acts as SendNotice, but sends notice asynchronously
 // and pending notices can be flushed with Flush.
 func (n *Notifier) SendNoticeAsync(notice *Notice) {
+	select {
+	case <-n.closed:
+		return
+	default:
+	}
+
 	n.wg.Add(1)
 	select {
 	case n.noticeCh <- notice:
@@ -189,12 +201,14 @@ func (n *Notifier) worker() {
 	for {
 		select {
 		case notice := <-n.noticeCh:
-			if _, err := n.SendNotice(notice); err != nil && err != errRateLimited {
-				logger.Printf("gobrake failed reporting notice=%q: error=%q", notice, err)
-			}
-			n.wg.Done()
+			n.sendNotice(notice)
 		case <-n.closed:
-			return
+			select {
+			case notice := <-n.noticeCh:
+				n.sendNotice(notice)
+			default:
+				return
+			}
 		}
 	}
 }
@@ -209,25 +223,43 @@ func (n *Notifier) NotifyOnPanic() {
 	}
 }
 
-// Flush does nothing.
-//
-// Deprecated. Use CloseAndWait instead.
-func (n *Notifier) Flush() {}
+// Flush waits for pending requests to finish.
+func (n *Notifier) Flush() {
+	n.waitTimeout(waitTimeout)
+}
 
-// WaitAndClose waits for pending requests to finish and then closes the notifier.
+// Deprecated. Use CloseTimeout instead.
 func (n *Notifier) WaitAndClose(timeout time.Duration) error {
+	return n.CloseTimeout(timeout)
+}
+
+// CloseTimeout waits for pending requests to finish and then closes the notifier.
+func (n *Notifier) CloseTimeout(timeout time.Duration) error {
+	select {
+	case <-n.closed:
+	default:
+		close(n.closed)
+	}
+	return n.waitTimeout(timeout)
+}
+
+func (n *Notifier) waitTimeout(timeout time.Duration) error {
 	done := make(chan struct{})
 	go func() {
 		n.wg.Wait()
 		close(done)
 	}()
+
 	select {
 	case <-done:
+		return nil
 	case <-time.After(timeout):
+		return fmt.Errorf("Wait timed out after %s", timeout)
 	}
+}
 
-	close(n.closed)
-	return nil
+func (n *Notifier) Close() error {
+	return n.CloseTimeout(waitTimeout)
 }
 
 func getCreateNoticeURL(host string, projectId int64, key string) string {
