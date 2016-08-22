@@ -6,6 +6,9 @@ checkout:
 
 dependencies:
   override:
+    - wget https://storage.googleapis.com/golang/go1.7.linux-amd64.tar.gz
+    - sudo rm -rf /usr/local/go
+    - sudo tar -C /usr/local -xzf go1.7.linux-amd64.tar.gz
     - go get github.com/onsi/ginkgo
     - go get github.com/onsi/gomega
 
