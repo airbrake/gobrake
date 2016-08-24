@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -124,6 +125,8 @@ var _ = Describe("Notifier", func() {
 
 		hostname, _ := os.Hostname()
 		gopath, _ := os.LookupEnv("GOPATH")
+		gopath = filepath.SplitList(gopath)[0]
+
 		Expect(sentNotice.Context["language"]).To(Equal(runtime.Version()))
 		Expect(sentNotice.Context["os"]).To(Equal(runtime.GOOS))
 		Expect(sentNotice.Context["architecture"]).To(Equal(runtime.GOARCH))
