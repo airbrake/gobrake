@@ -124,7 +124,7 @@ var _ = Describe("Notifier", func() {
 		notify("hello", nil)
 
 		hostname, _ := os.Hostname()
-		gopath, _ := os.LookupEnv("GOPATH")
+		gopath := os.Getenv("GOPATH")
 		gopath = filepath.SplitList(gopath)[0]
 
 		Expect(sentNotice.Context["language"]).To(Equal(runtime.Version()))

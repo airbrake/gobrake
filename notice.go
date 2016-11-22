@@ -29,7 +29,7 @@ func getDefaultContext() map[string]interface{} {
 	if s, err := os.Hostname(); err == nil {
 		defaultContext["hostname"] = s
 	}
-	if s, ok := os.LookupEnv("GOPATH"); ok {
+	if s := os.Getenv("GOPATH"); s != "" {
 		list := filepath.SplitList(s)
 		// TODO: multiple root dirs?
 		defaultContext["rootDirectory"] = list[0]
