@@ -16,6 +16,7 @@ import (
 
 const defaultAirbrakeHost = "https://airbrake.io"
 const waitTimeout = 5 * time.Second
+const httpStatusTooManyRequests = 429
 
 var (
 	errClosed      = errors.New("gobrake: notifier is closed")
@@ -138,7 +139,7 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		if resp.StatusCode == http.StatusTooManyRequests {
+		if resp.StatusCode == httpStatusTooManyRequests {
 			return "", errRateLimited
 		}
 		err := fmt.Errorf("gobrake: got response status=%q, wanted 201 CREATED", resp.Status)
