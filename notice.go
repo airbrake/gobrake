@@ -29,7 +29,7 @@ func getDefaultContext() map[string]interface{} {
 	if s, err := os.Hostname(); err == nil {
 		defaultContext["hostname"] = s
 	}
-	if s, ok := os.LookupEnv("GOPATH"); ok {
+	if s := os.Getenv("GOPATH"); s != "" {
 		list := filepath.SplitList(s)
 		// TODO: multiple root dirs?
 		defaultContext["rootDirectory"] = list[0]
@@ -53,10 +53,10 @@ type Notice struct {
 
 func (n *Notice) String() string {
 	if len(n.Errors) == 0 {
-		return fmt.Sprint(n)
+		return "Notice<no errors>"
 	}
 	e := n.Errors[0]
-	return fmt.Sprintf("%s: %s", e.Type, e.Message)
+	return fmt.Sprintf("Notice<%s: %s>", e.Type, e.Message)
 }
 
 func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
