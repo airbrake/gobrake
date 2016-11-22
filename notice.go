@@ -53,10 +53,10 @@ type Notice struct {
 
 func (n *Notice) String() string {
 	if len(n.Errors) == 0 {
-		return fmt.Sprint(n)
+		return "Notice<no errors>"
 	}
 	e := n.Errors[0]
-	return fmt.Sprintf("%s: %s", e.Type, e.Message)
+	return fmt.Sprintf("Notice<%s: %s>", e.Type, e.Message)
 }
 
 func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
