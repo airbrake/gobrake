@@ -6,6 +6,7 @@ go:
   - 1.5
   - 1.6
   - 1.7
+  - 1.8
   - tip
 
 matrix:
@@ -15,5 +16,3 @@ matrix:
 install:
   - go get github.com/onsi/ginkgo
   - go get github.com/onsi/gomega
-  - mkdir -p $HOME/gopath/src/gopkg.in/airbrake
-  - mv `pwd` $HOME/gopath/src/gopkg.in/airbrake/gobrake.v2

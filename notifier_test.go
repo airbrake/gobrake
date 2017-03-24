@@ -61,7 +61,7 @@ var _ = Describe("Notifier", func() {
 		e := sentNotice.Errors[0]
 		Expect(e.Type).To(Equal("string"))
 		Expect(e.Message).To(Equal("hello"))
-		Expect(e.Backtrace[0].File).To(Equal("[PROJECT_ROOT]/gopkg.in/airbrake/gobrake.v2/notifier_test.go"))
+		Expect(e.Backtrace[0].File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/notifier_test.go"))
 	})
 
 	It("reports context, env, session and params", func() {

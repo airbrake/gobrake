@@ -1,4 +1,4 @@
-package gobrake // import "gopkg.in/airbrake/gobrake.v2"
+package gobrake
 
 import (
 	"bytes"
@@ -212,11 +212,6 @@ func (n *Notifier) NotifyOnPanic() {
 // Flush waits for pending requests to finish.
 func (n *Notifier) Flush() {
 	n.waitTimeout(waitTimeout)
-}
-
-// Deprecated. Use CloseTimeout instead.
-func (n *Notifier) WaitAndClose(timeout time.Duration) error {
-	return n.CloseTimeout(timeout)
 }
 
 // CloseTimeout waits for pending requests to finish and then closes the notifier.
