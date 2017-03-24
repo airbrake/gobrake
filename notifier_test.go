@@ -11,10 +11,10 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/airbrake/gobrake"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"gopkg.in/airbrake/gobrake.v2"
 )
 
 func TestGobrake(t *testing.T) {
