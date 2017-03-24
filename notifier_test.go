@@ -93,7 +93,8 @@ var _ = Describe("Notifier", func() {
 		Expect(err).To(BeNil())
 
 		req := &http.Request{
-			URL: u,
+			Method: "GET",
+			URL:    u,
 			Header: http.Header{
 				"h1":         {"h1v1", "h1v2"},
 				"h2":         {"h2v1"},
@@ -109,6 +110,7 @@ var _ = Describe("Notifier", func() {
 
 		ctx := sentNotice.Context
 		Expect(ctx["url"]).To(Equal("http://foo/bar"))
+		Expect(ctx["httpMethod"]).To(Equal("GET"))
 		Expect(ctx["userAgent"]).To(Equal("my_user_agent"))
 
 		params := sentNotice.Params

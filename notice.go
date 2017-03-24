@@ -78,6 +78,7 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 
 	if req != nil {
 		notice.Context["url"] = req.URL.String()
+		notice.Context["httpMethod"] = req.Method
 		if ua := req.Header.Get("User-Agent"); ua != "" {
 			notice.Context["userAgent"] = ua
 		}
