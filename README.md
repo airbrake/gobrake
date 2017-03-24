@@ -10,7 +10,7 @@ package main
 import (
 	"errors"
 
-	"gopkg.in/airbrake/gobrake.v2"
+	"github.com/airbrake/gobrake"
 )
 
 var airbrake = gobrake.NewNotifier(1234567, "FIXME")
