@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 )
 
@@ -76,31 +77,38 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 		notice.Context[k] = v
 	}
 
-	if req != nil {
-		notice.Context["url"] = req.URL.String()
-		notice.Context["httpMethod"] = req.Method
-		if ua := req.Header.Get("User-Agent"); ua != "" {
-			notice.Context["userAgent"] = ua
-		}
+	if req == nil {
+		return notice
+	}
 
-		for k, v := range req.Header {
-			if len(v) == 1 {
-				notice.Env[k] = v[0]
-			} else {
-				notice.Env[k] = v
-			}
-		}
+	notice.Context["url"] = req.URL.String()
+	notice.Context["httpMethod"] = req.Method
+	if ua := req.Header.Get("User-Agent"); ua != "" {
+		notice.Context["userAgent"] = ua
+	}
+	notice.Context["userAddr"] = remoteAddr(req)
 
-		if err := req.ParseForm(); err == nil {
-			for k, v := range req.Form {
-				if len(v) == 1 {
-					notice.Params[k] = v[0]
-				} else {
-					notice.Params[k] = v
-				}
-			}
+	for k, v := range req.Header {
+		if len(v) == 1 {
+			notice.Env[k] = v[0]
+		} else {
+			notice.Env[k] = v
 		}
 	}
 
 	return notice
+}
+
+func remoteAddr(req *http.Request) string {
+	if s := req.Header.Get("X-Forwarded-For"); s != "" {
+		parts := strings.Split(s, ",")
+		return parts[0]
+	}
+
+	if s := req.Header.Get("X-Real-Ip"); s != "" {
+		return s
+	}
+
+	parts := strings.Split(req.RemoteAddr, ":")
+	return parts[0]
 }

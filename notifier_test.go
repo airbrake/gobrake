@@ -96,9 +96,10 @@ var _ = Describe("Notifier", func() {
 			Method: "GET",
 			URL:    u,
 			Header: http.Header{
+				"User-Agent": {"my_user_agent"},
+				"X-Real-Ip":  {"127.0.0.1"},
 				"h1":         {"h1v1", "h1v2"},
 				"h2":         {"h2v1"},
-				"User-Agent": {"my_user_agent"},
 			},
 			Form: url.Values{
 				"f1": {"f1v1"},
@@ -112,10 +113,7 @@ var _ = Describe("Notifier", func() {
 		Expect(ctx["url"]).To(Equal("http://foo/bar"))
 		Expect(ctx["httpMethod"]).To(Equal("GET"))
 		Expect(ctx["userAgent"]).To(Equal("my_user_agent"))
-
-		params := sentNotice.Params
-		Expect(params["f1"]).To(Equal("f1v1"))
-		Expect(params["f2"]).To(Equal([]interface{}{"f2v1", "f2v2"}))
+		Expect(ctx["userAddr"]).To(Equal("127.0.0.1"))
 
 		env := sentNotice.Env
 		Expect(env["h1"]).To(Equal([]interface{}{"h1v1", "h1v2"}))
