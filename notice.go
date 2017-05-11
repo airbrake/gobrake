@@ -25,6 +25,7 @@ func getDefaultContext() map[string]interface{} {
 			"language":     runtime.Version(),
 			"os":           runtime.GOOS,
 			"architecture": runtime.GOARCH,
+			"severity":     "error",
 		}
 		if s, err := os.Hostname(); err == nil {
 			defaultContext["hostname"] = s
@@ -61,7 +62,12 @@ func (n *Notice) String() string {
 }
 
 func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
-	notice := &Notice{
+	notice, ok := e.(*Notice)
+	if ok {
+		return notice
+	}
+
+	notice = &Notice{
 		Errors: []Error{{
 			Type:      fmt.Sprintf("%T", e),
 			Message:   fmt.Sprint(e),
