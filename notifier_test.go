@@ -132,9 +132,20 @@ var _ = Describe("Notifier", func() {
 		Expect(sentNotice.Context["architecture"]).To(Equal(runtime.GOARCH))
 		Expect(sentNotice.Context["hostname"]).To(Equal(hostname))
 		Expect(sentNotice.Context["rootDirectory"]).To(Equal(gopath))
+		Expect(sentNotice.Context["severity"]).To(Equal("error"))
 	})
 
 	It("does not panic on double close", func() {
 		Expect(notifier.Close()).NotTo(HaveOccurred())
+	})
+
+	It("allows setting custom severity", func() {
+		customSeverity := "critical"
+
+		notice := notifier.Notice("hello", nil, 3)
+		notice.Context["severity"] = customSeverity
+
+		notify(notice, nil)
+		Expect(sentNotice.Context["severity"]).To(Equal(customSeverity))
 	})
 })

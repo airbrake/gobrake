@@ -42,6 +42,19 @@ airbrake.AddFilter(func(notice *gobrake.Notice) *gobrake.Notice {
 })
 ```
 
+## Setting severity
+
+[Severity](https://airbrake.io/docs/airbrake-faq/what-is-severity/) allows
+categorizing how severe an error is. By default, it's set to `error`. To
+redefine severity, simply overwrite `context/severity` of a notice object. For
+example:
+
+```go
+notice := airbrake.Notice("operation failed", nil, 3)
+notice.Context["severity"] = "critical"
+airbrake.Notify(notice, nil)
+```
+
 ## Logging
 
 You can use [glog fork](https://github.com/airbrake/glog) to send your logs to Airbrake.
