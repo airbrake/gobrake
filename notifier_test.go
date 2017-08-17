@@ -132,7 +132,6 @@ var _ = Describe("Notifier", func() {
 		Expect(sentNotice.Context["architecture"]).To(Equal(runtime.GOARCH))
 		Expect(sentNotice.Context["hostname"]).To(Equal(hostname))
 		Expect(sentNotice.Context["rootDirectory"]).To(Equal(gopath))
-		Expect(sentNotice.Context["severity"]).To(Equal("error"))
 	})
 
 	It("does not panic on double close", func() {

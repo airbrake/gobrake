@@ -9,18 +9,24 @@ import (
 	"net"
 	"net/http"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
-const defaultAirbrakeHost = "https://airbrake.io"
+const defaultAirbrakeHost = "https://api.airbrake.io"
 const waitTimeout = 5 * time.Second
+
+const httpEnhanceYourCalm = 420
 const httpStatusTooManyRequests = 429
 
 var (
-	errClosed      = errors.New("gobrake: notifier is closed")
-	errRateLimited = errors.New("gobrake: rate limited")
+	errClosed             = errors.New("gobrake: notifier is closed")
+	errAccountRateLimited = errors.New("gobrake: account is rate limited")
+	errGroupRateLimited   = errors.New("gobrake: rate limited, because group has too many notices")
 )
 
 var httpClient = &http.Client{
@@ -61,6 +67,8 @@ type Notifier struct {
 	wg       sync.WaitGroup
 	noticeCh chan *Notice
 	closed   chan struct{}
+
+	rateLimitReset int64 // atomic
 }
 
 func NewNotifier(projectId int64, projectKey string) *Notifier {
@@ -69,14 +77,14 @@ func NewNotifier(projectId int64, projectKey string) *Notifier {
 
 		projectId:       projectId,
 		projectKey:      projectKey,
-		createNoticeURL: getCreateNoticeURL(defaultAirbrakeHost, projectId, projectKey),
+		createNoticeURL: buildCreateNoticeURL(defaultAirbrakeHost, projectId, projectKey),
 
 		filters: []filter{noticeBacktraceFilter},
 
 		noticeCh: make(chan *Notice, 1000),
 		closed:   make(chan struct{}),
 	}
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 2*runtime.NumCPU(); i++ {
 		go n.worker()
 	}
 	return n
@@ -84,7 +92,7 @@ func NewNotifier(projectId int64, projectKey string) *Notifier {
 
 // Sets Airbrake host name. Default is https://airbrake.io.
 func (n *Notifier) SetHost(h string) {
-	n.createNoticeURL = getCreateNoticeURL(h, n.projectId, n.projectKey)
+	n.createNoticeURL = buildCreateNoticeURL(h, n.projectId, n.projectKey)
 }
 
 // AddFilter adds filter that can modify or ignore notice.
@@ -118,6 +126,10 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 		}
 	}
 
+	if time.Now().Unix() < atomic.LoadInt64(&n.rateLimitReset) {
+		return "", errAccountRateLimited
+	}
+
 	buf := buffers.Get().(*bytes.Buffer)
 	defer buffers.Put(buf)
 
@@ -138,32 +150,37 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 		return "", err
 	}
 
-	if resp.StatusCode != http.StatusCreated {
-		if resp.StatusCode == httpStatusTooManyRequests {
-			return "", errRateLimited
+	switch resp.StatusCode {
+	case http.StatusCreated:
+		var sendResp sendResponse
+		err = json.NewDecoder(buf).Decode(&sendResp)
+		if err != nil {
+			return "", err
 		}
-		err := fmt.Errorf("gobrake: got response status=%q, wanted 201 CREATED", resp.Status)
-		return "", err
+		return sendResp.Id, nil
+	case httpStatusTooManyRequests:
+		resetAt := resp.Header.Get("X-RateLimit-Reset")
+		utime, err := strconv.ParseInt(resetAt, 10, 64)
+		if err == nil {
+			atomic.StoreInt64(&n.rateLimitReset, utime)
+		}
+		return "", errAccountRateLimited
+	case httpEnhanceYourCalm:
+		return "", errGroupRateLimited
 	}
 
-	var sendResp sendResponse
-	err = json.NewDecoder(buf).Decode(&sendResp)
-	if err != nil {
-		return "", err
-	}
-
-	return sendResp.Id, nil
+	err = fmt.Errorf("got response status=%q, wanted 201 CREATED", resp.Status)
+	logger.Printf("gobrake failed reporting notice=%q: %s", notice, err)
+	return "", err
 }
 
 func (n *Notifier) sendNotice(notice *Notice) {
-	if _, err := n.SendNotice(notice); err != nil && err != errRateLimited {
-		logger.Printf("gobrake failed reporting notice=%q: %s", notice, err)
-	}
+	_, _ = n.SendNotice(notice)
 	n.wg.Done()
 }
 
-// SendNoticeAsync acts as SendNotice, but sends notice asynchronously
-// and pending notices can be flushed with Flush.
+// SendNoticeAsync is like SendNotice, but sends notice asynchronously.
+// Pending notices can be flushed with Flush.
 func (n *Notifier) SendNoticeAsync(notice *Notice) {
 	select {
 	case <-n.closed:
@@ -243,7 +260,7 @@ func (n *Notifier) Close() error {
 	return n.CloseTimeout(waitTimeout)
 }
 
-func getCreateNoticeURL(host string, projectId int64, key string) string {
+func buildCreateNoticeURL(host string, projectId int64, key string) string {
 	return fmt.Sprintf(
 		"%s/api/v3/projects/%d/notices?key=%s",
 		host, projectId, key,

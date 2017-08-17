@@ -25,7 +25,6 @@ func getDefaultContext() map[string]interface{} {
 			"language":     runtime.Version(),
 			"os":           runtime.GOOS,
 			"architecture": runtime.GOARCH,
-			"severity":     "error",
 		}
 		if s, err := os.Hostname(); err == nil {
 			defaultContext["hostname"] = s
