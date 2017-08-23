@@ -9,7 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/airbrake/gobrake"
 
@@ -146,5 +148,35 @@ var _ = Describe("Notifier", func() {
 
 		notify(notice, nil)
 		Expect(sentNotice.Context["severity"]).To(Equal(customSeverity))
+	})
+})
+
+var _ = Describe("rate limiting", func() {
+	var notifier *gobrake.Notifier
+	var requests int
+
+	BeforeEach(func() {
+		handler := func(w http.ResponseWriter, req *http.Request) {
+			requests++
+			w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(time.Now().Unix()+1000, 10))
+			w.WriteHeader(429)
+		}
+		server := httptest.NewServer(http.HandlerFunc(handler))
+
+		notifier = gobrake.NewNotifier(1, "key")
+		notifier.SetHost(server.URL)
+	})
+
+	AfterEach(func() {
+		Expect(notifier.Close()).NotTo(HaveOccurred())
+	})
+
+	It("pauses notifier", func() {
+		notice := notifier.Notice("hello", nil, 3)
+		for i := 0; i < 3; i++ {
+			_, err := notifier.SendNotice(notice)
+			Expect(err).To(MatchError("gobrake: too many requests from this IP"))
+		}
+		Expect(requests).To(Equal(1))
 	})
 })
