@@ -26,7 +26,7 @@ const httpStatusTooManyRequests = 429
 var (
 	errClosed             = errors.New("gobrake: notifier is closed")
 	errAccountRateLimited = errors.New("gobrake: account is rate limited")
-	errGroupRateLimited   = errors.New("gobrake: rate limited, because group has too many notices")
+	errIPRateLimited      = errors.New("gobrake: too many requests from this IP")
 )
 
 var httpClient = &http.Client{
@@ -127,7 +127,7 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 	}
 
 	if time.Now().Unix() < atomic.LoadInt64(&n.rateLimitReset) {
-		return "", errAccountRateLimited
+		return "", errIPRateLimited
 	}
 
 	buf := buffers.Get().(*bytes.Buffer)
@@ -164,9 +164,9 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 		if err == nil {
 			atomic.StoreInt64(&n.rateLimitReset, utime)
 		}
-		return "", errAccountRateLimited
+		return "", errIPRateLimited
 	case httpEnhanceYourCalm:
-		return "", errGroupRateLimited
+		return "", errAccountRateLimited
 	}
 
 	err = fmt.Errorf("got response status=%q, wanted 201 CREATED", resp.Status)
