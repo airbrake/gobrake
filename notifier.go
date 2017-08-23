@@ -26,7 +26,7 @@ const httpStatusTooManyRequests = 429
 var (
 	errClosed             = errors.New("gobrake: notifier is closed")
 	errAccountRateLimited = errors.New("gobrake: account is rate limited")
-	errIPRateLimited      = errors.New("gobrake: too many requests from this IP")
+	errIPRateLimited      = errors.New("gobrake: ip is rate limited")
 )
 
 var httpClient = &http.Client{
