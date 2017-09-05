@@ -9,9 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/airbrake/gobrake"
 
@@ -158,7 +156,7 @@ var _ = Describe("rate limiting", func() {
 	BeforeEach(func() {
 		handler := func(w http.ResponseWriter, req *http.Request) {
 			requests++
-			w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(time.Now().Unix()+1000, 10))
+			w.Header().Set("X-RateLimit-Delay", "10")
 			w.WriteHeader(429)
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))

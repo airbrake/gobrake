@@ -25,6 +25,7 @@ const httpStatusTooManyRequests = 429
 
 var (
 	errClosed             = errors.New("gobrake: notifier is closed")
+	errUnauthorized       = errors.New("gobrake: unauthorized: project id or key are wrong")
 	errAccountRateLimited = errors.New("gobrake: account is rate limited")
 	errIPRateLimited      = errors.New("gobrake: IP is rate limited")
 )
@@ -66,9 +67,11 @@ type Notifier struct {
 
 	wg       sync.WaitGroup
 	noticeCh chan *Notice
-	closed   chan struct{}
 
 	rateLimitReset int64 // atomic
+
+	_closed uint32 // atomic
+	close   chan struct{}
 }
 
 func NewNotifier(projectId int64, projectKey string) *Notifier {
@@ -82,7 +85,7 @@ func NewNotifier(projectId int64, projectKey string) *Notifier {
 		filters: []filter{noticeBacktraceFilter},
 
 		noticeCh: make(chan *Notice, 1000),
-		closed:   make(chan struct{}),
+		close:    make(chan struct{}),
 	}
 	for i := 0; i < 2*runtime.NumCPU(); i++ {
 		go n.worker()
@@ -158,11 +161,13 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 			return "", err
 		}
 		return sendResp.Id, nil
+	case http.StatusUnauthorized:
+		return "", errUnauthorized
 	case httpStatusTooManyRequests:
-		resetAt := resp.Header.Get("X-RateLimit-Reset")
-		utime, err := strconv.ParseInt(resetAt, 10, 64)
+		delayStr := resp.Header.Get("X-RateLimit-Delay")
+		delay, err := strconv.ParseInt(delayStr, 10, 64)
 		if err == nil {
-			atomic.StoreInt64(&n.rateLimitReset, utime)
+			atomic.StoreInt64(&n.rateLimitReset, time.Now().Unix()+delay)
 		}
 		return "", errIPRateLimited
 	case httpEnhanceYourCalm:
@@ -174,16 +179,11 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 	return "", err
 }
 
-func (n *Notifier) sendNotice(notice *Notice) {
-	_, _ = n.SendNotice(notice)
-	n.wg.Done()
-}
-
 // SendNoticeAsync is like SendNotice, but sends notice asynchronously.
 // Pending notices can be flushed with Flush.
 func (n *Notifier) SendNoticeAsync(notice *Notice) {
 	select {
-	case <-n.closed:
+	case <-n.close:
 		return
 	default:
 	}
@@ -204,11 +204,13 @@ func (n *Notifier) worker() {
 	for {
 		select {
 		case notice := <-n.noticeCh:
-			n.sendNotice(notice)
-		case <-n.closed:
+			_, _ = n.SendNotice(notice)
+			n.wg.Done()
+		case <-n.close:
 			select {
 			case notice := <-n.noticeCh:
-				n.sendNotice(notice)
+				_, _ = n.SendNotice(notice)
+				n.wg.Done()
 			default:
 				return
 			}
@@ -231,14 +233,22 @@ func (n *Notifier) Flush() {
 	n.waitTimeout(waitTimeout)
 }
 
+func (n *Notifier) Close() error {
+	return n.CloseTimeout(waitTimeout)
+}
+
 // CloseTimeout waits for pending requests to finish and then closes the notifier.
 func (n *Notifier) CloseTimeout(timeout time.Duration) error {
-	select {
-	case <-n.closed:
-	default:
-		close(n.closed)
+	if !atomic.CompareAndSwapUint32(&n._closed, 0, 1) {
+		return nil
 	}
-	return n.waitTimeout(timeout)
+	err := n.waitTimeout(timeout)
+	close(n.close)
+	return err
+}
+
+func (n *Notifier) closed() bool {
+	return atomic.LoadUint32(&n._closed) == 1
 }
 
 func (n *Notifier) waitTimeout(timeout time.Duration) error {
@@ -254,10 +264,6 @@ func (n *Notifier) waitTimeout(timeout time.Duration) error {
 	case <-time.After(timeout):
 		return fmt.Errorf("Wait timed out after %s", timeout)
 	}
-}
-
-func (n *Notifier) Close() error {
-	return n.CloseTimeout(waitTimeout)
 }
 
 func buildCreateNoticeURL(host string, projectId int64, key string) string {
