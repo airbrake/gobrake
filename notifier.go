@@ -121,6 +121,10 @@ type sendResponse struct {
 
 // SendNotice sends notice to Airbrake.
 func (n *Notifier) SendNotice(notice *Notice) (string, error) {
+	if n.closed() {
+		return "", errClosed
+	}
+
 	for _, fn := range n.filters {
 		notice = fn(notice)
 		if notice == nil {
@@ -182,10 +186,9 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 // SendNoticeAsync is like SendNotice, but sends notice asynchronously.
 // Pending notices can be flushed with Flush.
 func (n *Notifier) SendNoticeAsync(notice *Notice) {
-	select {
-	case <-n.close:
+	if n.closed() {
+		notice.Error = errClosed
 		return
-	default:
 	}
 
 	n.wg.Add(1)
@@ -204,12 +207,12 @@ func (n *Notifier) worker() {
 	for {
 		select {
 		case notice := <-n.noticeCh:
-			_, _ = n.SendNotice(notice)
+			notice.Id, notice.Error = n.SendNotice(notice)
 			n.wg.Done()
 		case <-n.close:
 			select {
 			case notice := <-n.noticeCh:
-				_, _ = n.SendNotice(notice)
+				notice.Id, notice.Error = n.SendNotice(notice)
 				n.wg.Done()
 			default:
 				return
