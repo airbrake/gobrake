@@ -18,7 +18,7 @@ func getDefaultContext() map[string]interface{} {
 		defaultContext = map[string]interface{}{
 			"notifier": map[string]interface{}{
 				"name":    "gobrake",
-				"version": "3.0.2",
+				"version": "3.1.0",
 				"url":     "https://github.com/airbrake/gobrake",
 			},
 
