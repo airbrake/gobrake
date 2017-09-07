@@ -45,6 +45,9 @@ type Error struct {
 }
 
 type Notice struct {
+	Id    string // id returned by SendNotice
+	Error error  // error returned by SendNotice
+
 	Errors  []Error                `json:"errors"`
 	Context map[string]interface{} `json:"context"`
 	Env     map[string]interface{} `json:"environment"`
