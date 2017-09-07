@@ -69,11 +69,14 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 		return notice
 	}
 
+	backtrace := getStack(e, depth)
+	typeName := getTypeName(e)
+
 	notice = &Notice{
 		Errors: []Error{{
-			Type:      fmt.Sprintf("%T", e),
+			Type:      typeName,
 			Message:   fmt.Sprint(e),
-			Backtrace: stack(depth),
+			Backtrace: backtrace,
 		}},
 		Context: make(map[string]interface{}),
 		Env:     make(map[string]interface{}),
