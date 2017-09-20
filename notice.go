@@ -117,8 +117,6 @@ func stackFromErrorWithStackTrace(e stackTracer) []StackFrame {
 			frames = append(frames, *pf)
 		}
 	}
-	// Remove the frames of runtime.main and runtime.goexit
-	frames = frames[:len(frames)-2]
 	return frames
 }
 
