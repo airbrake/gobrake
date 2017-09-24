@@ -83,39 +83,17 @@ func getStack(e interface{}, depth int) []StackFrame {
 	return stack(depth)
 }
 
-// parseFrame parses and errors.Frame and returns a non-nil StackFrame
-// if the parsing is successful.
-//
-// We need to parse a formatted output for the func. name/file name/line no.,
-// because Frame does not have public methods to access these values, only
-// the output is specified.
-func parseFrame(f *errors.Frame) *StackFrame {
-	// A stack frame can be formatted several ways:
-	//    %+s    func\nfile
-	//    %d    source line
-	buf := fmt.Sprintf("%+s\n%d", f, f)
-	parts := strings.Split(buf, "\n")
-	if len(parts) != 3 {
-		return nil
-	}
-
-	fn := strings.TrimSpace(parts[0])
-	file := strings.TrimSpace(parts[1])
-	line, err := strconv.ParseInt(parts[2], 10, 64)
-	if err != nil {
-		return nil
-	}
-	return &StackFrame{file, int(line), fn}
-}
-
 // stackFromErrorWithStackTrace extracts the stacktrace from e.
 func stackFromErrorWithStackTrace(e stackTracer) []StackFrame {
 	var frames []StackFrame
 	for _, f := range e.StackTrace() {
-		pf := parseFrame(&f)
-		if pf != nil {
-			frames = append(frames, *pf)
+		line, _ := strconv.ParseInt(fmt.Sprintf("%d", f), 10, 64)
+		sf := StackFrame{
+			Func: fmt.Sprintf("%n", f),
+			File: fmt.Sprintf("%s", f),
+			Line: int(line),
 		}
+		frames = append(frames, sf)
 	}
 	return frames
 }
