@@ -1,8 +1,12 @@
 package gobrake
 
 import (
+	"fmt"
 	"runtime"
+	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func stackFilter(packageName, funcName string, file string, line int) bool {
@@ -56,4 +60,44 @@ func packageFuncName(pc uintptr) (string, string) {
 	}
 
 	return packageName, funcName
+}
+
+// stackTraces returns the stackTrace of an error.
+// It is part of the errors package public interface.
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
+
+// getStack returns the stacktrace associated with e. If e is an
+// error from the errors package its stacktrace is extracted, otherwise
+// the current stacktrace is collected end returned.
+func getStack(e interface{}, depth int) []StackFrame {
+	if err, ok := e.(stackTracer); ok {
+		return stackFromErrorWithStackTrace(err)
+	}
+
+	return stack(depth)
+}
+
+// stackFromErrorWithStackTrace extracts the stacktrace from e.
+func stackFromErrorWithStackTrace(e stackTracer) []StackFrame {
+	var frames []StackFrame
+	for _, f := range e.StackTrace() {
+		line, _ := strconv.ParseInt(fmt.Sprintf("%d", f), 10, 64)
+		sf := StackFrame{
+			Func: fmt.Sprintf("%n", f),
+			File: fmt.Sprintf("%s", f),
+			Line: int(line),
+		}
+		frames = append(frames, sf)
+	}
+	return frames
+}
+
+// getTypeName returns the type name of e.
+func getTypeName(e interface{}) string {
+	if err, ok := e.(error); ok {
+		e = errors.Cause(err)
+	}
+	return fmt.Sprintf("%T", e)
 }
