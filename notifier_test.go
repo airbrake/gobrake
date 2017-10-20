@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/airbrake/gobrake"
+	"github.com/pkg/errors"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -62,6 +63,18 @@ var _ = Describe("Notifier", func() {
 		Expect(e.Type).To(Equal("string"))
 		Expect(e.Message).To(Equal("hello"))
 		Expect(e.Backtrace[1].File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/notifier_test.go"))
+	})
+
+	It("reports error and backtrace when error is created with pkg/errors", func() {
+		err := foo()
+		notify(err, nil)
+		e := sentNotice.Errors[0]
+
+		Expect(e.Type).To(Equal("*errors.fundamental"))
+		Expect(e.Message).To(Equal("Test"))
+		Expect(e.Backtrace[0].Func).To(Equal("github.com/airbrake/gobrake_test.bar"))
+		Expect(e.Backtrace[0].File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/notifier_test.go"))
+		Expect(e.Backtrace[1].Func).To(Equal("github.com/airbrake/gobrake_test.foo"))
 	})
 
 	It("reports context, env, session and params", func() {
@@ -178,3 +191,11 @@ var _ = Describe("rate limiting", func() {
 		Expect(requests).To(Equal(1))
 	})
 })
+
+func foo() error {
+	return bar()
+}
+
+func bar() error {
+	return errors.New("Test")
+}
