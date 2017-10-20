@@ -84,9 +84,13 @@ func stackFromErrorWithStackTrace(e stackTracer) []StackFrame {
 	var frames []StackFrame
 	for _, f := range e.StackTrace() {
 		line, _ := strconv.ParseInt(fmt.Sprintf("%d", f), 10, 64)
+		// We need to use %+s to get the relative path, see https://github.com/pkg/errors/issues/136.
+		funcAndPath := fmt.Sprintf("%+s", f)
+		parts := strings.Split(funcAndPath, "\n\t")
+
 		sf := StackFrame{
-			Func: fmt.Sprintf("%n", f),
-			File: fmt.Sprintf("%s", f),
+			Func: parts[0],
+			File: parts[1],
 			Line: int(line),
 		}
 		frames = append(frames, sf)
