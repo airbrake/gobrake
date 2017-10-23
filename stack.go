@@ -16,11 +16,8 @@ func getBacktrace(e interface{}, depth int) []StackFrame {
 	if err, ok := e.(stackTracer); ok {
 		return backtraceFromErrorWithStackTrace(err)
 	}
-	return backtrace(depth)
-}
 
-func backtrace(depth int) []StackFrame {
-	stack := []StackFrame{}
+	frames := make([]StackFrame, 0)
 	for i := depth; ; i++ {
 		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
@@ -28,17 +25,17 @@ func backtrace(depth int) []StackFrame {
 		}
 		packageName, funcName := packageFuncName(pc)
 		if stackFilter(packageName, funcName, file, line) {
-			stack = stack[:0]
+			frames = frames[:0]
 			continue
 		}
-		stack = append(stack, StackFrame{
+		frames = append(frames, StackFrame{
 			File: file,
 			Line: line,
 			Func: funcName,
 		})
 	}
 
-	return stack
+	return frames
 }
 
 func packageFuncName(pc uintptr) (string, string) {

@@ -63,10 +63,10 @@ var _ = Describe("Notifier", func() {
 		Expect(e.Message).To(Equal("hello"))
 
 		frame := e.Backtrace[0]
-		Expect(frame.File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/notifier.go"))
-		Expect(frame.Line).To(Equal(108))
-		Expect(frame.Func).To(Equal("(*Notifier).Notify"))
-		Expect(frame.Code[108]).To(Equal("\tnotice := n.Notice(e, req, 1)"))
+		Expect(frame.File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/notifier_test.go"))
+		Expect(frame.Line).To(Equal(30))
+		Expect(frame.Func).To(Equal("glob..func1.1"))
+		Expect(frame.Code[30]).To(Equal("\t\tnotifier.Notify(e, req)"))
 	})
 
 	It("reports error and backtrace when error is created with pkg/errors", func() {
