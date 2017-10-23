@@ -9,17 +9,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-func stackFilter(packageName, funcName string, file string, line int) bool {
-	return packageName == "runtime" && funcName == "panic"
+// getBacktrace returns the stacktrace associated with e. If e is an
+// error from the errors package its stacktrace is extracted, otherwise
+// the current stacktrace is collected end returned.
+func getBacktrace(e interface{}, depth int) []StackFrame {
+	if err, ok := e.(stackTracer); ok {
+		return backtraceFromErrorWithStackTrace(err)
+	}
+	return backtrace(depth)
 }
 
-type StackFrame struct {
-	File string `json:"file"`
-	Line int    `json:"line"`
-	Func string `json:"function"`
-}
-
-func stack(depth int) []StackFrame {
+func backtrace(depth int) []StackFrame {
 	stack := []StackFrame{}
 	for i := depth; ; i++ {
 		pc, file, line, ok := runtime.Caller(i)
@@ -62,33 +62,30 @@ func packageFuncName(pc uintptr) (string, string) {
 	return packageName, funcName
 }
 
+func stackFilter(packageName, funcName string, file string, line int) bool {
+	return packageName == "runtime" && funcName == "panic"
+}
+
 // stackTraces returns the stackTrace of an error.
 // It is part of the errors package public interface.
 type stackTracer interface {
 	StackTrace() errors.StackTrace
 }
 
-// getStack returns the stacktrace associated with e. If e is an
-// error from the errors package its stacktrace is extracted, otherwise
-// the current stacktrace is collected end returned.
-func getStack(e interface{}, depth int) []StackFrame {
-	if err, ok := e.(stackTracer); ok {
-		return stackFromErrorWithStackTrace(err)
-	}
+// backtraceFromErrorWithStackTrace extracts the stacktrace from e.
+func backtraceFromErrorWithStackTrace(e stackTracer) []StackFrame {
+	const sep = "\n\t"
 
-	return stack(depth)
-}
-
-// stackFromErrorWithStackTrace extracts the stacktrace from e.
-func stackFromErrorWithStackTrace(e stackTracer) []StackFrame {
 	stackTrace := e.StackTrace()
 	frames := make([]StackFrame, len(stackTrace))
 	for i, f := range stackTrace {
 		line, _ := strconv.ParseInt(fmt.Sprintf("%d", f), 10, 64)
-		funcFile := fmt.Sprintf("%+s", f)
-		ind := strings.Index(funcFile, "\n\t")
+		file := fmt.Sprintf("%+s", f)
+		if ind := strings.Index(file, sep); ind != -1 {
+			file = file[ind+len(sep):]
+		}
 		frames[i] = StackFrame{
-			File: funcFile[ind+2:],
+			File: file,
 			Line: int(line),
 			Func: fmt.Sprintf("%n", f),
 		}

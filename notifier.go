@@ -25,7 +25,7 @@ const httpStatusTooManyRequests = 429
 
 var (
 	errClosed             = errors.New("gobrake: notifier is closed")
-	errUnauthorized       = errors.New("gobrake: unauthorized: project id or key are wrong")
+	errUnauthorized       = errors.New("gobrake: unauthorized: invalid project id or key")
 	errAccountRateLimited = errors.New("gobrake: account is rate limited")
 	errIPRateLimited      = errors.New("gobrake: IP is rate limited")
 )
@@ -179,7 +179,7 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 	}
 
 	err = fmt.Errorf("got response status=%q, wanted 201 CREATED", resp.Status)
-	logger.Printf("gobrake failed reporting notice=%q: %s", notice, err)
+	logger.Printf("SendNotice failed reporting notice=%q: %s", notice, err)
 	return "", err
 }
 
@@ -296,6 +296,7 @@ func noticeBacktraceFilter(notice *Notice) *Notice {
 
 func replaceRootDirectory(backtrace []StackFrame, rootDir string) {
 	for i := range backtrace {
-		backtrace[i].File = strings.Replace(backtrace[i].File, rootDir, "[PROJECT_ROOT]", 1)
+		frame := &backtrace[i]
+		frame.File = strings.Replace(frame.File, rootDir, "[PROJECT_ROOT]", 1)
 	}
 }
