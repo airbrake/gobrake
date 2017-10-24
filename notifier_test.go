@@ -25,6 +25,7 @@ func TestGobrake(t *testing.T) {
 var _ = Describe("Notifier", func() {
 	var notifier *gobrake.Notifier
 	var sentNotice *gobrake.Notice
+	var sendNoticeReq *http.Request
 
 	notify := func(e interface{}, req *http.Request) {
 		notifier.Notify(e, req)
@@ -33,6 +34,8 @@ var _ = Describe("Notifier", func() {
 
 	BeforeEach(func() {
 		handler := func(w http.ResponseWriter, req *http.Request) {
+			sendNoticeReq = req
+
 			b, err := ioutil.ReadAll(req.Body)
 			if err != nil {
 				panic(err)
@@ -64,9 +67,9 @@ var _ = Describe("Notifier", func() {
 
 		frame := e.Backtrace[0]
 		Expect(frame.File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/notifier_test.go"))
-		Expect(frame.Line).To(Equal(30))
+		Expect(frame.Line).To(Equal(31))
 		Expect(frame.Func).To(Equal("glob..func1.1"))
-		Expect(frame.Code[30]).To(Equal("\t\tnotifier.Notify(e, req)"))
+		Expect(frame.Code[31]).To(Equal("\t\tnotifier.Notify(e, req)"))
 	})
 
 	It("reports error and backtrace when error is created with pkg/errors", func() {
@@ -102,6 +105,10 @@ var _ = Describe("Notifier", func() {
 		Expect(id).To(Equal("123"))
 
 		Expect(sentNotice).To(Equal(wanted))
+	})
+
+	It("passes token by header 'Authorization: Bearer {JWT}'", func() {
+		Expect(sendNoticeReq.Header.Get("Authorization")).To(Equal("Bearer key"))
 	})
 
 	It("reports context using SetContext", func() {
