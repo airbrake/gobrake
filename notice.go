@@ -83,8 +83,10 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 		frame := &backtrace[i]
 		code, err := getCode(frame.File, frame.Line)
 		if err != nil {
-			logger.Printf("getCode file=%q line=%d failed: %s",
-				frame.File, frame.Line, err)
+			if !os.IsNotExist(err) {
+				logger.Printf("getCode file=%q line=%d failed: %s",
+					frame.File, frame.Line, err)
+			}
 			continue
 		}
 		frame.Code = code
