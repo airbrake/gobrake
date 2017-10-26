@@ -2,6 +2,7 @@ package gobrake
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -13,17 +14,24 @@ var cache = lrucache.New(1000)
 func getCode(file string, line int) (map[int]string, error) {
 	cacheKey := file + strconv.Itoa(line)
 
-	lines, ok := cache.Get(cacheKey)
+	v, ok := cache.Get(cacheKey)
 	if ok {
-		return lines, nil
+		switch v := v.(type) {
+		case error:
+			return nil, v
+		case map[int]string:
+			return v, nil
+		default:
+			return nil, fmt.Errorf("unsupported type=%T", v)
+		}
 	}
 
 	lines, err := _getCode(file, line)
 	if err != nil {
+		cache.Set(cacheKey, err)
 		return nil, err
 	}
 
-	cache.Set(cacheKey, lines)
 	return lines, nil
 }
 
