@@ -52,8 +52,8 @@ type StackFrame struct {
 }
 
 type Notice struct {
-	Id    string // id returned by SendNotice
-	Error error  // error returned by SendNotice
+	Id    string `json:"-"` // id returned by SendNotice
+	Error error  `json:"-"` // error returned by SendNotice
 
 	Errors  []Error                `json:"errors"`
 	Context map[string]interface{} `json:"context"`
