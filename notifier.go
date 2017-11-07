@@ -80,7 +80,7 @@ func NewNotifier(projectId int64, projectKey string) *Notifier {
 
 		projectId:       projectId,
 		projectKey:      projectKey,
-		createNoticeURL: buildCreateNoticeURL(defaultAirbrakeHost, projectId, projectKey),
+		createNoticeURL: buildCreateNoticeURL(defaultAirbrakeHost, projectId),
 
 		filters: []filter{noticeBacktraceFilter},
 
@@ -95,7 +95,7 @@ func NewNotifier(projectId int64, projectKey string) *Notifier {
 
 // Sets Airbrake host name. Default is https://airbrake.io.
 func (n *Notifier) SetHost(h string) {
-	n.createNoticeURL = buildCreateNoticeURL(h, n.projectId, n.projectKey)
+	n.createNoticeURL = buildCreateNoticeURL(h, n.projectId)
 }
 
 // AddFilter adds filter that can modify or ignore notice.
@@ -145,7 +145,14 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 		return "", err
 	}
 
-	resp, err := n.Client.Post(n.createNoticeURL, "application/json", buf)
+	req, err := http.NewRequest("POST", n.createNoticeURL, buf)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+n.projectKey)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := n.Client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -269,11 +276,8 @@ func (n *Notifier) waitTimeout(timeout time.Duration) error {
 	}
 }
 
-func buildCreateNoticeURL(host string, projectId int64, key string) string {
-	return fmt.Sprintf(
-		"%s/api/v3/projects/%d/notices?key=%s",
-		host, projectId, key,
-	)
+func buildCreateNoticeURL(host string, projectId int64) string {
+	return fmt.Sprintf("%s/api/v3/projects/%d/notices", host, projectId)
 }
 
 func noticeBacktraceFilter(notice *Notice) *Notice {
