@@ -25,6 +25,7 @@ const httpStatusTooManyRequests = 429
 
 var (
 	errClosed             = errors.New("gobrake: notifier is closed")
+	errQueueFull          = errors.New("gobrake: queue is full (error is dropped)")
 	errUnauthorized       = errors.New("gobrake: unauthorized: invalid project id or key")
 	errAccountRateLimited = errors.New("gobrake: account is rate limited")
 	errIPRateLimited      = errors.New("gobrake: IP is rate limited")
@@ -65,13 +66,13 @@ type Notifier struct {
 
 	filters []filter
 
+	inFlight int32 // atomic
+	limit    chan struct{}
 	wg       sync.WaitGroup
-	noticeCh chan *Notice
 
 	rateLimitReset int64 // atomic
 
 	_closed uint32 // atomic
-	close   chan struct{}
 }
 
 func NewNotifier(projectId int64, projectKey string) *Notifier {
@@ -84,11 +85,7 @@ func NewNotifier(projectId int64, projectKey string) *Notifier {
 
 		filters: []filter{noticeBacktraceFilter},
 
-		noticeCh: make(chan *Notice, 1000),
-		close:    make(chan struct{}),
-	}
-	for i := 0; i < 2*runtime.NumCPU(); i++ {
-		go n.worker()
+		limit: make(chan struct{}, 2*runtime.NumCPU()),
 	}
 	return n
 }
@@ -198,34 +195,23 @@ func (n *Notifier) SendNoticeAsync(notice *Notice) {
 		return
 	}
 
-	n.wg.Add(1)
-	select {
-	case n.noticeCh <- notice:
-	default:
-		n.wg.Done()
-		logger.Printf(
-			"notice=%q is ignored, because queue is full (len=%d)",
-			notice, len(n.noticeCh),
-		)
+	inFlight := atomic.AddInt32(&n.inFlight, 1)
+	if inFlight > 1000 {
+		atomic.AddInt32(&n.inFlight, -1)
+		notice.Error = errQueueFull
+		return
 	}
-}
 
-func (n *Notifier) worker() {
-	for {
-		select {
-		case notice := <-n.noticeCh:
-			notice.Id, notice.Error = n.SendNotice(notice)
-			n.wg.Done()
-		case <-n.close:
-			select {
-			case notice := <-n.noticeCh:
-				notice.Id, notice.Error = n.SendNotice(notice)
-				n.wg.Done()
-			default:
-				return
-			}
-		}
-	}
+	n.wg.Add(1)
+	go func() {
+		n.limit <- struct{}{}
+
+		notice.Id, notice.Error = n.SendNotice(notice)
+		atomic.AddInt32(&n.inFlight, -1)
+		n.wg.Done()
+
+		<-n.limit
+	}()
 }
 
 // NotifyOnPanic notifies Airbrake about the panic and should be used
@@ -252,9 +238,7 @@ func (n *Notifier) CloseTimeout(timeout time.Duration) error {
 	if !atomic.CompareAndSwapUint32(&n._closed, 0, 1) {
 		return nil
 	}
-	err := n.waitTimeout(timeout)
-	close(n.close)
-	return err
+	return n.waitTimeout(timeout)
 }
 
 func (n *Notifier) closed() bool {
