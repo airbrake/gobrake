@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/airbrake/gobrake"
+	"github.com/airbrake/gobrake/internal/testpkg1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -67,13 +68,13 @@ var _ = Describe("Notifier", func() {
 
 		frame := e.Backtrace[0]
 		Expect(frame.File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/notifier_test.go"))
-		Expect(frame.Line).To(Equal(31))
+		Expect(frame.Line).To(Equal(32))
 		Expect(frame.Func).To(Equal("glob..func1.1"))
-		Expect(frame.Code[31]).To(Equal("\t\tnotifier.Notify(e, req)"))
+		Expect(frame.Code[32]).To(Equal("\t\tnotifier.Notify(e, req)"))
 	})
 
 	It("reports error and backtrace when error is created with pkg/errors", func() {
-		err := foo()
+		err := testpkg1.Foo()
 		notify(err, nil)
 		e := sentNotice.Errors[0]
 
@@ -81,16 +82,16 @@ var _ = Describe("Notifier", func() {
 		Expect(e.Message).To(Equal("Test"))
 
 		frame := e.Backtrace[0]
-		Expect(frame.File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/pkgerrors_test.go"))
+		Expect(frame.File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/internal/testpkg1/testhelper.go"))
 		Expect(frame.Line).To(Equal(10))
-		Expect(frame.Func).To(Equal("bar"))
+		Expect(frame.Func).To(Equal("Bar"))
 		Expect(frame.Code[10]).To(Equal(`	return errors.New("Test")`))
 
 		frame = e.Backtrace[1]
-		Expect(frame.File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/pkgerrors_test.go"))
+		Expect(frame.File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/internal/testpkg1/testhelper.go"))
 		Expect(frame.Line).To(Equal(6))
-		Expect(frame.Func).To(Equal("foo"))
-		Expect(frame.Code[6]).To(Equal("\treturn bar()"))
+		Expect(frame.Func).To(Equal("Foo"))
+		Expect(frame.Code[6]).To(Equal("\treturn Bar()"))
 	})
 
 	It("reports context, env, session and params", func() {
@@ -165,6 +166,7 @@ var _ = Describe("Notifier", func() {
 		Expect(sentNotice.Context["architecture"]).To(Equal(runtime.GOARCH))
 		Expect(sentNotice.Context["hostname"]).To(Equal(hostname))
 		Expect(sentNotice.Context["rootDirectory"]).To(Equal(gopath))
+		Expect(sentNotice.Context["component"]).To(Equal("github.com/airbrake/gobrake_test"))
 	})
 
 	It("does not panic on double close", func() {

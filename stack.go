@@ -12,11 +12,12 @@ import (
 // getBacktrace returns the stacktrace associated with e. If e is an
 // error from the errors package its stacktrace is extracted, otherwise
 // the current stacktrace is collected end returned.
-func getBacktrace(e interface{}, depth int) []StackFrame {
+func getBacktrace(e interface{}, depth int) (string, []StackFrame) {
 	if err, ok := e.(stackTracer); ok {
 		return backtraceFromErrorWithStackTrace(err)
 	}
 
+	var firstPkgName string
 	frames := make([]StackFrame, 0)
 	for i := depth; ; i++ {
 		pc, file, line, ok := runtime.Caller(i)
@@ -24,6 +25,10 @@ func getBacktrace(e interface{}, depth int) []StackFrame {
 			break
 		}
 		packageName, funcName := packageFuncName(pc)
+		if firstPkgName == "" && packageName != "runtime" {
+			firstPkgName = packageName
+		}
+
 		if stackFilter(packageName, funcName, file, line) {
 			frames = frames[:0]
 			continue
@@ -35,7 +40,7 @@ func getBacktrace(e interface{}, depth int) []StackFrame {
 		})
 	}
 
-	return frames
+	return firstPkgName, frames
 }
 
 func packageFuncName(pc uintptr) (string, string) {
@@ -44,9 +49,12 @@ func packageFuncName(pc uintptr) (string, string) {
 		return "", ""
 	}
 
-	packageName := ""
 	funcName := f.Name()
+	return splitPackageFuncNames(funcName)
+}
 
+func splitPackageFuncNames(funcName string) (string, string) {
+	var packageName string
 	if ind := strings.LastIndex(funcName, "/"); ind > 0 {
 		packageName += funcName[:ind+1]
 		funcName = funcName[ind+1:]
@@ -70,15 +78,19 @@ type stackTracer interface {
 }
 
 // backtraceFromErrorWithStackTrace extracts the stacktrace from e.
-func backtraceFromErrorWithStackTrace(e stackTracer) []StackFrame {
+func backtraceFromErrorWithStackTrace(e stackTracer) (string, []StackFrame) {
 	const sep = "\n\t"
 
+	var firstPkgName string
 	stackTrace := e.StackTrace()
 	frames := make([]StackFrame, len(stackTrace))
 	for i, f := range stackTrace {
 		line, _ := strconv.ParseInt(fmt.Sprintf("%d", f), 10, 64)
 		file := fmt.Sprintf("%+s", f)
 		if ind := strings.Index(file, sep); ind != -1 {
+			if firstPkgName == "" {
+				firstPkgName, _ = splitPackageFuncNames(file[:ind])
+			}
 			file = file[ind+len(sep):]
 		}
 		frames[i] = StackFrame{
@@ -87,7 +99,8 @@ func backtraceFromErrorWithStackTrace(e stackTracer) []StackFrame {
 			Func: fmt.Sprintf("%n", f),
 		}
 	}
-	return frames
+
+	return firstPkgName, frames
 }
 
 // getTypeName returns the type name of e.

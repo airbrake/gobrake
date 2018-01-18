@@ -77,7 +77,7 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 	}
 
 	typeName := getTypeName(e)
-	backtrace := getBacktrace(e, depth)
+	packageName, backtrace := getBacktrace(e, depth)
 
 	for i := range backtrace {
 		frame := &backtrace[i]
@@ -107,6 +107,7 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 	for k, v := range getDefaultContext() {
 		notice.Context[k] = v
 	}
+	notice.Context["component"] = packageName
 
 	if req == nil {
 		return notice
