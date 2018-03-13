@@ -1,13 +1,16 @@
 package gobrake
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -83,7 +86,7 @@ func NewNotifier(projectId int64, projectKey string) *Notifier {
 		projectKey:      projectKey,
 		createNoticeURL: buildCreateNoticeURL(defaultAirbrakeHost, projectId),
 
-		filters: []filter{noticeBacktraceFilter},
+		filters: []filter{gopathFilter, gitRevisionFilter},
 
 		limit: make(chan struct{}, 2*runtime.NumCPU()),
 	}
@@ -96,7 +99,7 @@ func (n *Notifier) SetHost(h string) {
 }
 
 // AddFilter adds filter that can modify or ignore notice.
-func (n *Notifier) AddFilter(fn filter) {
+func (n *Notifier) AddFilter(fn func(*Notice) *Notice) {
 	n.filters = append(n.filters, fn)
 }
 
@@ -264,27 +267,141 @@ func buildCreateNoticeURL(host string, projectId int64) string {
 	return fmt.Sprintf("%s/api/v3/projects/%d/notices", host, projectId)
 }
 
-func noticeBacktraceFilter(notice *Notice) *Notice {
-	v, ok := notice.Context["rootDirectory"]
+func gopathFilter(notice *Notice) *Notice {
+	s, ok := notice.Context["gopath"].(string)
 	if !ok {
 		return notice
 	}
 
-	dir, ok := v.(string)
-	if !ok {
-		return notice
-	}
-
-	dir = filepath.Join(dir, "src")
+	dirs := filepath.SplitList(s)
 	for i := range notice.Errors {
-		replaceRootDirectory(notice.Errors[i].Backtrace, dir)
+		backtrace := notice.Errors[i].Backtrace
+		for j := range backtrace {
+			frame := &backtrace[j]
+
+			for _, dir := range dirs {
+				dir = filepath.Join(dir, "src")
+				if strings.HasPrefix(frame.File, dir) {
+					frame.File = strings.Replace(frame.File, dir, "[GOPATH]", 1)
+					break
+				}
+			}
+		}
 	}
+
 	return notice
 }
 
-func replaceRootDirectory(backtrace []StackFrame, rootDir string) {
-	for i := range backtrace {
-		frame := &backtrace[i]
-		frame.File = strings.Replace(frame.File, rootDir, "[PROJECT_ROOT]", 1)
+func gitRevisionFilter(notice *Notice) *Notice {
+	rootDir, _ := notice.Context["rootDirectory"].(string)
+	version, _ := notice.Context["version"].(string)
+	if rootDir == "" || version != "" {
+		return notice
 	}
+
+	rev, err := gitRevision(rootDir)
+	if err != nil {
+		return notice
+	}
+
+	notice.Context["version"] = rev
+	return notice
+}
+
+var (
+	mu        sync.RWMutex
+	revisions = make(map[string]interface{})
+)
+
+func gitRevision(dir string) (string, error) {
+	mu.RLock()
+	v := revisions[dir]
+	mu.RUnlock()
+
+	switch v := v.(type) {
+	case error:
+		return "", v
+	case string:
+		return v, nil
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	rev, err := _gitRevision(dir)
+	if err != nil {
+		logger.Printf("gitRevision dir=%q failed: %s", dir, err)
+		revisions[dir] = err
+		return "", err
+	}
+
+	revisions[dir] = rev
+	return rev, nil
+}
+
+func _gitRevision(dir string) (string, error) {
+	head, err := gitHead(dir)
+	if err != nil {
+		return "", err
+	}
+
+	prefix := []byte("ref: ")
+	if !bytes.HasPrefix(head, prefix) {
+		return string(head), nil
+	}
+	ref := head[len(prefix):]
+
+	refFile := filepath.Join(dir, ".git", string(ref))
+	rev, err := ioutil.ReadFile(refFile)
+	if err == nil {
+		return string(trimnl(rev)), nil
+	}
+
+	refsFile := filepath.Join(dir, ".git", "packed-refs")
+	fd, err := os.Open(refsFile)
+	if err != nil {
+		return "", err
+	}
+
+	scanner := bufio.NewScanner(fd)
+	for scanner.Scan() {
+		b := scanner.Bytes()
+		if len(b) == 0 || b[0] == '#' || b[0] == '^' {
+			continue
+		}
+
+		bs := bytes.Split(b, []byte{' '})
+		if len(bs) != 2 {
+			continue
+		}
+
+		if bytes.Equal(bs[1], head) {
+			return string(bs[0]), nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+
+	return "", fmt.Errorf("git revision for ref=%q not found", ref)
+}
+
+func gitHead(dir string) ([]byte, error) {
+	headFile := filepath.Join(dir, ".git", "HEAD")
+	b, err := ioutil.ReadFile(headFile)
+	if err != nil {
+		return nil, err
+	}
+	return trimnl(b), nil
+}
+
+func trimnl(b []byte) []byte {
+	for _, c := range []byte{'\n', '\r'} {
+		if len(b) > 0 && b[len(b)-1] == c {
+			b = b[:len(b)-1]
+		} else {
+			break
+		}
+	}
+	return b
 }
