@@ -282,7 +282,7 @@ func gopathFilter(notice *Notice) *Notice {
 			for _, dir := range dirs {
 				dir = filepath.Join(dir, "src")
 				if strings.HasPrefix(frame.File, dir) {
-					frame.File = strings.Replace(frame.File, dir, "[GOPATH]", 1)
+					frame.File = strings.Replace(frame.File, dir, "/GOPATH", 1)
 					break
 				}
 			}
