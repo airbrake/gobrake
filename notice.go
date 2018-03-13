@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -26,13 +25,17 @@ func getDefaultContext() map[string]interface{} {
 			"os":           runtime.GOOS,
 			"architecture": runtime.GOARCH,
 		}
+
 		if s, err := os.Hostname(); err == nil {
 			defaultContext["hostname"] = s
 		}
+
+		if wd, err := os.Getwd(); err == nil {
+			defaultContext["rootDirectory"] = wd
+		}
+
 		if s := os.Getenv("GOPATH"); s != "" {
-			list := filepath.SplitList(s)
-			// TODO: multiple root dirs?
-			defaultContext["rootDirectory"] = list[0]
+			defaultContext["gopath"] = s
 		}
 	})
 	return defaultContext

@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -67,10 +66,10 @@ var _ = Describe("Notifier", func() {
 		Expect(e.Message).To(Equal("hello"))
 
 		frame := e.Backtrace[0]
-		Expect(frame.File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/notifier_test.go"))
-		Expect(frame.Line).To(Equal(32))
+		Expect(frame.File).To(Equal("[GOPATH]/github.com/airbrake/gobrake/notifier_test.go"))
+		Expect(frame.Line).To(Equal(31))
 		Expect(frame.Func).To(Equal("glob..func1.1"))
-		Expect(frame.Code[32]).To(Equal("\t\tnotifier.Notify(e, req)"))
+		Expect(frame.Code[31]).To(Equal("\t\tnotifier.Notify(e, req)"))
 	})
 
 	It("reports error and backtrace when error is created with pkg/errors", func() {
@@ -82,13 +81,13 @@ var _ = Describe("Notifier", func() {
 		Expect(e.Message).To(Equal("Test"))
 
 		frame := e.Backtrace[0]
-		Expect(frame.File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/internal/testpkg1/testhelper.go"))
+		Expect(frame.File).To(Equal("[GOPATH]/github.com/airbrake/gobrake/internal/testpkg1/testhelper.go"))
 		Expect(frame.Line).To(Equal(10))
 		Expect(frame.Func).To(Equal("Bar"))
 		Expect(frame.Code[10]).To(Equal(`	return errors.New("Test")`))
 
 		frame = e.Backtrace[1]
-		Expect(frame.File).To(Equal("[PROJECT_ROOT]/github.com/airbrake/gobrake/internal/testpkg1/testhelper.go"))
+		Expect(frame.File).To(Equal("[GOPATH]/github.com/airbrake/gobrake/internal/testpkg1/testhelper.go"))
 		Expect(frame.Line).To(Equal(6))
 		Expect(frame.Func).To(Equal("Foo"))
 		Expect(frame.Code[6]).To(Equal("\treturn Bar()"))
@@ -108,7 +107,7 @@ var _ = Describe("Notifier", func() {
 		Expect(sentNotice).To(Equal(wanted))
 	})
 
-	It("passes token by header 'Authorization: Bearer {JWT}'", func() {
+	It("passes token by header 'Authorization: Bearer {project key}'", func() {
 		Expect(sendNoticeReq.Header.Get("Authorization")).To(Equal("Bearer key"))
 	})
 
@@ -159,14 +158,16 @@ var _ = Describe("Notifier", func() {
 
 		hostname, _ := os.Hostname()
 		gopath := os.Getenv("GOPATH")
-		gopath = filepath.SplitList(gopath)[0]
+		wd, _ := os.Getwd()
 
 		Expect(sentNotice.Context["language"]).To(Equal(runtime.Version()))
 		Expect(sentNotice.Context["os"]).To(Equal(runtime.GOOS))
 		Expect(sentNotice.Context["architecture"]).To(Equal(runtime.GOARCH))
 		Expect(sentNotice.Context["hostname"]).To(Equal(hostname))
-		Expect(sentNotice.Context["rootDirectory"]).To(Equal(gopath))
+		Expect(sentNotice.Context["rootDirectory"]).To(Equal(wd))
+		Expect(sentNotice.Context["gopath"]).To(Equal(gopath))
 		Expect(sentNotice.Context["component"]).To(Equal("github.com/airbrake/gobrake_test"))
+		Expect(sentNotice.Context["version"]).NotTo(BeEmpty())
 	})
 
 	It("does not panic on double close", func() {
