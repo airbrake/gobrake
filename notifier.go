@@ -294,8 +294,8 @@ func gopathFilter(notice *Notice) *Notice {
 
 func gitRevisionFilter(notice *Notice) *Notice {
 	rootDir, _ := notice.Context["rootDirectory"].(string)
-	version, _ := notice.Context["version"].(string)
-	if rootDir == "" || version != "" {
+	rev, _ := notice.Context["revision"].(string)
+	if rootDir == "" || rev != "" {
 		return notice
 	}
 
@@ -304,7 +304,7 @@ func gitRevisionFilter(notice *Notice) *Notice {
 		return notice
 	}
 
-	notice.Context["version"] = rev
+	notice.Context["revision"] = rev
 	return notice
 }
 

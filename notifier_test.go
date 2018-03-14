@@ -167,7 +167,7 @@ var _ = Describe("Notifier", func() {
 		Expect(sentNotice.Context["rootDirectory"]).To(Equal(wd))
 		Expect(sentNotice.Context["gopath"]).To(Equal(gopath))
 		Expect(sentNotice.Context["component"]).To(Equal("github.com/airbrake/gobrake_test"))
-		Expect(sentNotice.Context["version"]).NotTo(BeEmpty())
+		Expect(sentNotice.Context["revision"]).NotTo(BeEmpty())
 	})
 
 	It("does not panic on double close", func() {
