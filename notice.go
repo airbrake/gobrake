@@ -73,6 +73,37 @@ func (n *Notice) String() string {
 	return fmt.Sprintf("Notice<%s: %s>", e.Type, e.Message)
 }
 
+func (n *Notice) SetRequest(req *http.Request) {
+	n.Context["url"] = req.URL.String()
+	n.Context["httpMethod"] = req.Method
+	if ua := req.Header.Get("User-Agent"); ua != "" {
+		n.Context["userAgent"] = ua
+	}
+	n.Context["userAddr"] = remoteAddr(req)
+
+	for k, v := range req.Header {
+		if len(v) == 1 {
+			n.Env[k] = v[0]
+		} else {
+			n.Env[k] = v
+		}
+	}
+}
+
+func remoteAddr(req *http.Request) string {
+	if s := req.Header.Get("X-Forwarded-For"); s != "" {
+		parts := strings.Split(s, ",")
+		return parts[0]
+	}
+
+	if s := req.Header.Get("X-Real-Ip"); s != "" {
+		return s
+	}
+
+	parts := strings.Split(req.RemoteAddr, ":")
+	return parts[0]
+}
+
 func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 	notice, ok := e.(*Notice)
 	if ok {
@@ -112,38 +143,9 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 	}
 	notice.Context["component"] = packageName
 
-	if req == nil {
-		return notice
-	}
-
-	notice.Context["url"] = req.URL.String()
-	notice.Context["httpMethod"] = req.Method
-	if ua := req.Header.Get("User-Agent"); ua != "" {
-		notice.Context["userAgent"] = ua
-	}
-	notice.Context["userAddr"] = remoteAddr(req)
-
-	for k, v := range req.Header {
-		if len(v) == 1 {
-			notice.Env[k] = v[0]
-		} else {
-			notice.Env[k] = v
-		}
+	if req != nil {
+		notice.SetRequest(req)
 	}
 
 	return notice
-}
-
-func remoteAddr(req *http.Request) string {
-	if s := req.Header.Get("X-Forwarded-For"); s != "" {
-		parts := strings.Split(s, ",")
-		return parts[0]
-	}
-
-	if s := req.Header.Get("X-Real-Ip"); s != "" {
-		return s
-	}
-
-	parts := strings.Split(req.RemoteAddr, ":")
-	return parts[0]
 }
