@@ -349,9 +349,9 @@ func _gitRevision(dir string) (string, error) {
 	if !bytes.HasPrefix(head, prefix) {
 		return string(head), nil
 	}
-	ref := head[len(prefix):]
+	head = head[len(prefix):]
 
-	refFile := filepath.Join(dir, ".git", string(ref))
+	refFile := filepath.Join(dir, ".git", string(head))
 	rev, err := ioutil.ReadFile(refFile)
 	if err == nil {
 		return string(trimnl(rev)), nil
@@ -383,7 +383,7 @@ func _gitRevision(dir string) (string, error) {
 		return "", err
 	}
 
-	return "", fmt.Errorf("git revision for ref=%q not found", ref)
+	return "", fmt.Errorf("git revision for ref=%q not found", head)
 }
 
 func gitHead(dir string) ([]byte, error) {
