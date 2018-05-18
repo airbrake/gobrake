@@ -1,6 +1,7 @@
 package gobrake_test
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -67,9 +68,9 @@ var _ = Describe("Notifier", func() {
 
 		frame := e.Backtrace[0]
 		Expect(frame.File).To(Equal("/GOPATH/github.com/airbrake/gobrake/notifier_test.go"))
-		Expect(frame.Line).To(Equal(31))
+		Expect(frame.Line).To(Equal(32))
 		Expect(frame.Func).To(Equal("glob..func1.1"))
-		Expect(frame.Code[31]).To(Equal("\t\tnotifier.Notify(e, req)"))
+		Expect(frame.Code[32]).To(Equal("\t\tnotifier.Notify(e, req)"))
 	})
 
 	It("reports error and backtrace when error is created with pkg/errors", func() {
@@ -212,5 +213,35 @@ var _ = Describe("rate limiting", func() {
 			Expect(err).To(MatchError("gobrake: IP is rate limited"))
 		}
 		Expect(requests).To(Equal(1))
+	})
+})
+
+var _ = Describe("Notice exceeds 64KB", func() {
+	var notifier *gobrake.Notifier
+
+	const maxNoticeLen = 64 * 1024
+
+	BeforeEach(func() {
+		handler := func(w http.ResponseWriter, req *http.Request) {
+			w.WriteHeader(http.StatusCreated)
+		}
+		server := httptest.NewServer(http.HandlerFunc(handler))
+
+		notifier = gobrake.NewNotifier(1, "key")
+		notifier.SetHost(server.URL)
+	})
+
+	AfterEach(func() {
+		Expect(notifier.Close()).NotTo(HaveOccurred())
+	})
+
+	It("returns notice too big error", func() {
+		b := make([]byte, maxNoticeLen+1)
+		_, err := rand.Read(b)
+		Expect(err).NotTo(HaveOccurred())
+
+		notice := notifier.Notice(string(b), nil, 3)
+		_, err = notifier.SendNotice(notice)
+		Expect(err).To(MatchError("gobrake: notice exceeds 64KB max size limit"))
 	})
 })
