@@ -26,12 +26,15 @@ const waitTimeout = 5 * time.Second
 const httpEnhanceYourCalm = 420
 const httpStatusTooManyRequests = 429
 
+const maxNoticeLen = 64 * 1024
+
 var (
 	errClosed             = errors.New("gobrake: notifier is closed")
 	errQueueFull          = errors.New("gobrake: queue is full (error is dropped)")
 	errUnauthorized       = errors.New("gobrake: unauthorized: invalid project id or key")
 	errAccountRateLimited = errors.New("gobrake: account is rate limited")
 	errIPRateLimited      = errors.New("gobrake: IP is rate limited")
+	errNoticeTooBig       = errors.New("gobrake: notice exceeds 64KB max size limit")
 )
 
 var httpClient = &http.Client{
@@ -143,6 +146,10 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 	buf.Reset()
 	if err := json.NewEncoder(buf).Encode(notice); err != nil {
 		return "", err
+	}
+
+	if buf.Len() > maxNoticeLen {
+		return "", errNoticeTooBig
 	}
 
 	req, err := http.NewRequest("POST", n.createNoticeURL, buf)
