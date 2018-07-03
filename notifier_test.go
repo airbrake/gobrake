@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"regexp"
 	"runtime"
 	"testing"
 
@@ -59,6 +60,34 @@ var _ = Describe("Notifier", func() {
 		Expect(notifier.Close()).NotTo(HaveOccurred())
 	})
 
+	It("applies black list keys filter", func() {
+		filter := gobrake.NewBlacklistKeysFilter("password", regexp.MustCompile("(?i)(user)"))
+		notifier.AddFilter(filter)
+
+		notice := &gobrake.Notice{
+			Errors: []gobrake.Error{{
+				Type:    "type1",
+				Message: "msg1",
+			}},
+			Env: map[string]interface{}{
+				"password": "slds2&LP",
+				"User":     "username",
+				"email":    "john@example.com",
+			},
+		}
+		notifier.Notify(notice, nil)
+		notifier.Flush()
+
+		e := sentNotice.Errors[0]
+		Expect(e.Type).To(Equal("type1"))
+		Expect(e.Message).To(Equal("msg1"))
+		Expect(sentNotice.Env).To(Equal(map[string]interface{}{
+			"User":     "[Filtered]",
+			"email":    "john@example.com",
+			"password": "[Filtered]",
+		}))
+	})
+
 	It("reports error and backtrace", func() {
 		notify("hello", nil)
 
@@ -68,9 +97,9 @@ var _ = Describe("Notifier", func() {
 
 		frame := e.Backtrace[0]
 		Expect(frame.File).To(Equal("/GOPATH/github.com/airbrake/gobrake/notifier_test.go"))
-		Expect(frame.Line).To(Equal(32))
+		Expect(frame.Line).To(Equal(33))
 		Expect(frame.Func).To(Equal("glob..func1.1"))
-		Expect(frame.Code[32]).To(Equal("\t\tnotifier.Notify(e, req)"))
+		Expect(frame.Code[33]).To(Equal("\t\tnotifier.Notify(e, req)"))
 	})
 
 	It("reports error and backtrace when error is created with pkg/errors", func() {
