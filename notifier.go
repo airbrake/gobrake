@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -67,6 +68,8 @@ type NotifierOptions struct {
 
 	// Environment such as production or development.
 	Environment string
+	// Git revision. Default is SOURCE_VERSION on Heroku.
+	Revision string
 	// List of keys containing sensitive information that must be filtered out.
 	// Default is password, secret.
 	KeysBlacklist []interface{}
@@ -75,6 +78,11 @@ type NotifierOptions struct {
 func (opt *NotifierOptions) init() {
 	if opt.Host == "" {
 		opt.Host = "https://api.airbrake.io"
+	}
+
+	if opt.Revision == "" {
+		// https://devcenter.heroku.com/changelog-items/630
+		opt.Revision = os.Getenv("SOURCE_VERSION")
 	}
 
 	if opt.KeysBlacklist == nil {
@@ -89,8 +97,7 @@ type Notifier struct {
 	// http.Client that is used to interact with Airbrake API.
 	Client *http.Client
 
-	projectId       int64
-	projectKey      string
+	opt             *NotifierOptions
 	createNoticeURL string
 
 	filters []filter
@@ -99,9 +106,8 @@ type Notifier struct {
 	limit    chan struct{}
 	wg       sync.WaitGroup
 
-	rateLimitReset int64 // atomic
-
-	_closed uint32 // atomic
+	rateLimitReset uint32 // atomic
+	_closed        uint32 // atomic
 }
 
 func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
@@ -110,21 +116,15 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 	n := &Notifier{
 		Client: httpClient,
 
-		projectId:       opt.ProjectId,
-		projectKey:      opt.ProjectKey,
+		opt:             opt,
 		createNoticeURL: buildCreateNoticeURL(opt.Host, opt.ProjectId),
-
-		filters: []filter{gopathFilter, gitRevisionFilter},
 
 		limit: make(chan struct{}, 2*runtime.NumCPU()),
 	}
 
-	if opt.Environment != "" {
-		n.AddFilter(func(notice *Notice) *Notice {
-			notice.Context["environment"] = opt.Environment
-			return notice
-		})
-	}
+	n.AddFilter(newNotifierFilter(n))
+	n.AddFilter(gopathFilter)
+	n.AddFilter(gitRevisionFilter)
 
 	if len(opt.KeysBlacklist) > 0 {
 		n.AddFilter(NewBlacklistKeysFilter(opt.KeysBlacklist...))
@@ -175,7 +175,7 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 		}
 	}
 
-	if time.Now().Unix() < atomic.LoadInt64(&n.rateLimitReset) {
+	if time.Now().Unix() < int64(atomic.LoadUint32(&n.rateLimitReset)) {
 		return "", errIPRateLimited
 	}
 
@@ -196,7 +196,7 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 		return "", err
 	}
 
-	req.Header.Set("Authorization", "Bearer "+n.projectKey)
+	req.Header.Set("Authorization", "Bearer "+n.opt.ProjectKey)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := n.Client.Do(req)
 	if err != nil {
@@ -224,7 +224,7 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 		delayStr := resp.Header.Get("X-RateLimit-Delay")
 		delay, err := strconv.ParseInt(delayStr, 10, 64)
 		if err == nil {
-			atomic.StoreInt64(&n.rateLimitReset, time.Now().Unix()+delay)
+			atomic.StoreUint32(&n.rateLimitReset, uint32(time.Now().Unix()+delay))
 		}
 		return "", errIPRateLimited
 	case httpEnhanceYourCalm:

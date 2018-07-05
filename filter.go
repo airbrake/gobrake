@@ -12,6 +12,19 @@ import (
 	"sync"
 )
 
+func newNotifierFilter(notifier *Notifier) func(*Notice) *Notice {
+	opt := notifier.opt
+	return func(notice *Notice) *Notice {
+		if opt.Environment != "" {
+			notice.Context["environment"] = opt.Environment
+		}
+		if opt.Revision != "" {
+			notice.Context["revision"] = opt.Revision
+		}
+		return notice
+	}
+}
+
 func NewBlacklistKeysFilter(keys ...interface{}) func(*Notice) *Notice {
 	return func(notice *Notice) *Notice {
 		for _, key := range keys {
