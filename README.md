@@ -8,25 +8,33 @@
 package main
 
 import (
-	"errors"
+    "errors"
 
-	"github.com/airbrake/gobrake"
+    "github.com/airbrake/gobrake"
 )
 
-var airbrake = gobrake.NewNotifier(1234567, "FIXME")
+var airbrake = gobrake.NewNotifierWithOptions(&NotifierOptions{
+    ProjectId: 123456,
+    ProjectKey: "FIXME",
+    Environment: "production",
+})
 
 func init() {
-	airbrake.AddFilter(func(notice *gobrake.Notice) *gobrake.Notice {
-		notice.Context["environment"] = "production"
-		return notice
-	})
+    airbrake.AddFilter(func(notice *gobrake.Notice) *gobrake.Notice {
+        notice.Params["user"] = map[string]string{
+            "id": "1",
+            "username": "johnsmith",
+            "name": "John Smith",
+        }
+        return notice
+    })
 }
 
 func main() {
-	defer airbrake.Close()
-	defer airbrake.NotifyOnPanic()
+    defer airbrake.Close()
+    defer airbrake.NotifyOnPanic()
 
-	airbrake.Notify(errors.New("operation failed"), nil)
+    airbrake.Notify(errors.New("operation failed"), nil)
 }
 ```
 
@@ -34,11 +42,11 @@ func main() {
 
 ```go
 airbrake.AddFilter(func(notice *gobrake.Notice) *gobrake.Notice {
-	if notice.Context["environment"] == "development" {
-		// Ignore notices in development environment.
-		return nil
-	}
-	return notice
+    if notice.Context["environment"] == "development" {
+        // Ignore notices in development environment.
+        return nil
+    }
+    return notice
 })
 ```
 

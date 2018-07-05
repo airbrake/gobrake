@@ -16,8 +16,11 @@ func BenchmarkSendNotice(b *testing.B) {
 	}
 	server := httptest.NewServer(http.HandlerFunc(handler))
 
-	notifier := gobrake.NewNotifier(1, "key")
-	notifier.SetHost(server.URL)
+	notifier := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
+		ProjectId:  1,
+		ProjectKey: "key",
+		Host:       server.URL,
+	})
 
 	notice := notifier.Notice(errors.New("benchmark"), nil, 0)
 

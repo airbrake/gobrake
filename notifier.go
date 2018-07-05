@@ -1,27 +1,21 @@
 package gobrake
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
-	"os"
-	"path/filepath"
 	"regexp"
 	"runtime"
 	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
-const defaultAirbrakeHost = "https://api.airbrake.io"
 const waitTimeout = 5 * time.Second
 
 const httpEnhanceYourCalm = 420
@@ -63,6 +57,34 @@ var buffers = sync.Pool{
 
 type filter func(*Notice) *Notice
 
+type NotifierOptions struct {
+	// Airbrake project id.
+	ProjectId int64
+	// Airbrake project key.
+	ProjectKey string
+	// Airbrake host name. Default is https://airbrake.io.
+	Host string
+
+	// Environment such as production or development.
+	Environment string
+	// List of keys containing sensitive information that must be filtered out.
+	// Default is password, secret.
+	KeysBlacklist []interface{}
+}
+
+func (opt *NotifierOptions) init() {
+	if opt.Host == "" {
+		opt.Host = "https://api.airbrake.io"
+	}
+
+	if opt.KeysBlacklist == nil {
+		opt.KeysBlacklist = []interface{}{
+			regexp.MustCompile("password"),
+			regexp.MustCompile("secret"),
+		}
+	}
+}
+
 type Notifier struct {
 	// http.Client that is used to interact with Airbrake API.
 	Client *http.Client
@@ -82,27 +104,43 @@ type Notifier struct {
 	_closed uint32 // atomic
 }
 
-func NewNotifier(projectId int64, projectKey string) *Notifier {
+func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
+	opt.init()
+
 	n := &Notifier{
 		Client: httpClient,
 
-		projectId:       projectId,
-		projectKey:      projectKey,
-		createNoticeURL: buildCreateNoticeURL(defaultAirbrakeHost, projectId),
+		projectId:       opt.ProjectId,
+		projectKey:      opt.ProjectKey,
+		createNoticeURL: buildCreateNoticeURL(opt.Host, opt.ProjectId),
 
 		filters: []filter{gopathFilter, gitRevisionFilter},
 
 		limit: make(chan struct{}, 2*runtime.NumCPU()),
 	}
+
+	if opt.Environment != "" {
+		n.AddFilter(func(notice *Notice) *Notice {
+			notice.Context["environment"] = opt.Environment
+			return notice
+		})
+	}
+
+	if len(opt.KeysBlacklist) > 0 {
+		n.AddFilter(NewBlacklistKeysFilter(opt.KeysBlacklist...))
+	}
+
 	return n
 }
 
-// Sets Airbrake host name. Default is https://airbrake.io.
-func (n *Notifier) SetHost(h string) {
-	n.createNoticeURL = buildCreateNoticeURL(h, n.projectId)
+func NewNotifier(projectId int64, projectKey string) *Notifier {
+	return NewNotifierWithOptions(&NotifierOptions{
+		ProjectId:  projectId,
+		ProjectKey: projectKey,
+	})
 }
 
-// AddFilter adds filter that can modify or ignore notice.
+// AddFilter adds filter that can change notice or ignore it by returning nil.
 func (n *Notifier) AddFilter(fn func(*Notice) *Notice) {
 	n.filters = append(n.filters, fn)
 }
@@ -273,176 +311,4 @@ func (n *Notifier) waitTimeout(timeout time.Duration) error {
 
 func buildCreateNoticeURL(host string, projectId int64) string {
 	return fmt.Sprintf("%s/api/v3/projects/%d/notices", host, projectId)
-}
-
-func NewBlacklistKeysFilter(keys ...interface{}) func(*Notice) *Notice {
-	return func(notice *Notice) *Notice {
-		for _, key := range keys {
-			notice.Env = filterByKey(notice.Env, key)
-			notice.Context = filterByKey(notice.Context, key)
-			notice.Session = filterByKey(notice.Session, key)
-		}
-
-		return notice
-	}
-}
-
-func filterByKey(values map[string]interface{}, key interface{}) map[string]interface{} {
-	const filteredValue = "[Filtered]"
-
-	switch key := key.(type) {
-	case string:
-		for k := range values {
-			if k == key {
-				values[k] = filteredValue
-			}
-		}
-	case *regexp.Regexp:
-		for k := range values {
-			if key.MatchString(k) {
-				values[k] = filteredValue
-			}
-		}
-	}
-
-	return values
-}
-
-func gopathFilter(notice *Notice) *Notice {
-	s, ok := notice.Context["gopath"].(string)
-	if !ok {
-		return notice
-	}
-
-	dirs := filepath.SplitList(s)
-	for i := range notice.Errors {
-		backtrace := notice.Errors[i].Backtrace
-		for j := range backtrace {
-			frame := &backtrace[j]
-
-			for _, dir := range dirs {
-				dir = filepath.Join(dir, "src")
-				if strings.HasPrefix(frame.File, dir) {
-					frame.File = strings.Replace(frame.File, dir, "/GOPATH", 1)
-					break
-				}
-			}
-		}
-	}
-
-	return notice
-}
-
-func gitRevisionFilter(notice *Notice) *Notice {
-	rootDir, _ := notice.Context["rootDirectory"].(string)
-	rev, _ := notice.Context["revision"].(string)
-	if rootDir == "" || rev != "" {
-		return notice
-	}
-
-	rev, err := gitRevision(rootDir)
-	if err != nil {
-		return notice
-	}
-
-	notice.Context["revision"] = rev
-	return notice
-}
-
-var (
-	mu        sync.RWMutex
-	revisions = make(map[string]interface{})
-)
-
-func gitRevision(dir string) (string, error) {
-	mu.RLock()
-	v := revisions[dir]
-	mu.RUnlock()
-
-	switch v := v.(type) {
-	case error:
-		return "", v
-	case string:
-		return v, nil
-	}
-
-	mu.Lock()
-	defer mu.Unlock()
-
-	rev, err := _gitRevision(dir)
-	if err != nil {
-		logger.Printf("gitRevision dir=%q failed: %s", dir, err)
-		revisions[dir] = err
-		return "", err
-	}
-
-	revisions[dir] = rev
-	return rev, nil
-}
-
-func _gitRevision(dir string) (string, error) {
-	head, err := gitHead(dir)
-	if err != nil {
-		return "", err
-	}
-
-	prefix := []byte("ref: ")
-	if !bytes.HasPrefix(head, prefix) {
-		return string(head), nil
-	}
-	head = head[len(prefix):]
-
-	refFile := filepath.Join(dir, ".git", string(head))
-	rev, err := ioutil.ReadFile(refFile)
-	if err == nil {
-		return string(trimnl(rev)), nil
-	}
-
-	refsFile := filepath.Join(dir, ".git", "packed-refs")
-	fd, err := os.Open(refsFile)
-	if err != nil {
-		return "", err
-	}
-
-	scanner := bufio.NewScanner(fd)
-	for scanner.Scan() {
-		b := scanner.Bytes()
-		if len(b) == 0 || b[0] == '#' || b[0] == '^' {
-			continue
-		}
-
-		bs := bytes.Split(b, []byte{' '})
-		if len(bs) != 2 {
-			continue
-		}
-
-		if bytes.Equal(bs[1], head) {
-			return string(bs[0]), nil
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return "", err
-	}
-
-	return "", fmt.Errorf("git revision for ref=%q not found", head)
-}
-
-func gitHead(dir string) ([]byte, error) {
-	headFile := filepath.Join(dir, ".git", "HEAD")
-	b, err := ioutil.ReadFile(headFile)
-	if err != nil {
-		return nil, err
-	}
-	return trimnl(b), nil
-}
-
-func trimnl(b []byte) []byte {
-	for _, c := range []byte{'\n', '\r'} {
-		if len(b) > 0 && b[len(b)-1] == c {
-			b = b[:len(b)-1]
-		} else {
-			break
-		}
-	}
-	return b
 }

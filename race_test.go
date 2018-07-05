@@ -20,8 +20,11 @@ var _ = Describe("Notifier", func() {
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
 
-		notifier = gobrake.NewNotifier(1, "key")
-		notifier.SetHost(server.URL)
+		notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
+			ProjectId:  1,
+			ProjectKey: "key",
+			Host:       server.URL,
+		})
 	})
 
 	It("is race free", func() {
