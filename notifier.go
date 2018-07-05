@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -272,6 +273,39 @@ func (n *Notifier) waitTimeout(timeout time.Duration) error {
 
 func buildCreateNoticeURL(host string, projectId int64) string {
 	return fmt.Sprintf("%s/api/v3/projects/%d/notices", host, projectId)
+}
+
+func NewBlacklistKeysFilter(keys ...interface{}) func(*Notice) *Notice {
+	return func(notice *Notice) *Notice {
+		for _, key := range keys {
+			notice.Env = filterByKey(notice.Env, key)
+			notice.Context = filterByKey(notice.Context, key)
+			notice.Session = filterByKey(notice.Session, key)
+		}
+
+		return notice
+	}
+}
+
+func filterByKey(values map[string]interface{}, key interface{}) map[string]interface{} {
+	const filteredValue = "[Filtered]"
+
+	switch key := key.(type) {
+	case string:
+		for k := range values {
+			if k == key {
+				values[k] = filteredValue
+			}
+		}
+	case *regexp.Regexp:
+		for k := range values {
+			if key.MatchString(k) {
+				values[k] = filteredValue
+			}
+		}
+	}
+
+	return values
 }
 
 func gopathFilter(notice *Notice) *Notice {
