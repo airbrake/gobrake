@@ -52,8 +52,11 @@ var _ = Describe("Notifier", func() {
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
 
-		notifier = gobrake.NewNotifier(1, "key")
-		notifier.SetHost(server.URL)
+		notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
+			ProjectId:  1,
+			ProjectKey: "key",
+			Host:       server.URL,
+		})
 	})
 
 	AfterEach(func() {
@@ -227,8 +230,11 @@ var _ = Describe("rate limiting", func() {
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
 
-		notifier = gobrake.NewNotifier(1, "key")
-		notifier.SetHost(server.URL)
+		notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
+			ProjectId:  1,
+			ProjectKey: "key",
+			Host:       server.URL,
+		})
 	})
 
 	AfterEach(func() {
@@ -256,8 +262,11 @@ var _ = Describe("Notice exceeds 64KB", func() {
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
 
-		notifier = gobrake.NewNotifier(1, "key")
-		notifier.SetHost(server.URL)
+		notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
+			ProjectId:  1,
+			ProjectKey: "key",
+			Host:       server.URL,
+		})
 	})
 
 	AfterEach(func() {
