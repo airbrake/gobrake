@@ -37,6 +37,7 @@ func getCode(file string, line int) (map[int]string, error) {
 
 func _getCode(file string, line int) (map[int]string, error) {
 	const nlines = 2
+	const maxLineLen = 512
 
 	fd, err := os.Open(file)
 	if err != nil {
@@ -58,7 +59,11 @@ func _getCode(file string, line int) (map[int]string, error) {
 		if i > end {
 			break
 		}
-		lines[i] = scanner.Text()
+		line := scanner.Text()
+		if len(line) > maxLineLen {
+			line = line[:maxLineLen]
+		}
+		lines[i] = line
 	}
 
 	if err := scanner.Err(); err != nil {
