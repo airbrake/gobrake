@@ -33,21 +33,31 @@ var (
 	errNoticeTooBig       = errors.New("gobrake: notice exceeds 64KB max size limit")
 )
 
-var httpClient = &http.Client{
-	Transport: &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		Dial: (&net.Dialer{
-			Timeout:   15 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout: 10 * time.Second,
-		TLSClientConfig: &tls.Config{
-			ClientSessionCache: tls.NewLRUClientSessionCache(1024),
-		},
-		MaxIdleConnsPerHost:   10,
-		ResponseHeaderTimeout: 10 * time.Second,
-	},
-	Timeout: 10 * time.Second,
+var (
+	httpClientOnce sync.Once
+	httpClient     *http.Client
+)
+
+func defaultHTTPClient() *http.Client {
+	httpClientOnce.Do(func() {
+		httpClient = &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+				Dial: (&net.Dialer{
+					Timeout:   15 * time.Second,
+					KeepAlive: 30 * time.Second,
+				}).Dial,
+				TLSHandshakeTimeout: 10 * time.Second,
+				TLSClientConfig: &tls.Config{
+					ClientSessionCache: tls.NewLRUClientSessionCache(1024),
+				},
+				MaxIdleConnsPerHost:   10,
+				ResponseHeaderTimeout: 10 * time.Second,
+			},
+			Timeout: 10 * time.Second,
+		}
+	})
+	return httpClient
 }
 
 var buffers = sync.Pool{
@@ -73,6 +83,9 @@ type NotifierOptions struct {
 	// List of keys containing sensitive information that must be filtered out.
 	// Default is password, secret.
 	KeysBlacklist []interface{}
+
+	// http.Client that is used to interact with Airbrake API.
+	HTTPClient *http.Client
 }
 
 func (opt *NotifierOptions) init() {
@@ -91,12 +104,13 @@ func (opt *NotifierOptions) init() {
 			regexp.MustCompile("secret"),
 		}
 	}
+
+	if opt.HTTPClient == nil {
+		opt.HTTPClient = defaultHTTPClient()
+	}
 }
 
 type Notifier struct {
-	// http.Client that is used to interact with Airbrake API.
-	Client *http.Client
-
 	opt             *NotifierOptions
 	createNoticeURL string
 
@@ -106,6 +120,8 @@ type Notifier struct {
 	limit    chan struct{}
 	wg       sync.WaitGroup
 
+	routes *routeStats
+
 	rateLimitReset uint32 // atomic
 	_closed        uint32 // atomic
 }
@@ -114,12 +130,13 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 	opt.init()
 
 	n := &Notifier{
-		Client: httpClient,
-
-		opt:             opt,
-		createNoticeURL: buildCreateNoticeURL(opt.Host, opt.ProjectId),
+		opt: opt,
+		createNoticeURL: fmt.Sprintf("%s/api/v3/projects/%d/notices",
+			opt.Host, opt.ProjectId),
 
 		limit: make(chan struct{}, 2*runtime.NumCPU()),
+
+		routes: newRouteStats(opt),
 	}
 
 	n.AddFilter(newNotifierFilter(n))
@@ -183,7 +200,8 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 	defer buffers.Put(buf)
 
 	buf.Reset()
-	if err := json.NewEncoder(buf).Encode(notice); err != nil {
+	err := json.NewEncoder(buf).Encode(notice)
+	if err != nil {
 		return "", err
 	}
 
@@ -198,7 +216,7 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 
 	req.Header.Set("Authorization", "Bearer "+n.opt.ProjectKey)
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := n.Client.Do(req)
+	resp, err := n.opt.HTTPClient.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -310,6 +328,8 @@ func (n *Notifier) waitTimeout(timeout time.Duration) error {
 	}
 }
 
-func buildCreateNoticeURL(host string, projectId int64) string {
-	return fmt.Sprintf("%s/api/v3/projects/%d/notices", host, projectId)
+func (n *Notifier) IncRequest(
+	method, route string, statusCode int, dur time.Duration, tm time.Time,
+) error {
+	return n.routes.IncRequest(method, route, statusCode, dur, tm)
 }
