@@ -137,7 +137,10 @@ var _ = Describe("Notifier", func() {
 		Expect(err).To(BeNil())
 		Expect(id).To(Equal("123"))
 
-		Expect(sentNotice).To(Equal(wanted))
+		Expect(sentNotice.Context["context1"]).To(Equal(wanted.Context["context1"]))
+		Expect(sentNotice.Env).To(Equal(wanted.Env))
+		Expect(sentNotice.Session).To(Equal(wanted.Session))
+		Expect(sentNotice.Params).To(Equal(wanted.Params))
 	})
 
 	It("passes token by header 'Authorization: Bearer {project key}'", func() {
@@ -201,6 +204,7 @@ var _ = Describe("Notifier", func() {
 		Expect(sentNotice.Context["gopath"]).To(Equal(gopath))
 		Expect(sentNotice.Context["component"]).To(Equal("github.com/airbrake/gobrake_test"))
 		Expect(sentNotice.Context["revision"]).NotTo(BeEmpty())
+		Expect(sentNotice.Context["lastCheckout"]).NotTo(BeEmpty())
 	})
 
 	It("does not panic on double close", func() {
