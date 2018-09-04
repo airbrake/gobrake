@@ -1,15 +1,10 @@
 package gobrake
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
 )
 
 func newNotifierFilter(notifier *Notifier) func(*Notice) *Notice {
@@ -92,109 +87,15 @@ func gitRevisionFilter(notice *Notice) *Notice {
 		return notice
 	}
 
-	rev, err := gitRevision(rootDir)
-	if err != nil {
-		return notice
-	}
-
-	notice.Context["revision"] = rev
-	return notice
-}
-
-var (
-	mu        sync.RWMutex
-	revisions = make(map[string]interface{})
-)
-
-func gitRevision(dir string) (string, error) {
-	mu.RLock()
-	v := revisions[dir]
-	mu.RUnlock()
-
-	switch v := v.(type) {
-	case error:
-		return "", v
-	case string:
-		return v, nil
-	}
-
-	mu.Lock()
-	defer mu.Unlock()
-
-	rev, err := _gitRevision(dir)
-	if err != nil {
-		logger.Printf("gitRevision dir=%q failed: %s", dir, err)
-		revisions[dir] = err
-		return "", err
-	}
-
-	revisions[dir] = rev
-	return rev, nil
-}
-
-func _gitRevision(dir string) (string, error) {
-	head, err := gitHead(dir)
-	if err != nil {
-		return "", err
-	}
-
-	prefix := []byte("ref: ")
-	if !bytes.HasPrefix(head, prefix) {
-		return string(head), nil
-	}
-	head = head[len(prefix):]
-
-	refFile := filepath.Join(dir, ".git", string(head))
-	rev, err := ioutil.ReadFile(refFile)
+	checkout, err := gitLastCheckout(rootDir)
 	if err == nil {
-		return string(trimnl(rev)), nil
+		notice.Context["lastCheckout"] = checkout
 	}
 
-	refsFile := filepath.Join(dir, ".git", "packed-refs")
-	fd, err := os.Open(refsFile)
-	if err != nil {
-		return "", err
+	rev, err = gitRevision(rootDir)
+	if err == nil {
+		notice.Context["revision"] = rev
 	}
 
-	scanner := bufio.NewScanner(fd)
-	for scanner.Scan() {
-		b := scanner.Bytes()
-		if len(b) == 0 || b[0] == '#' || b[0] == '^' {
-			continue
-		}
-
-		bs := bytes.Split(b, []byte{' '})
-		if len(bs) != 2 {
-			continue
-		}
-
-		if bytes.Equal(bs[1], head) {
-			return string(bs[0]), nil
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return "", err
-	}
-
-	return "", fmt.Errorf("git revision for ref=%q not found", head)
-}
-
-func gitHead(dir string) ([]byte, error) {
-	headFile := filepath.Join(dir, ".git", "HEAD")
-	b, err := ioutil.ReadFile(headFile)
-	if err != nil {
-		return nil, err
-	}
-	return trimnl(b), nil
-}
-
-func trimnl(b []byte) []byte {
-	for _, c := range []byte{'\n', '\r'} {
-		if len(b) > 0 && b[len(b)-1] == c {
-			b = b[:len(b)-1]
-		} else {
-			break
-		}
-	}
-	return b
+	return notice
 }
