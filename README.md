@@ -13,7 +13,7 @@ import (
     "github.com/airbrake/gobrake"
 )
 
-var airbrake = gobrake.NewNotifierWithOptions(&NotifierOptions{
+var airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
     ProjectId: 123456,
     ProjectKey: "FIXME",
     Environment: "production",
