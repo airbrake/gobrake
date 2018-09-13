@@ -268,6 +268,7 @@ func (n *Notifier) SendNoticeAsync(notice *Notice) {
 func (n *Notifier) NotifyOnPanic() {
 	if v := recover(); v != nil {
 		notice := n.Notice(v, nil, 3)
+		notice.Context["severity"] = "critical"
 		n.SendNotice(notice)
 		panic(v)
 	}

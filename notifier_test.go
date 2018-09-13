@@ -143,6 +143,23 @@ var _ = Describe("Notifier", func() {
 		Expect(sentNotice.Params).To(Equal(wanted.Params))
 	})
 
+	It("sets context.severity=critical when notify on panic", func() {
+		assert := func() {
+			v := recover()
+			Expect(v).NotTo(BeNil())
+
+			e := sentNotice.Errors[0]
+			Expect(e.Type).To(Equal("string"))
+			Expect(e.Message).To(Equal("hello"))
+			Expect(sentNotice.Context["severity"]).To(Equal("critical"))
+		}
+
+		defer assert()
+		defer notifier.NotifyOnPanic()
+
+		panic("hello")
+	})
+
 	It("passes token by header 'Authorization: Bearer {project key}'", func() {
 		Expect(sendNoticeReq.Header.Get("Authorization")).To(Equal("Bearer key"))
 	})
