@@ -124,7 +124,7 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 
 	n.AddFilter(newNotifierFilter(n))
 	n.AddFilter(gopathFilter)
-	n.AddFilter(gitRevisionFilter)
+	n.AddFilter(gitFilter)
 
 	if len(opt.KeysBlacklist) > 0 {
 		n.AddFilter(NewBlacklistKeysFilter(opt.KeysBlacklist...))

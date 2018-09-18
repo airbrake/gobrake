@@ -80,21 +80,24 @@ func gopathFilter(notice *Notice) *Notice {
 	return notice
 }
 
-func gitRevisionFilter(notice *Notice) *Notice {
+func gitFilter(notice *Notice) *Notice {
 	rootDir, _ := notice.Context["rootDirectory"].(string)
-	rev, _ := notice.Context["revision"].(string)
-	if rootDir == "" || rev != "" {
+	if rootDir == "" {
 		return notice
 	}
 
-	checkout, err := gitLastCheckout(rootDir)
-	if err == nil {
-		notice.Context["lastCheckout"] = checkout
+	info := getGitInfo(rootDir)
+
+	if notice.Context["repository"] == nil && info.Repository != "" {
+		notice.Context["repository"] = info.Repository
 	}
 
-	rev, err = gitRevision(rootDir)
-	if err == nil {
-		notice.Context["revision"] = rev
+	if notice.Context["revision"] == nil && info.Revision != "" {
+		notice.Context["revision"] = info.Revision
+	}
+
+	if info.LastCheckout != nil {
+		notice.Context["lastCheckout"] = info.LastCheckout
 	}
 
 	return notice

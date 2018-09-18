@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -13,38 +14,78 @@ import (
 	"time"
 )
 
-var (
-	revisionsMu sync.RWMutex
-	revisions   = make(map[string]interface{})
-)
-
-func gitRevision(dir string) (string, error) {
-	revisionsMu.RLock()
-	v := revisions[dir]
-	revisionsMu.RUnlock()
-
-	switch v := v.(type) {
-	case error:
-		return "", v
-	case string:
-		return v, nil
-	}
-
-	revisionsMu.Lock()
-	defer revisionsMu.Unlock()
-
-	rev, err := _gitRevision(dir)
-	if err != nil {
-		logger.Printf("gitRevision dir=%q failed: %s", dir, err)
-		revisions[dir] = err
-		return "", err
-	}
-
-	revisions[dir] = rev
-	return rev, nil
+type gitLog struct {
+	Username string    `json:"username"`
+	Email    string    `json:"email"`
+	Revision string    `json:"revision"`
+	Time     time.Time `json:"time"`
 }
 
-func _gitRevision(dir string) (string, error) {
+type gitInfo struct {
+	Repository   string
+	Revision     string
+	LastCheckout *gitLog
+}
+
+var (
+	gitInfosMu sync.RWMutex
+	gitInfos   = make(map[string]*gitInfo)
+)
+
+func getGitInfo(dir string) *gitInfo {
+	gitInfosMu.RLock()
+	info, ok := gitInfos[dir]
+	gitInfosMu.RUnlock()
+
+	if ok {
+		return info
+	}
+
+	gitInfosMu.Lock()
+	defer gitInfosMu.Unlock()
+
+	info = new(gitInfo)
+	gitInfos[dir] = info
+
+	if !exists(filepath.Join(dir, ".git")) {
+		return info
+	}
+
+	repo, err := gitRepository(dir)
+	if err != nil {
+		logger.Printf("gitRepository dir=%q failed: %s", dir, err)
+	} else {
+		info.Repository = repo
+	}
+
+	rev, err := gitRevision(dir)
+	if err != nil {
+		logger.Printf("gitRevision dir=%q failed: %s", dir, err)
+	} else {
+		info.Revision = rev
+	}
+
+	lastCheckout, err := gitLastCheckout(dir)
+	if err != nil {
+		logger.Printf("gitLastCheckout dir=%q failed: %s", dir, err)
+	} else {
+		info.LastCheckout = lastCheckout
+	}
+
+	return info
+}
+
+func gitRepository(dir string) (string, error) {
+	cmd := exec.Command("git", "remote", "get-url", "origin")
+	cmd.Dir = dir
+	out, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return string(trimnl(out)), nil
+}
+
+func gitRevision(dir string) (string, error) {
 	head, err := gitHead(dir)
 	if err != nil {
 		return "", err
@@ -111,45 +152,7 @@ func trimnl(b []byte) []byte {
 	return b
 }
 
-var (
-	gitCheckoutsMu sync.RWMutex
-	gitCheckouts   = make(map[string]interface{})
-)
-
-func gitLastCheckout(dir string) (*logInfo, error) {
-	gitCheckoutsMu.RLock()
-	v := gitCheckouts[dir]
-	gitCheckoutsMu.RUnlock()
-
-	switch v := v.(type) {
-	case error:
-		return nil, v
-	case *logInfo:
-		return v, nil
-	}
-
-	gitCheckoutsMu.Lock()
-	defer gitCheckoutsMu.Unlock()
-
-	info, err := _gitLastCheckout(dir)
-	if err != nil {
-		logger.Printf("gitCommit dir=%q failed: %s", dir, err)
-		gitCheckouts[dir] = err
-		return nil, err
-	}
-
-	gitCheckouts[dir] = info
-	return info, nil
-}
-
-type logInfo struct {
-	Username string    `json:"username"`
-	Email    string    `json:"email"`
-	Revision string    `json:"revision"`
-	Time     time.Time `json:"time"`
-}
-
-func _gitLastCheckout(dir string) (*logInfo, error) {
+func gitLastCheckout(dir string) (*gitLog, error) {
 	headFile := filepath.Join(dir, ".git", "logs", "HEAD")
 	line, err := lastCheckoutLine(headFile)
 	if err != nil {
@@ -158,13 +161,13 @@ func _gitLastCheckout(dir string) (*logInfo, error) {
 
 	ind := strings.IndexByte(line, '\t')
 	if ind == -1 {
-		return nil, fmt.Errorf("gitLastCheckout: tab not found")
+		return nil, fmt.Errorf("tab not found")
 	}
 	line = line[:ind]
 
 	parts := strings.Split(line, " ")
 	if len(parts) < 5 {
-		return nil, fmt.Errorf("gitLastCheckout: can't parse %q", line)
+		return nil, fmt.Errorf("can't parse %q", line)
 	}
 	author := parts[2 : len(parts)-2]
 
@@ -173,7 +176,7 @@ func _gitLastCheckout(dir string) (*logInfo, error) {
 		return nil, err
 	}
 
-	info := &logInfo{
+	info := &gitLog{
 		Revision: parts[1],
 		Time:     time.Unix(utime, 0),
 	}
@@ -207,7 +210,7 @@ func lastCheckoutLine(filename string) (string, error) {
 	}
 
 	if lastCheckout == "" {
-		return "", fmt.Errorf("gitLastCheckout: no entries")
+		return "", fmt.Errorf("no clone, pull, or checkout entries")
 	}
 	return lastCheckout, nil
 }
@@ -220,4 +223,13 @@ func cleanEmail(s string) string {
 		return s[1 : len(s)-1]
 	}
 	return ""
+}
+
+func exists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }
