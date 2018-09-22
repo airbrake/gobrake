@@ -9,27 +9,33 @@ import (
 )
 
 var _ = Describe("findGitDir", func() {
-	It("returns git directory filepath", func() {
+	It("returns first directory containing .git", func() {
 		workDir, _ := os.Getwd()
-		gitDir := filepath.Join(workDir, ".git")
 		tests := []struct {
-			workDir string
-			gitDir  string
-			ok      bool
+			dir string
+			ok  bool
 		}{
-			{"", gitDir, true},
-			{"abc", "", false},
-			{workDir, gitDir, true},
-			{filepath.Join(workDir, "internal"), gitDir, true},
-			{filepath.Join(workDir, "internal", "lrucache"), gitDir, true},
-			{filepath.Join(workDir, "abc"), "", false},
-			{filepath.Dir(workDir), "", false},
+			{"", true},
+			{"./", true},
+			{"...", true},
+			{"../gobrake", true},
+			{workDir, true},
+			{filepath.Join(workDir, "internal"), true},
+			{filepath.Join(workDir, "internal", "lrucache"), true},
+			{"../", false},
+			{"abc", false},
+			{filepath.Join(workDir, "abc"), false},
+			{filepath.Dir(workDir), false},
 		}
 
 		for _, test := range tests {
-			gitDir, ok := findGitDir(test.workDir)
-			Expect(ok).To(Equal(test.ok))
-			Expect(gitDir).To(Equal(test.gitDir))
+			dir, ok := findGitDir(test.dir)
+			if ok {
+				Expect(dir).To(Equal(workDir))
+				continue
+			}
+
+			Expect(dir).To(Equal(""))
 		}
 	})
 })

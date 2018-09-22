@@ -85,8 +85,7 @@ func gitRepository(dir string) (string, error) {
 	return string(trimnl(out)), nil
 }
 
-// findGitDir locates .git directory checking the working directory
-// and parent directories. Returns git directory path.
+// findGitDir returns first directory containing .git file checking the dir and parent dirs.
 func findGitDir(dir string) (string, bool) {
 	dir, err := filepath.Abs(dir)
 	if err != nil || !exists(dir) {
@@ -95,9 +94,8 @@ func findGitDir(dir string) (string, bool) {
 
 	for i := 0; i < 10; i++ {
 		path := filepath.Join(dir, ".git")
-		_, err := os.Stat(path)
-		if err == nil {
-			return path, true
+		if exists(path) {
+			return dir, true
 		}
 
 		if dir == "." || dir == "/" {
