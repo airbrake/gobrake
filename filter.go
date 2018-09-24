@@ -86,7 +86,16 @@ func gitFilter(notice *Notice) *Notice {
 		return notice
 	}
 
-	info := getGitInfo(rootDir)
+	gitDir, ok := findGitDir(rootDir)
+	if !ok {
+		return notice
+	}
+
+	info := getGitInfo(gitDir)
+
+	if notice.Context == nil {
+		notice.Context = make(map[string]interface{})
+	}
 
 	if notice.Context["repository"] == nil && info.Repository != "" {
 		notice.Context["repository"] = info.Repository
