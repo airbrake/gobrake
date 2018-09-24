@@ -47,10 +47,6 @@ func getGitInfo(dir string) *gitInfo {
 	info = new(gitInfo)
 	gitInfos[dir] = info
 
-	if !exists(filepath.Join(dir, ".git")) {
-		return info
-	}
-
 	repo, err := gitRepository(dir)
 	if err != nil {
 		logger.Printf("gitRepository dir=%q failed: %s", dir, err)
