@@ -9,9 +9,9 @@ import (
 )
 
 var env = flag.String("env", "development", "environment, e.g. development or production")
-var host = flag.String("host", "", "host")
-var projectId = flag.Int64("project_id", 0, "project ID")
-var projectKey = flag.String("project_key", "", "project key")
+var host = flag.String("airbrake_host", "", "airbrake host")
+var projectId = flag.Int64("airbrake_project_id", 0, "airbrake project ID")
+var projectKey = flag.String("airbrake_project_key", "", "airbrake project key")
 
 func main() {
 	flag.Parse()
