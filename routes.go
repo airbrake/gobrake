@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -28,7 +27,7 @@ type routeStat struct {
 }
 
 type routeKeyStat struct {
-	*routeKey
+	routeKey
 	*routeStat
 }
 
@@ -82,7 +81,7 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 	var routes []routeKeyStat
 	for k, v := range m {
 		routes = append(routes, routeKeyStat{
-			routeKey:  &k,
+			routeKey:  k,
 			routeStat: v,
 		})
 	}
@@ -99,8 +98,6 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 	if err != nil {
 		return err
 	}
-
-	log.Println(string(buf.Bytes()))
 
 	req, err := http.NewRequest("PUT", s.apiURL, buf)
 	if err != nil {
