@@ -17,3 +17,4 @@ install:
   - go get github.com/onsi/gomega
   - go get github.com/pkg/errors
   - go get -u github.com/gin-gonic/gin
+  - go get -u github.com/astaxie/beego
