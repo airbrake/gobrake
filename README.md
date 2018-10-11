@@ -9,6 +9,7 @@ package main
 
 import (
     "errors"
+    "time"
 
     "github.com/airbrake/gobrake"
 )
@@ -35,6 +36,7 @@ func main() {
     defer airbrake.NotifyOnPanic()
 
     airbrake.Notify(errors.New("operation failed"), nil)
+    time.Sleep(50 * time.Millisecond)
 }
 ```
 
