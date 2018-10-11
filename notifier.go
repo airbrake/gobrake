@@ -332,7 +332,7 @@ func (n *Notifier) waitTimeout(timeout time.Duration) error {
 }
 
 func (n *Notifier) IncRequest(
-	method, route string, statusCode int, dur time.Duration, tm time.Time,
+	method, route string, statusCode int, tm time.Time, dur time.Duration,
 ) error {
-	return n.routes.IncRequest(method, route, statusCode, dur, tm)
+	return n.routes.IncRequest(method, route, statusCode, tm, dur)
 }

@@ -130,7 +130,7 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 }
 
 func (s *routeStats) IncRequest(
-	method, route string, statusCode int, dur time.Duration, tm time.Time,
+	method, route string, statusCode int, tm time.Time, dur time.Duration,
 ) error {
 	key := routeKey{
 		Method:     method,

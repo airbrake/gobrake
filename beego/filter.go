@@ -33,7 +33,7 @@ func afterExecFunc(notifier *gobrake.Notifier) func(c *context.Context) {
 		}
 
 		dur := time.Since(startTime)
-		notifier.IncRequest(c.Input.Method(), routerPattern, statusCode, dur, startTime)
+		notifier.IncRequest(c.Input.Method(), routerPattern, statusCode, startTime, dur)
 	}
 }
 

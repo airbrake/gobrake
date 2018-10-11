@@ -20,7 +20,7 @@ func NewMiddleware(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.C
 		dur := time.Since(start)
 
 		routeName := getRouteName(c, engine)
-		notifier.IncRequest(c.Request.Method, routeName, c.Writer.Status(), dur, start)
+		notifier.IncRequest(c.Request.Method, routeName, c.Writer.Status(), start, dur)
 	}
 }
 
