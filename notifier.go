@@ -183,7 +183,10 @@ func (n *Notifier) SendNotice(notice *Notice) (string, error) {
 	if n.closed() {
 		return "", errClosed
 	}
+	return n.sendNotice(notice)
+}
 
+func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 	for _, fn := range n.filters {
 		notice = fn(notice)
 		if notice == nil {
@@ -273,7 +276,7 @@ func (n *Notifier) SendNoticeAsync(notice *Notice) {
 	go func() {
 		n.limit <- struct{}{}
 
-		notice.Id, notice.Error = n.SendNotice(notice)
+		notice.Id, notice.Error = n.sendNotice(notice)
 		atomic.AddInt32(&n.inFlight, -1)
 		n.wg.Done()
 
