@@ -231,14 +231,16 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 		return "", err
 	}
 
-	switch resp.StatusCode {
-	case http.StatusCreated:
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		var sendResp sendResponse
 		err = json.NewDecoder(buf).Decode(&sendResp)
 		if err != nil {
 			return "", err
 		}
 		return sendResp.Id, nil
+	}
+
+	switch resp.StatusCode {
 	case http.StatusUnauthorized:
 		return "", errUnauthorized
 	case httpStatusTooManyRequests:
@@ -252,7 +254,7 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 		return "", errAccountRateLimited
 	}
 
-	err = fmt.Errorf("got response status=%q, wanted 201 CREATED", resp.Status)
+	err = fmt.Errorf("got unexpected response status=%q", resp.Status)
 	logger.Printf("SendNotice failed reporting notice=%q: %s", notice, err)
 	return "", err
 }

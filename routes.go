@@ -136,14 +136,16 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 		return err
 	}
 
-	switch resp.StatusCode {
-	case http.StatusOK:
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		return nil
+	}
+
+	switch resp.StatusCode {
 	case http.StatusUnauthorized:
 		return errUnauthorized
 	}
 
-	err = fmt.Errorf("got response status=%q, wanted 200 OK", resp.Status)
+	err = fmt.Errorf("got unexpected response status=%q", resp.Status)
 	return err
 }
 
