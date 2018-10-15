@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	tdigest "github.com/caio/go-tdigest"
 )
 
 const flushPeriod = 15 * time.Second
@@ -19,11 +21,21 @@ type routeKey struct {
 }
 
 type routeStat struct {
-	Count int     `json:"count"`
-	Sum   float64 `json:"sum"`
-	Sumsq float64 `json:"sumsq"`
-	Min   float64 `json:"min"`
-	Max   float64 `json:"max"`
+	Count   int     `json:"count"`
+	Sum     float64 `json:"sum"`
+	Sumsq   float64 `json:"sumsq"`
+	TDigest []byte  `json:"tDigest"`
+	td      *tdigest.TDigest
+}
+
+func newRouteStat() *routeStat {
+	td, err := tdigest.New(tdigest.Compression(32))
+	if err != nil {
+		panic(err)
+	}
+	return &routeStat{
+		td: td,
+	}
 }
 
 type routeKeyStat struct {
@@ -80,6 +92,12 @@ type routesStatsJSONRequest struct {
 func (s *routeStats) send(m map[routeKey]*routeStat) error {
 	var routes []routeKeyStat
 	for k, v := range m {
+		b, err := v.td.AsBytes()
+		if err != nil {
+			return err
+		}
+		v.TDigest = b
+
 		routes = append(routes, routeKeyStat{
 			routeKey:  k,
 			routeStat: v,
@@ -146,7 +164,7 @@ func (s *routeStats) IncRequest(
 
 	stat, ok := s.m[key]
 	if !ok {
-		stat = new(routeStat)
+		stat = newRouteStat()
 		s.m[key] = stat
 	}
 
@@ -154,12 +172,7 @@ func (s *routeStats) IncRequest(
 	ms := float64(dur) / float64(time.Millisecond)
 	stat.Sum += ms
 	stat.Sumsq += ms * ms
-	if ms < stat.Min || stat.Min == 0 {
-		stat.Min = ms
-	}
-	if ms > stat.Max {
-		stat.Max = ms
-	}
+	stat.td.Add(ms)
 
 	return nil
 }
