@@ -29,7 +29,7 @@ type routeStat struct {
 }
 
 func newRouteStat() *routeStat {
-	td, err := tdigest.New(tdigest.Compression(32))
+	td, err := tdigest.New(tdigest.Compression(20))
 	if err != nil {
 		panic(err)
 	}
