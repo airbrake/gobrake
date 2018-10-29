@@ -92,6 +92,11 @@ type routesStatsJSONRequest struct {
 func (s *routeStats) send(m map[routeKey]*routeStat) error {
 	var routes []routeKeyStat
 	for k, v := range m {
+		err := v.td.Compress()
+		if err != nil {
+			return err
+		}
+
 		b, err := v.td.AsBytes()
 		if err != nil {
 			return err
