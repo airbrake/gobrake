@@ -16,7 +16,7 @@ const flushPeriod = 15 * time.Second
 type routeKey struct {
 	Method     string    `json:"method"`
 	Route      string    `json:"route"`
-	StatusCode int       `json:"statusCode"`
+	StatusCode int       `json:"status_code"`
 	Time       time.Time `json:"time"`
 }
 
@@ -24,7 +24,7 @@ type routeStat struct {
 	Count   int     `json:"count"`
 	Sum     float64 `json:"sum"`
 	Sumsq   float64 `json:"sumsq"`
-	TDigest []byte  `json:"tDigest"`
+	TDigest []byte  `json:"tdigest"`
 	td      *tdigest.TDigest
 }
 
@@ -58,7 +58,7 @@ type routeStats struct {
 func newRouteStats(opt *NotifierOptions) *routeStats {
 	return &routeStats{
 		opt: opt,
-		apiURL: fmt.Sprintf("%s/api/v4/projects/%d/routes-stats",
+		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/routes-stats",
 			opt.Host, opt.ProjectId),
 	}
 }
@@ -179,7 +179,10 @@ func (s *routeStats) IncRequest(
 	ms := float64(dur) / float64(time.Millisecond)
 	stat.Sum += ms
 	stat.Sumsq += ms * ms
-	stat.td.Add(ms)
+	err := stat.td.Add(ms)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
