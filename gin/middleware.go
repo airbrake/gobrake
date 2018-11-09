@@ -14,13 +14,17 @@ var pathMap map[string]string
 func NewMiddleware(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		start := time.Now()
-
 		c.Next()
-
-		dur := time.Since(start)
+		end := time.Now()
 
 		routeName := getRouteName(c, engine)
-		notifier.IncRequest(c.Request.Method, routeName, c.Writer.Status(), start, dur)
+		notifier.NotifyRequest(&gobrake.RequestInfo{
+			Method:     c.Request.Method,
+			Route:      routeName,
+			StatusCode: c.Writer.Status(),
+			Start:      start,
+			End:        end,
+		})
 	}
 }
 
