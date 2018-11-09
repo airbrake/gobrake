@@ -13,6 +13,14 @@ import (
 
 const flushPeriod = 15 * time.Second
 
+type RequestInfo struct {
+	Method     string
+	Route      string
+	StatusCode int
+	Start      time.Time
+	End        time.Time
+}
+
 type routeKey struct {
 	Method     string    `json:"method"`
 	Route      string    `json:"route"`
@@ -154,14 +162,12 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 	return err
 }
 
-func (s *routeStats) IncRequest(
-	method, route string, statusCode int, tm time.Time, dur time.Duration,
-) error {
+func (s *routeStats) NotifyRequest(req *RequestInfo) error {
 	key := routeKey{
-		Method:     method,
-		Route:      route,
-		StatusCode: statusCode,
-		Time:       tm.UTC().Truncate(time.Minute),
+		Method:     req.Method,
+		Route:      req.Route,
+		StatusCode: req.StatusCode,
+		Time:       req.Start.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
@@ -176,7 +182,7 @@ func (s *routeStats) IncRequest(
 	}
 
 	stat.Count++
-	ms := float64(dur) / float64(time.Millisecond)
+	ms := float64(req.End.Sub(req.Start)) / float64(time.Millisecond)
 	stat.Sum += ms
 	stat.Sumsq += ms * ms
 	err := stat.td.Add(ms)

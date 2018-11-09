@@ -17,11 +17,6 @@ func beforeExecFunc() func(c *context.Context) {
 
 func afterExecFunc(notifier *gobrake.Notifier) func(c *context.Context) {
 	return func(c *context.Context) {
-		startTime, ok := c.Input.GetData("StartTime").(time.Time)
-		if !ok {
-			return
-		}
-
 		routerPattern, ok := c.Input.GetData("RouterPattern").(string)
 		if !ok {
 			return
@@ -32,8 +27,18 @@ func afterExecFunc(notifier *gobrake.Notifier) func(c *context.Context) {
 			statusCode = 200
 		}
 
-		dur := time.Since(startTime)
-		notifier.IncRequest(c.Input.Method(), routerPattern, statusCode, startTime, dur)
+		startTime, ok := c.Input.GetData("StartTime").(time.Time)
+		if !ok {
+			return
+		}
+
+		notifier.NotifyRequest(&gobrake.RequestInfo{
+			Method:     c.Input.Method(),
+			Route:      routerPattern,
+			StatusCode: statusCode,
+			Start:      startTime,
+			End:        time.Now(),
+		})
 	}
 }
 
