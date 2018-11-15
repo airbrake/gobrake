@@ -2,6 +2,7 @@ package gobrake_test
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -51,21 +52,27 @@ func BenchmarkNotifyRequest(b *testing.B) {
 		b.Fatal(err)
 	}
 
-	info := &gobrake.RequestInfo{
-		Method:     "GET",
-		Route:      "/api/v4/groups",
-		StatusCode: 200,
-		Start:      tm,
-		End:        tm.Add(123 * time.Millisecond),
+	const n = 100
+	reqs := make([]*gobrake.RequestInfo, n)
+	for i := 0; i < n; i++ {
+		reqs[i] = &gobrake.RequestInfo{
+			Method:     "GET",
+			Route:      fmt.Sprintf("/api/v4/groups/%d", i),
+			StatusCode: 200,
+			Start:      tm,
+			End:        tm.Add(123 * time.Millisecond),
+		}
 	}
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
+		var i int
 		for pb.Next() {
-			err := notifier.NotifyRequest(info)
+			err := notifier.NotifyRequest(reqs[i%n])
 			if err != nil {
 				b.Fatal(err)
 			}
+			i++
 		}
 	})
 }

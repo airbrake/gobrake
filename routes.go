@@ -29,6 +29,7 @@ type routeKey struct {
 }
 
 type routeStat struct {
+	mu      sync.Mutex
 	Count   int     `json:"count"`
 	Sum     float64 `json:"sum"`
 	Sumsq   float64 `json:"sumsq"`
@@ -36,14 +37,19 @@ type routeStat struct {
 	td      *tdigest.TDigest
 }
 
-func newRouteStat() *routeStat {
-	td, err := tdigest.New(tdigest.Compression(20))
-	if err != nil {
-		panic(err)
+func (s *routeStat) Add(ms float64) error {
+	if s.td == nil {
+		td, err := tdigest.New(tdigest.Compression(20))
+		if err != nil {
+			return err
+		}
+		s.td = td
 	}
-	return &routeStat{
-		td: td,
-	}
+
+	s.Count++
+	s.Sum += ms
+	s.Sumsq += ms * ms
+	return s.td.Add(ms)
 }
 
 type routeKeyStat struct {
@@ -171,24 +177,19 @@ func (s *routeStats) NotifyRequest(req *RequestInfo) error {
 	}
 
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	s.init()
-
 	stat, ok := s.m[key]
 	if !ok {
-		stat = newRouteStat()
+		stat = &routeStat{}
 		s.m[key] = stat
 	}
+	s.mu.Unlock()
 
-	stat.Count++
 	ms := float64(req.End.Sub(req.Start)) / float64(time.Millisecond)
-	stat.Sum += ms
-	stat.Sumsq += ms * ms
-	err := stat.td.Add(ms)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	stat.mu.Lock()
+	err := stat.Add(ms)
+	stat.mu.Unlock()
+
+	return err
 }
