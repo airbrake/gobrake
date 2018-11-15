@@ -66,3 +66,19 @@ airbrake.Notify(notice, nil)
 ## Logging
 
 You can use [glog fork](https://github.com/airbrake/glog) to send your logs to Airbrake.
+
+## Sending requests stats
+
+In order to collect some basic requests stats you can instrument your application using `Notifier.NotifyRequest` API:
+
+```go
+notifier.NotifyRequest(&gobrake.RequestInfo{
+    Method:     "GET",
+    Route:      "/hello/:name",
+    StatusCode: http.StatusOK,
+    Start:      startTime,
+    End:        time.Now(),
+})
+```
+
+We also prepared HTTP middlewares for [Gin](examples/gin) and [Beego](examples/beego) users.

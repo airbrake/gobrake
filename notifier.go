@@ -333,6 +333,7 @@ func (n *Notifier) waitTimeout(timeout time.Duration) error {
 	}
 }
 
+// NotifyRequest notifies Airbrake about the request.
 func (n *Notifier) NotifyRequest(req *RequestInfo) error {
 	return n.routes.NotifyRequest(req)
 }
