@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 var defaultContextOnce sync.Once
@@ -148,4 +150,12 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 	}
 
 	return notice
+}
+
+// getTypeName returns the type name of e.
+func getTypeName(e interface{}) string {
+	if err, ok := e.(error); ok {
+		e = errors.Cause(err)
+	}
+	return fmt.Sprintf("%T", e)
 }
