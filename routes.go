@@ -24,7 +24,7 @@ type RequestInfo struct {
 type routeKey struct {
 	Method     string    `json:"method"`
 	Route      string    `json:"route"`
-	StatusCode int       `json:"status_code"`
+	StatusCode int       `json:"statusCode"`
 	Time       time.Time `json:"time"`
 }
 
