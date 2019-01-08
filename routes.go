@@ -188,6 +188,7 @@ func (s *routeStats) NotifyRequest(req *RequestInfo) error {
 		stat = &routeStat{}
 		s.m[key] = stat
 	}
+	addWG := s.addWG
 	s.addWG.Add(1)
 	s.mu.Unlock()
 
@@ -195,7 +196,7 @@ func (s *routeStats) NotifyRequest(req *RequestInfo) error {
 
 	stat.mu.Lock()
 	err := stat.Add(ms)
-	s.addWG.Done()
+	addWG.Done()
 	stat.mu.Unlock()
 
 	return err
