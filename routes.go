@@ -63,10 +63,11 @@ type routeStats struct {
 	opt    *NotifierOptions
 	apiURL string
 
+	flushTimer *time.Timer
+	addWG      *sync.WaitGroup
+
 	mu sync.Mutex
 	m  map[routeKey]*routeStat
-
-	flushTimer *time.Timer
 }
 
 func newRouteStats(opt *NotifierOptions) *routeStats {
@@ -78,21 +79,25 @@ func newRouteStats(opt *NotifierOptions) *routeStats {
 }
 
 func (s *routeStats) init() {
-	if s.m == nil && s.flushTimer == nil {
-		s.m = make(map[routeKey]*routeStat)
+	if s.flushTimer == nil {
 		s.flushTimer = time.AfterFunc(flushPeriod, s.flush)
+		s.addWG = new(sync.WaitGroup)
+		s.m = make(map[routeKey]*routeStat)
 	}
 }
 
 func (s *routeStats) flush() {
 	s.mu.Lock()
 
+	s.flushTimer = nil
+	addWG := s.addWG
+	s.addWG = nil
 	m := s.m
 	s.m = nil
-	s.flushTimer = nil
 
 	s.mu.Unlock()
 
+	addWG.Wait()
 	err := s.send(m)
 	if err != nil {
 		logger.Printf("routeStats.send failed: %s", err)
@@ -183,12 +188,14 @@ func (s *routeStats) NotifyRequest(req *RequestInfo) error {
 		stat = &routeStat{}
 		s.m[key] = stat
 	}
+	s.addWG.Add(1)
 	s.mu.Unlock()
 
 	ms := float64(req.End.Sub(req.Start)) / float64(time.Millisecond)
 
 	stat.mu.Lock()
 	err := stat.Add(ms)
+	s.addWG.Done()
 	stat.mu.Unlock()
 
 	return err
