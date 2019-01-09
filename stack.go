@@ -74,10 +74,20 @@ type stackTracer interface {
 // backtraceFromErrorWithStackTrace extracts the stacktrace from e.
 func backtraceFromErrorWithStackTrace(e stackTracer) (string, []StackFrame) {
 	stackTrace := e.StackTrace()
+	var pcs []uintptr
+	for _, f := range stackTrace {
+		pcs = append(pcs, uintptr(f))
+	}
 
+	ff := runtime.CallersFrames(pcs)
 	var firstPkg string
 	frames := make([]StackFrame, 0)
-	for _, f := range stackTrace {
+	for {
+		f, ok := ff.Next()
+		if !ok {
+			break
+		}
+
 		pkg, fn := splitPackageFuncName(f.Function)
 		if firstPkg == "" {
 			firstPkg = pkg
