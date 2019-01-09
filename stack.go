@@ -78,17 +78,50 @@ func backtraceFromErrorWithStackTrace(e stackTracer) (string, []StackFrame) {
 	var firstPkg string
 	frames := make([]StackFrame, 0)
 	for _, f := range stackTrace {
-		pkg, fn := splitPackageFuncName(f.Function)
+		pkg, fn := splitPackageFuncName(nameForFrame(uintptr(f)))
 		if firstPkg == "" {
 			firstPkg = pkg
 		}
 
 		frames = append(frames, StackFrame{
-			File: f.File,
-			Line: f.Line,
+			File: fileForFrame(uintptr(f)),
+			Line: lineForFrame(uintptr(f)),
 			Func: fn,
 		})
 	}
 
 	return firstPkg, frames
+}
+
+func pcForFrame(f uintptr) uintptr { return f - 1 }
+
+// file returns the full path to the file that contains the
+// function for this Frame's pc.
+func fileForFrame(f uintptr) string {
+	fn := runtime.FuncForPC(pcForFrame(f))
+	if fn == nil {
+		return "unknown"
+	}
+	file, _ := fn.FileLine(pcForFrame(f))
+	return file
+}
+
+// line returns the line number of source code of the
+// function for this Frame's pc.
+func lineForFrame(f uintptr) int {
+	fn := runtime.FuncForPC(pcForFrame(f))
+	if fn == nil {
+		return 0
+	}
+	_, line := fn.FileLine(pcForFrame(f))
+	return line
+}
+
+// name returns the name of this function, if known.
+func nameForFrame(f uintptr) string {
+	fn := runtime.FuncForPC(pcForFrame(f))
+	if fn == nil {
+		return "unknown"
+	}
+	return fn.Name()
 }
