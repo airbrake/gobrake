@@ -57,6 +57,8 @@ type routeKeyStat struct {
 	*routeStat
 }
 
+type requestFilter func(*RequestInfo) *RequestInfo
+
 // routeStats aggregates information about requests and periodically sends
 // collected data to Airbrake.
 type routeStats struct {
@@ -65,6 +67,8 @@ type routeStats struct {
 
 	flushTimer *time.Timer
 	addWG      *sync.WaitGroup
+
+	requestFilters []requestFilter
 
 	mu sync.Mutex
 	m  map[routeKey]*routeStat
@@ -87,6 +91,10 @@ func (s *routeStats) init() {
 }
 
 func (s *routeStats) flush() {
+	if s.addWG == nil {
+		return
+	}
+
 	s.mu.Lock()
 
 	s.flushTimer = nil
@@ -174,6 +182,14 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 }
 
 func (s *routeStats) NotifyRequest(req *RequestInfo) error {
+	for _, fn := range s.requestFilters {
+		req = fn(req)
+
+		if req == nil {
+			return nil
+		}
+	}
+
 	key := routeKey{
 		Method:     req.Method,
 		Route:      req.Route,
@@ -200,4 +216,8 @@ func (s *routeStats) NotifyRequest(req *RequestInfo) error {
 	stat.mu.Unlock()
 
 	return err
+}
+
+func (s *routeStats) AddRequestFilter(fn func(*RequestInfo) *RequestInfo) {
+	s.requestFilters = append(s.requestFilters, fn)
 }

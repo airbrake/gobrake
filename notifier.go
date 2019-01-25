@@ -339,3 +339,13 @@ func (n *Notifier) waitTimeout(timeout time.Duration) error {
 func (n *Notifier) NotifyRequest(req *RequestInfo) error {
 	return n.routes.NotifyRequest(req)
 }
+
+// AddRequestFilter adds request filter that can modify or ignore requests.
+func (n *Notifier) AddRequestFilter(fn func(*RequestInfo) *RequestInfo) {
+	n.routes.AddRequestFilter(fn)
+}
+
+// FlushRoutes flushes routes stats
+func (n *Notifier) FlushRoutes() {
+	n.routes.flush()
+}
