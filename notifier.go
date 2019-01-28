@@ -120,7 +120,8 @@ type Notifier struct {
 	limit    chan struct{}
 	wg       sync.WaitGroup
 
-	routes *routeStats
+	routes  *routeStats
+	Queries *QueryStats
 
 	rateLimitReset uint32 // atomic
 	_closed        uint32 // atomic
@@ -136,7 +137,8 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 
 		limit: make(chan struct{}, 2*runtime.NumCPU()),
 
-		routes: newRouteStats(opt),
+		routes:  newRouteStats(opt),
+		Queries: newQueryStats(opt),
 	}
 
 	n.AddFilter(newNotifierFilter(n))
