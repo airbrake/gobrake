@@ -143,7 +143,7 @@ func (s *QueryStats) send(m map[queryKey]*routeStat) error {
 	return err
 }
 
-func (s *QueryStats) NotifyQuery(q *QueryInfo) error {
+func (s *QueryStats) Notify(q *QueryInfo) error {
 	key := queryKey{
 		Method: q.Method,
 		Route:  q.Route,
