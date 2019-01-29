@@ -18,7 +18,7 @@ func NewMiddleware(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.C
 		end := time.Now()
 
 		routeName := getRouteName(c, engine)
-		notifier.NotifyRequest(&gobrake.RequestInfo{
+		notifier.Routes.Notify(&gobrake.RouteInfo{
 			Method:     c.Request.Method,
 			Route:      routeName,
 			StatusCode: c.Writer.Status(),

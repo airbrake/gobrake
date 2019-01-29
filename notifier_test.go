@@ -305,3 +305,88 @@ var _ = Describe("Notice exceeds 64KB", func() {
 		Expect(err).To(MatchError("gobrake: notice exceeds 64KB max size limit"))
 	})
 })
+
+var _ = Describe("Notifier request filter", func() {
+	type routeStat struct {
+		Method     string
+		Route      string
+		StatusCode int
+		Count      int     `json:"count"`
+		Sum        float64 `json:"sum"`
+		Sumsq      float64 `json:"sumsq"`
+		TDigest    []byte  `json:"tdigest"`
+	}
+
+	type routeStats struct {
+		Routes []routeStat `json:"routes"`
+	}
+
+	var notifier *gobrake.Notifier
+	var stats *routeStats
+
+	BeforeEach(func() {
+		stats = new(routeStats)
+
+		handler := func(w http.ResponseWriter, req *http.Request) {
+			b, err := ioutil.ReadAll(req.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			err = json.Unmarshal(b, &stats)
+			Expect(err).NotTo(HaveOccurred())
+
+			w.WriteHeader(http.StatusCreated)
+		}
+		server := httptest.NewServer(http.HandlerFunc(handler))
+
+		notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
+			ProjectId:  1,
+			ProjectKey: "key",
+			Host:       server.URL,
+		})
+
+		filter := func(info *gobrake.RouteInfo) *gobrake.RouteInfo {
+			if info.Route == "/pong" {
+				return nil
+			}
+
+			return info
+		}
+		notifier.Routes.AddFilter(filter)
+	})
+
+	It("sends route stat with route is /ping", func() {
+		req := &gobrake.RouteInfo{
+			Method:     "GET",
+			Route:      "/ping",
+			StatusCode: 200,
+		}
+
+		err := notifier.Routes.Notify(req)
+		Expect(err).NotTo(HaveOccurred())
+
+		notifier.Routes.Flush()
+		Expect(stats.Routes).To(HaveLen(1))
+
+		route := stats.Routes[0]
+		Expect(route.Method).To(Equal("GET"))
+		Expect(route.Route).To(Equal("/ping"))
+		Expect(route.StatusCode).To(Equal(200))
+		Expect(route.Count).To(Equal(1))
+	})
+
+	It("ignores route stat with route is /pong", func() {
+		req := &gobrake.RouteInfo{
+			Method:     "GET",
+			Route:      "/pong",
+			StatusCode: 200,
+		}
+
+		err := notifier.Routes.Notify(req)
+		Expect(err).NotTo(HaveOccurred())
+
+		notifier.Routes.Flush()
+		Expect(stats.Routes).To(HaveLen(0))
+	})
+})
