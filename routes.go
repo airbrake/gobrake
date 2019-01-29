@@ -13,7 +13,7 @@ import (
 
 const flushPeriod = 15 * time.Second
 
-type RequestInfo struct {
+type RouteInfo struct {
 	Method     string
 	Route      string
 	StatusCode int
@@ -57,7 +57,7 @@ type routeKeyStat struct {
 	*routeStat
 }
 
-type requestFilter func(*RequestInfo) *RequestInfo
+type routeFilter func(*RouteInfo) *RouteInfo
 
 // routeStats aggregates information about requests and periodically sends
 // collected data to Airbrake.
@@ -68,7 +68,7 @@ type routeStats struct {
 	flushTimer *time.Timer
 	addWG      *sync.WaitGroup
 
-	requestFilters []requestFilter
+	filters []routeFilter
 
 	mu sync.Mutex
 	m  map[routeKey]*routeStat
@@ -84,17 +84,14 @@ func newRouteStats(opt *NotifierOptions) *routeStats {
 
 func (s *routeStats) init() {
 	if s.flushTimer == nil {
-		s.flushTimer = time.AfterFunc(flushPeriod, s.flush)
+		s.flushTimer = time.AfterFunc(flushPeriod, s.Flush)
 		s.addWG = new(sync.WaitGroup)
 		s.m = make(map[routeKey]*routeStat)
 	}
 }
 
-func (s *routeStats) flush() {
-	if s.addWG == nil {
-		return
-	}
-
+// Flush sends to Airbrake route stats.
+func (s *routeStats) Flush() {
 	s.mu.Lock()
 
 	s.flushTimer = nil
@@ -104,6 +101,10 @@ func (s *routeStats) flush() {
 	s.m = nil
 
 	s.mu.Unlock()
+
+	if m == nil {
+		return
+	}
 
 	addWG.Wait()
 	err := s.send(m)
@@ -181,8 +182,9 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 	return err
 }
 
-func (s *routeStats) NotifyRequest(req *RequestInfo) error {
-	for _, fn := range s.requestFilters {
+// Notify adds new route stats.
+func (s *routeStats) Notify(req *RouteInfo) error {
+	for _, fn := range s.filters {
 		req = fn(req)
 
 		if req == nil {
@@ -218,6 +220,7 @@ func (s *routeStats) NotifyRequest(req *RequestInfo) error {
 	return err
 }
 
-func (s *routeStats) AddRequestFilter(fn func(*RequestInfo) *RequestInfo) {
-	s.requestFilters = append(s.requestFilters, fn)
+// AddFilter adds filter that can change route stat or ignore it by returning nil.
+func (s *routeStats) AddFilter(fn func(*RouteInfo) *RouteInfo) {
+	s.filters = append(s.filters, fn)
 }

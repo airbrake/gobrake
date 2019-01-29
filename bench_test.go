@@ -53,9 +53,9 @@ func BenchmarkNotifyRequest(b *testing.B) {
 	}
 
 	const n = 100
-	reqs := make([]*gobrake.RequestInfo, n)
+	reqs := make([]*gobrake.RouteInfo, n)
 	for i := 0; i < n; i++ {
-		reqs[i] = &gobrake.RequestInfo{
+		reqs[i] = &gobrake.RouteInfo{
 			Method:     "GET",
 			Route:      fmt.Sprintf("/api/v4/groups/%d", i),
 			StatusCode: 200,
@@ -68,7 +68,7 @@ func BenchmarkNotifyRequest(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		var i int
 		for pb.Next() {
-			err := notifier.NotifyRequest(reqs[i%n])
+			err := notifier.Routes.Notify(reqs[i%n])
 			if err != nil {
 				b.Fatal(err)
 			}

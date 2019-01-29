@@ -120,7 +120,7 @@ type Notifier struct {
 	limit    chan struct{}
 	wg       sync.WaitGroup
 
-	routes  *routeStats
+	Routes  *routeStats
 	Queries *QueryStats
 
 	rateLimitReset uint32 // atomic
@@ -137,7 +137,7 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 
 		limit: make(chan struct{}, 2*runtime.NumCPU()),
 
-		routes:  newRouteStats(opt),
+		Routes:  newRouteStats(opt),
 		Queries: newQueryStats(opt),
 	}
 
@@ -333,19 +333,4 @@ func (n *Notifier) waitTimeout(timeout time.Duration) error {
 	case <-time.After(timeout):
 		return fmt.Errorf("Wait timed out after %s", timeout)
 	}
-}
-
-// NotifyRequest notifies Airbrake about the request.
-func (n *Notifier) NotifyRequest(req *RequestInfo) error {
-	return n.routes.NotifyRequest(req)
-}
-
-// AddRequestFilter adds request filter that can modify or ignore requests.
-func (n *Notifier) AddRequestFilter(fn func(*RequestInfo) *RequestInfo) {
-	n.routes.AddRequestFilter(fn)
-}
-
-// FlushRoutes flushes routes stats
-func (n *Notifier) FlushRoutes() {
-	n.routes.flush()
 }

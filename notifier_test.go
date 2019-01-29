@@ -346,27 +346,27 @@ var _ = Describe("Notifier request filter", func() {
 			Host:       server.URL,
 		})
 
-		filter := func(info *gobrake.RequestInfo) *gobrake.RequestInfo {
+		filter := func(info *gobrake.RouteInfo) *gobrake.RouteInfo {
 			if info.Route == "/pong" {
 				return nil
 			}
 
 			return info
 		}
-		notifier.AddRequestFilter(filter)
+		notifier.Routes.AddFilter(filter)
 	})
 
-	It("sends request stat with route is /ping", func() {
-		req := &gobrake.RequestInfo{
+	It("sends route stat with route is /ping", func() {
+		req := &gobrake.RouteInfo{
 			Method:     "GET",
 			Route:      "/ping",
 			StatusCode: 200,
 		}
 
-		err := notifier.NotifyRequest(req)
+		err := notifier.Routes.Notify(req)
 		Expect(err).NotTo(HaveOccurred())
 
-		notifier.FlushRoutes()
+		notifier.Routes.Flush()
 		Expect(stats.Routes).To(HaveLen(1))
 
 		route := stats.Routes[0]
@@ -376,17 +376,17 @@ var _ = Describe("Notifier request filter", func() {
 		Expect(route.Count).To(Equal(1))
 	})
 
-	It("ignores request stat with route is /pong", func() {
-		req := &gobrake.RequestInfo{
+	It("ignores route stat with route is /pong", func() {
+		req := &gobrake.RouteInfo{
 			Method:     "GET",
 			Route:      "/pong",
 			StatusCode: 200,
 		}
 
-		err := notifier.NotifyRequest(req)
+		err := notifier.Routes.Notify(req)
 		Expect(err).NotTo(HaveOccurred())
 
-		notifier.FlushRoutes()
+		notifier.Routes.Flush()
 		Expect(stats.Routes).To(HaveLen(0))
 	})
 })
