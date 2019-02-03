@@ -13,6 +13,9 @@ type QueryInfo struct {
 	Method string
 	Route  string
 	Query  string
+	Func   string
+	File   string
+	Line   int
 	Start  time.Time
 	End    time.Time
 }
@@ -21,6 +24,9 @@ type queryKey struct {
 	Method string
 	Route  string
 	Query  string
+	Func   string
+	File   string
+	Line   int
 	Time   time.Time
 }
 
@@ -148,6 +154,9 @@ func (s *QueryStats) Notify(q *QueryInfo) error {
 		Method: q.Method,
 		Route:  q.Route,
 		Query:  q.Query,
+		Func:   q.Func,
+		File:   q.File,
+		Line:   q.Line,
 		Time:   q.Start.UTC().Truncate(time.Minute),
 	}
 
