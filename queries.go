@@ -21,13 +21,13 @@ type QueryInfo struct {
 }
 
 type queryKey struct {
-	Method string
-	Route  string
-	Query  string
-	Func   string
-	File   string
-	Line   int
-	Time   time.Time
+	Method string    `json:"method"`
+	Route  string    `json:"route"`
+	Query  string    `json:"query"`
+	Func   string    `json:"function"`
+	File   string    `json:"file"`
+	Line   int       `json:"line"`
+	Time   time.Time `json:"time"`
 }
 
 type queryKeyStat struct {
