@@ -14,18 +14,20 @@ import (
 const flushPeriod = 15 * time.Second
 
 type RouteInfo struct {
-	Method     string
-	Route      string
-	StatusCode int
-	Start      time.Time
-	End        time.Time
+	Environment string
+	Method      string
+	Route       string
+	StatusCode  int
+	Start       time.Time
+	End         time.Time
 }
 
 type routeKey struct {
-	Method     string    `json:"method"`
-	Route      string    `json:"route"`
-	StatusCode int       `json:"statusCode"`
-	Time       time.Time `json:"time"`
+	Environment string    `json:"environment"`
+	Method      string    `json:"method"`
+	Route       string    `json:"route"`
+	StatusCode  int       `json:"statusCode"`
+	Time        time.Time `json:"time"`
 }
 
 type routeStat struct {

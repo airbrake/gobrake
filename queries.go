@@ -10,24 +10,26 @@ import (
 )
 
 type QueryInfo struct {
-	Method string
-	Route  string
-	Query  string
-	Func   string
-	File   string
-	Line   int
-	Start  time.Time
-	End    time.Time
+	Environment string
+	Method      string
+	Route       string
+	Query       string
+	Func        string
+	File        string
+	Line        int
+	Start       time.Time
+	End         time.Time
 }
 
 type queryKey struct {
-	Method string    `json:"method"`
-	Route  string    `json:"route"`
-	Query  string    `json:"query"`
-	Func   string    `json:"function"`
-	File   string    `json:"file"`
-	Line   int       `json:"line"`
-	Time   time.Time `json:"time"`
+	Environment string    `json:"environment"`
+	Method      string    `json:"method"`
+	Route       string    `json:"route"`
+	Query       string    `json:"query"`
+	Func        string    `json:"function"`
+	File        string    `json:"file"`
+	Line        int       `json:"line"`
+	Time        time.Time `json:"time"`
 }
 
 type queryKeyStat struct {
