@@ -153,13 +153,14 @@ func (s *QueryStats) send(m map[queryKey]*routeStat) error {
 
 func (s *QueryStats) Notify(q *QueryInfo) error {
 	key := queryKey{
-		Method: q.Method,
-		Route:  q.Route,
-		Query:  q.Query,
-		Func:   q.Func,
-		File:   q.File,
-		Line:   q.Line,
-		Time:   q.Start.UTC().Truncate(time.Minute),
+		Environment: q.Environment,
+		Method:      q.Method,
+		Route:       q.Route,
+		Query:       q.Query,
+		Func:        q.Func,
+		File:        q.File,
+		Line:        q.Line,
+		Time:        q.Start.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
