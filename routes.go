@@ -195,10 +195,11 @@ func (s *routeStats) Notify(req *RouteInfo) error {
 	}
 
 	key := routeKey{
-		Method:     req.Method,
-		Route:      req.Route,
-		StatusCode: req.StatusCode,
-		Time:       req.Start.UTC().Truncate(time.Minute),
+		Environment: req.Environment,
+		Method:      req.Method,
+		Route:       req.Route,
+		StatusCode:  req.StatusCode,
+		Time:        req.Start.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
