@@ -10,26 +10,24 @@ import (
 )
 
 type QueryInfo struct {
-	Environment string
-	Method      string
-	Route       string
-	Query       string
-	Func        string
-	File        string
-	Line        int
-	Start       time.Time
-	End         time.Time
+	Method string
+	Route  string
+	Query  string
+	Func   string
+	File   string
+	Line   int
+	Start  time.Time
+	End    time.Time
 }
 
 type queryKey struct {
-	Environment string    `json:"environment"`
-	Method      string    `json:"method"`
-	Route       string    `json:"route"`
-	Query       string    `json:"query"`
-	Func        string    `json:"function"`
-	File        string    `json:"file"`
-	Line        int       `json:"line"`
-	Time        time.Time `json:"time"`
+	Method string    `json:"method"`
+	Route  string    `json:"route"`
+	Query  string    `json:"query"`
+	Func   string    `json:"function"`
+	File   string    `json:"file"`
+	Line   int       `json:"line"`
+	Time   time.Time `json:"time"`
 }
 
 type queryKeyStat struct {
@@ -82,7 +80,8 @@ func (s *QueryStats) flush() {
 	}
 }
 
-type queriesStatsJSONRequest struct {
+type queriesOut struct {
+	Env     string         `json:"environment"`
 	Queries []queryKeyStat `json:"queries"`
 }
 
@@ -106,15 +105,15 @@ func (s *QueryStats) send(m map[queryKey]*routeStat) error {
 		})
 	}
 
-	jsonReq := queriesStatsJSONRequest{
-		Queries: queries,
-	}
-
 	buf := buffers.Get().(*bytes.Buffer)
 	defer buffers.Put(buf)
-
 	buf.Reset()
-	err := json.NewEncoder(buf).Encode(jsonReq)
+
+	out := queriesOut{
+		Env:     s.opt.Environment,
+		Queries: queries,
+	}
+	err := json.NewEncoder(buf).Encode(out)
 	if err != nil {
 		return err
 	}
@@ -153,14 +152,13 @@ func (s *QueryStats) send(m map[queryKey]*routeStat) error {
 
 func (s *QueryStats) Notify(q *QueryInfo) error {
 	key := queryKey{
-		Environment: q.Environment,
-		Method:      q.Method,
-		Route:       q.Route,
-		Query:       q.Query,
-		Func:        q.Func,
-		File:        q.File,
-		Line:        q.Line,
-		Time:        q.Start.UTC().Truncate(time.Minute),
+		Method: q.Method,
+		Route:  q.Route,
+		Query:  q.Query,
+		Func:   q.Func,
+		File:   q.File,
+		Line:   q.Line,
+		Time:   q.Start.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
