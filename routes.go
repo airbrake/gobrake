@@ -14,20 +14,18 @@ import (
 const flushPeriod = 15 * time.Second
 
 type RouteInfo struct {
-	Environment string
-	Method      string
-	Route       string
-	StatusCode  int
-	Start       time.Time
-	End         time.Time
+	Method     string
+	Route      string
+	StatusCode int
+	Start      time.Time
+	End        time.Time
 }
 
 type routeKey struct {
-	Environment string    `json:"environment"`
-	Method      string    `json:"method"`
-	Route       string    `json:"route"`
-	StatusCode  int       `json:"statusCode"`
-	Time        time.Time `json:"time"`
+	Method     string    `json:"method"`
+	Route      string    `json:"route"`
+	StatusCode int       `json:"statusCode"`
+	Time       time.Time `json:"time"`
 }
 
 type routeStat struct {
@@ -115,7 +113,8 @@ func (s *routeStats) Flush() {
 	}
 }
 
-type routesStatsJSONRequest struct {
+type routesOut struct {
+	Env    string         `json:"environment"`
 	Routes []routeKeyStat `json:"routes"`
 }
 
@@ -139,15 +138,15 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 		})
 	}
 
-	jsonReq := routesStatsJSONRequest{
-		Routes: routes,
-	}
-
 	buf := buffers.Get().(*bytes.Buffer)
 	defer buffers.Put(buf)
-
 	buf.Reset()
-	err := json.NewEncoder(buf).Encode(jsonReq)
+
+	out := routesOut{
+		Env:    s.opt.Environment,
+		Routes: routes,
+	}
+	err := json.NewEncoder(buf).Encode(out)
 	if err != nil {
 		return err
 	}
@@ -195,11 +194,10 @@ func (s *routeStats) Notify(req *RouteInfo) error {
 	}
 
 	key := routeKey{
-		Environment: req.Environment,
-		Method:      req.Method,
-		Route:       req.Route,
-		StatusCode:  req.StatusCode,
-		Time:        req.Start.UTC().Truncate(time.Minute),
+		Method:     req.Method,
+		Route:      req.Route,
+		StatusCode: req.StatusCode,
+		Time:       req.Start.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
