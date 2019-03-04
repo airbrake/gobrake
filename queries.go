@@ -177,7 +177,7 @@ func (s *queryStats) Notify(c context.Context, q *QueryInfo) error {
 
 	trace := RouteTraceFromContext(c)
 	if trace != nil {
-		trace.IncSpan("queries", ms)
+		trace.IncGroup("queries", ms)
 	}
 
 	stat.mu.Lock()

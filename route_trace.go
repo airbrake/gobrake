@@ -225,8 +225,8 @@ type RouteTrace struct {
 	route  string
 	start  time.Time
 
-	mu    sync.Mutex
-	spans map[string]float64
+	mu     sync.Mutex
+	groups map[string]float64
 }
 
 func newRouteTrace(breakdowns *routeBreakdowns, method, route string) *RouteTrace {
@@ -236,7 +236,7 @@ func newRouteTrace(breakdowns *routeBreakdowns, method, route string) *RouteTrac
 		method: method,
 		route:  route,
 		start:  time.Now(),
-		spans:  make(map[string]float64),
+		groups: make(map[string]float64),
 	}
 }
 
@@ -249,8 +249,8 @@ func (t *RouteTrace) Inject(c context.Context) context.Context {
 	return context.WithValue(c, traceCtxKey, t)
 }
 
-func (t *RouteTrace) Span(name string) Span {
-	s := &span{
+func (t *RouteTrace) Group(name string) Group {
+	s := &group{
 		trace: t,
 		name:  name,
 		start: time.Now(),
@@ -260,33 +260,33 @@ func (t *RouteTrace) Span(name string) Span {
 
 func (t *RouteTrace) Finish() {
 	t.mu.Lock()
-	spans := t.spans
-	t.spans = nil
+	groups := t.groups
+	t.groups = nil
 	t.mu.Unlock()
-	t.breakdowns.Add(t.method, t.route, t.start, time.Now(), spans)
+	t.breakdowns.Add(t.method, t.route, t.start, time.Now(), groups)
 }
 
-func (t *RouteTrace) IncSpan(name string, ms float64) {
+func (t *RouteTrace) IncGroup(name string, ms float64) {
 	t.mu.Lock()
-	if t.spans != nil {
-		t.spans[name] += ms
+	if t.groups != nil {
+		t.groups[name] += ms
 	}
 	t.mu.Unlock()
 }
 
-type Span interface {
+type Group interface {
 	Finish()
 }
 
-type span struct {
+type group struct {
 	trace *RouteTrace
 	name  string
 	start time.Time
 }
 
-func (s *span) Finish() {
-	since := time.Since(s.start)
-	s.trace.IncSpan(s.name, durInMs(since))
+func (g *group) Finish() {
+	since := time.Since(g.start)
+	g.trace.IncGroup(g.name, durInMs(since))
 }
 
 func durInMs(dur time.Duration) float64 {
