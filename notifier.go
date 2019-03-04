@@ -2,6 +2,7 @@ package gobrake
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -110,6 +111,41 @@ func (opt *NotifierOptions) init() {
 	}
 }
 
+type routes struct {
+	stats      *routeStats
+	breakdowns *routeBreakdowns
+}
+
+func newRoutes(opt *NotifierOptions) *routes {
+	return &routes{
+		stats:      newRouteStats(opt),
+		breakdowns: newRouteBreakdowns(opt),
+	}
+}
+
+func (rs *routes) AddFilter(fn func(*RouteInfo) *RouteInfo) {
+	rs.stats.AddFilter(fn)
+}
+
+func (rs *routes) Flush() {
+	rs.stats.Flush()
+	rs.breakdowns.Flush()
+}
+
+func (rs *routes) Notify(c context.Context, req *RouteInfo) error {
+	return rs.stats.Notify(c, req)
+}
+
+func (rs *routes) NewTrace(c context.Context, method, route string) *RouteTrace {
+	return &RouteTrace{
+		breakdowns: rs.breakdowns,
+
+		method: method,
+		route:  route,
+		start:  time.Now(),
+	}
+}
+
 type Notifier struct {
 	opt             *NotifierOptions
 	createNoticeURL string
@@ -120,8 +156,8 @@ type Notifier struct {
 	limit    chan struct{}
 	wg       sync.WaitGroup
 
-	Routes  *routeStats
-	Queries *QueryStats
+	Routes  *routes
+	Queries *queryStats
 
 	rateLimitReset uint32 // atomic
 	_closed        uint32 // atomic
@@ -137,7 +173,7 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 
 		limit: make(chan struct{}, 2*runtime.NumCPU()),
 
-		Routes:  newRouteStats(opt),
+		Routes:  newRoutes(opt),
 		Queries: newQueryStats(opt),
 	}
 

@@ -2,6 +2,7 @@ package gobrake
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -37,6 +38,10 @@ type routeStat struct {
 	td      *tdigest.TDigest
 }
 
+func newRouteStat() *routeStat {
+	return new(routeStat)
+}
+
 func (s *routeStat) Add(ms float64) error {
 	if s.td == nil {
 		td, err := tdigest.New(tdigest.Compression(20))
@@ -50,6 +55,21 @@ func (s *routeStat) Add(ms float64) error {
 	s.Sum += ms
 	s.Sumsq += ms * ms
 	return s.td.Add(ms)
+}
+
+func (s *routeStat) Pack() error {
+	err := s.td.Compress()
+	if err != nil {
+		return err
+	}
+
+	b, err := s.td.AsBytes()
+	if err != nil {
+		return err
+	}
+	s.TDigest = b
+
+	return nil
 }
 
 type routeKeyStat struct {
@@ -121,16 +141,10 @@ type routesOut struct {
 func (s *routeStats) send(m map[routeKey]*routeStat) error {
 	var routes []routeKeyStat
 	for k, v := range m {
-		err := v.td.Compress()
+		err := v.Pack()
 		if err != nil {
 			return err
 		}
-
-		b, err := v.td.AsBytes()
-		if err != nil {
-			return err
-		}
-		v.TDigest = b
 
 		routes = append(routes, routeKeyStat{
 			routeKey:  k,
@@ -184,7 +198,7 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 }
 
 // Notify adds new route stats.
-func (s *routeStats) Notify(req *RouteInfo) error {
+func (s *routeStats) Notify(c context.Context, req *RouteInfo) error {
 	for _, fn := range s.filters {
 		req = fn(req)
 
@@ -211,7 +225,7 @@ func (s *routeStats) Notify(req *RouteInfo) error {
 	s.addWG.Add(1)
 	s.mu.Unlock()
 
-	ms := float64(req.End.Sub(req.Start)) / float64(time.Millisecond)
+	ms := durInMs(req.End.Sub(req.Start))
 
 	stat.mu.Lock()
 	err := stat.Add(ms)

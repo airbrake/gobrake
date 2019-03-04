@@ -2,6 +2,7 @@ package gobrake
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -35,7 +36,7 @@ type queryKeyStat struct {
 	*routeStat
 }
 
-type QueryStats struct {
+type queryStats struct {
 	opt    *NotifierOptions
 	apiURL string
 
@@ -46,15 +47,15 @@ type QueryStats struct {
 	m  map[queryKey]*routeStat
 }
 
-func newQueryStats(opt *NotifierOptions) *QueryStats {
-	return &QueryStats{
+func newQueryStats(opt *NotifierOptions) *queryStats {
+	return &queryStats{
 		opt: opt,
 		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/queries-stats",
 			opt.Host, opt.ProjectId),
 	}
 }
 
-func (s *QueryStats) init() {
+func (s *queryStats) init() {
 	if s.flushTimer == nil {
 		s.flushTimer = time.AfterFunc(flushPeriod, s.flush)
 		s.addWG = new(sync.WaitGroup)
@@ -62,7 +63,7 @@ func (s *QueryStats) init() {
 	}
 }
 
-func (s *QueryStats) flush() {
+func (s *queryStats) flush() {
 	s.mu.Lock()
 
 	s.flushTimer = nil
@@ -85,7 +86,7 @@ type queriesOut struct {
 	Queries []queryKeyStat `json:"queries"`
 }
 
-func (s *QueryStats) send(m map[queryKey]*routeStat) error {
+func (s *queryStats) send(m map[queryKey]*routeStat) error {
 	var queries []queryKeyStat
 	for k, v := range m {
 		err := v.td.Compress()
@@ -150,7 +151,7 @@ func (s *QueryStats) send(m map[queryKey]*routeStat) error {
 	return err
 }
 
-func (s *QueryStats) Notify(q *QueryInfo) error {
+func (s *queryStats) Notify(c context.Context, q *QueryInfo) error {
 	key := queryKey{
 		Method: q.Method,
 		Route:  q.Route,
@@ -173,6 +174,11 @@ func (s *QueryStats) Notify(q *QueryInfo) error {
 	s.mu.Unlock()
 
 	ms := float64(q.End.Sub(q.Start)) / float64(time.Millisecond)
+
+	trace := RouteTraceFromContext(c)
+	if trace != nil {
+		trace.IncSpan("queries", ms)
+	}
 
 	stat.mu.Lock()
 	err := stat.Add(ms)

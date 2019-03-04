@@ -68,7 +68,7 @@ func BenchmarkNotifyRequest(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		var i int
 		for pb.Next() {
-			err := notifier.Routes.Notify(reqs[i%n])
+			err := notifier.Routes.Notify(nil, reqs[i%n])
 			if err != nil {
 				b.Fatal(err)
 			}

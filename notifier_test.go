@@ -363,7 +363,7 @@ var _ = Describe("Notifier request filter", func() {
 			StatusCode: 200,
 		}
 
-		err := notifier.Routes.Notify(req)
+		err := notifier.Routes.Notify(nil, req)
 		Expect(err).NotTo(HaveOccurred())
 
 		notifier.Routes.Flush()
@@ -383,7 +383,7 @@ var _ = Describe("Notifier request filter", func() {
 			StatusCode: 200,
 		}
 
-		err := notifier.Routes.Notify(req)
+		err := notifier.Routes.Notify(nil, req)
 		Expect(err).NotTo(HaveOccurred())
 
 		notifier.Routes.Flush()
