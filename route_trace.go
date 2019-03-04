@@ -229,6 +229,17 @@ type RouteTrace struct {
 	spans map[string]float64
 }
 
+func newRouteTrace(breakdowns *routeBreakdowns, method, route string) *RouteTrace {
+	return &RouteTrace{
+		breakdowns: breakdowns,
+
+		method: method,
+		route:  route,
+		start:  time.Now(),
+		spans:  make(map[string]float64),
+	}
+}
+
 func RouteTraceFromContext(c context.Context) *RouteTrace {
 	t, _ := c.Value(traceCtxKey).(*RouteTrace)
 	return t

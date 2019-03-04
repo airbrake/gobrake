@@ -136,14 +136,8 @@ func (rs *routes) Notify(c context.Context, req *RouteInfo) error {
 	return rs.stats.Notify(c, req)
 }
 
-func (rs *routes) NewTrace(c context.Context, method, route string) *RouteTrace {
-	return &RouteTrace{
-		breakdowns: rs.breakdowns,
-
-		method: method,
-		route:  route,
-		start:  time.Now(),
-	}
+func (rs *routes) NewTrace(method, route string) *RouteTrace {
+	return newRouteTrace(rs.breakdowns, method, route)
 }
 
 type Notifier struct {
