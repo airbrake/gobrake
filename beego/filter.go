@@ -32,7 +32,7 @@ func afterExecFunc(notifier *gobrake.Notifier) func(c *context.Context) {
 			return
 		}
 
-		notifier.Routes.Notify(&gobrake.RouteInfo{
+		notifier.Routes.Notify(nil, &gobrake.RouteInfo{
 			Method:     c.Input.Method(),
 			Route:      routerPattern,
 			StatusCode: statusCode,
