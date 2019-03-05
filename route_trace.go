@@ -14,10 +14,15 @@ type ctxKey string
 
 const traceCtxKey ctxKey = "ab_route_trace"
 
+type routeBreakdownKey struct {
+	Method      string    `json:"method"`
+	Route       string    `json:"route"`
+	ContentType string    `json:"contentType"`
+	Time        time.Time `json:"time"`
+}
+
 type routeBreakdown struct {
-	Method string    `json:"method"`
-	Route  string    `json:"route"`
-	Time   time.Time `json:"time"`
+	routeBreakdownKey
 
 	mu     sync.Mutex
 	Total  *routeStat            `json:"total"`
@@ -46,6 +51,10 @@ func (b *routeBreakdown) Add(total float64, groups map[string]float64) {
 	if other < 0 {
 		other = 0
 	}
+
+	if groups == nil {
+		groups = make(map[string]float64)
+	}
 	groups["other"] = other
 
 	for name, ms := range groups {
@@ -72,12 +81,6 @@ func (b *routeBreakdown) Pack() error {
 	}
 
 	return nil
-}
-
-type routeBreakdownKey struct {
-	Method string    `json:"method"`
-	Route  string    `json:"route"`
-	Time   time.Time `json:"time"`
 }
 
 type routeBreakdowns struct {
@@ -190,63 +193,63 @@ func (s *routeBreakdowns) send(m map[routeBreakdownKey]*routeBreakdown) error {
 	return err
 }
 
-func (s *routeBreakdowns) Add(
-	method, route string, start, end time.Time, groups map[string]float64,
-) {
+func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 	key := routeBreakdownKey{
-		Method: method,
-		Route:  route,
-		Time:   start.UTC().Truncate(time.Minute),
+		Method:      trace.Method,
+		Route:       trace.Route,
+		ContentType: trace.ContentType,
+		Time:        trace.start.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
 	s.init()
 	b, ok := s.m[key]
 	if !ok {
-		b = &routeBreakdown{}
+		b = &routeBreakdown{
+			routeBreakdownKey: key,
+		}
 		s.m[key] = b
 	}
 	addWG := s.addWG
 	s.addWG.Add(1)
 	s.mu.Unlock()
 
-	total := durInMs(end.Sub(start))
+	total := durInMs(trace.end.Sub(trace.start))
+	trace.mu.Lock()
+	groups := trace.groups
+	trace.groups = nil
+	trace.mu.Unlock()
 
 	s.mu.Lock()
 	b.Add(total, groups)
 	addWG.Done()
 	s.mu.Unlock()
+
+	return nil
 }
 
 type RouteTrace struct {
-	breakdowns *routeBreakdowns
+	Method      string
+	Route       string
+	StatusCode  int
+	ContentType string
 
-	method string
-	route  string
-	start  time.Time
+	start time.Time
+	end   time.Time
 
 	mu     sync.Mutex
 	groups map[string]float64
 }
 
-func newRouteTrace(breakdowns *routeBreakdowns, method, route string) *RouteTrace {
-	return &RouteTrace{
-		breakdowns: breakdowns,
-
-		method: method,
-		route:  route,
-		start:  time.Now(),
-		groups: make(map[string]float64),
-	}
+func NewRouteTrace(c context.Context, trace *RouteTrace) (context.Context, *RouteTrace) {
+	trace.start = time.Now()
+	c = context.WithValue(c, traceCtxKey, trace)
+	return c, trace
 }
 
 func RouteTraceFromContext(c context.Context) *RouteTrace {
 	t, _ := c.Value(traceCtxKey).(*RouteTrace)
 	return t
-}
-
-func (t *RouteTrace) Inject(c context.Context) context.Context {
-	return context.WithValue(c, traceCtxKey, t)
 }
 
 func (t *RouteTrace) Group(name string) Group {
@@ -258,19 +261,12 @@ func (t *RouteTrace) Group(name string) Group {
 	return s
 }
 
-func (t *RouteTrace) Finish() {
-	t.mu.Lock()
-	groups := t.groups
-	t.groups = nil
-	t.mu.Unlock()
-	t.breakdowns.Add(t.method, t.route, t.start, time.Now(), groups)
-}
-
 func (t *RouteTrace) IncGroup(name string, ms float64) {
 	t.mu.Lock()
-	if t.groups != nil {
-		t.groups[name] += ms
+	if t.groups == nil {
+		t.groups = make(map[string]float64)
 	}
+	t.groups[name] += ms
 	t.mu.Unlock()
 }
 

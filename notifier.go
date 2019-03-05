@@ -112,6 +112,8 @@ func (opt *NotifierOptions) init() {
 }
 
 type routes struct {
+	filters []routeFilter
+
 	stats      *routeStats
 	breakdowns *routeBreakdowns
 }
@@ -123,8 +125,9 @@ func newRoutes(opt *NotifierOptions) *routes {
 	}
 }
 
-func (rs *routes) AddFilter(fn func(*RouteInfo) *RouteInfo) {
-	rs.stats.AddFilter(fn)
+// AddFilter adds filter that can change route stat or ignore it by returning nil.
+func (rs *routes) AddFilter(fn func(*RouteTrace) *RouteTrace) {
+	rs.filters = append(rs.filters, fn)
 }
 
 func (rs *routes) Flush() {
@@ -132,12 +135,27 @@ func (rs *routes) Flush() {
 	rs.breakdowns.Flush()
 }
 
-func (rs *routes) Notify(c context.Context, req *RouteInfo) error {
-	return rs.stats.Notify(c, req)
-}
+func (rs *routes) Notify(c context.Context, trace *RouteTrace) error {
+	trace.end = time.Now()
 
-func (rs *routes) NewTrace(method, route string) *RouteTrace {
-	return newRouteTrace(rs.breakdowns, method, route)
+	for _, fn := range rs.filters {
+		trace = fn(trace)
+		if trace == nil {
+			return nil
+		}
+	}
+
+	err := rs.stats.Notify(c, trace)
+	if err != nil {
+		return err
+	}
+
+	err = rs.breakdowns.Notify(c, trace)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type Notifier struct {

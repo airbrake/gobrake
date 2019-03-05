@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/airbrake/gobrake"
 )
@@ -47,20 +46,13 @@ func BenchmarkNotifyRequest(b *testing.B) {
 		ProjectKey: "",
 	})
 
-	tm, err := time.Parse(time.RFC3339, "2018-01-01T00:00:00Z")
-	if err != nil {
-		b.Fatal(err)
-	}
-
 	const n = 100
-	reqs := make([]*gobrake.RouteInfo, n)
+	reqs := make([]*gobrake.RouteTrace, n)
 	for i := 0; i < n; i++ {
-		reqs[i] = &gobrake.RouteInfo{
+		reqs[i] = &gobrake.RouteTrace{
 			Method:     "GET",
 			Route:      fmt.Sprintf("/api/v4/groups/%d", i),
 			StatusCode: 200,
-			Start:      tm,
-			End:        tm.Add(123 * time.Millisecond),
 		}
 	}
 

@@ -14,14 +14,6 @@ import (
 
 const flushPeriod = 15 * time.Second
 
-type RouteInfo struct {
-	Method     string
-	Route      string
-	StatusCode int
-	Start      time.Time
-	End        time.Time
-}
-
 type routeKey struct {
 	Method     string    `json:"method"`
 	Route      string    `json:"route"`
@@ -77,7 +69,7 @@ type routeKeyStat struct {
 	*routeStat
 }
 
-type routeFilter func(*RouteInfo) *RouteInfo
+type routeFilter func(*RouteTrace) *RouteTrace
 
 // routeStats aggregates information about requests and periodically sends
 // collected data to Airbrake.
@@ -87,8 +79,6 @@ type routeStats struct {
 
 	flushTimer *time.Timer
 	addWG      *sync.WaitGroup
-
-	filters []routeFilter
 
 	mu sync.Mutex
 	m  map[routeKey]*routeStat
@@ -198,20 +188,12 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 }
 
 // Notify adds new route stats.
-func (s *routeStats) Notify(c context.Context, req *RouteInfo) error {
-	for _, fn := range s.filters {
-		req = fn(req)
-
-		if req == nil {
-			return nil
-		}
-	}
-
+func (s *routeStats) Notify(c context.Context, req *RouteTrace) error {
 	key := routeKey{
 		Method:     req.Method,
 		Route:      req.Route,
 		StatusCode: req.StatusCode,
-		Time:       req.Start.UTC().Truncate(time.Minute),
+		Time:       req.start.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
@@ -225,7 +207,7 @@ func (s *routeStats) Notify(c context.Context, req *RouteInfo) error {
 	s.addWG.Add(1)
 	s.mu.Unlock()
 
-	ms := durInMs(req.End.Sub(req.Start))
+	ms := durInMs(req.end.Sub(req.start))
 
 	stat.mu.Lock()
 	err := stat.Add(ms)
@@ -233,9 +215,4 @@ func (s *routeStats) Notify(c context.Context, req *RouteInfo) error {
 	stat.mu.Unlock()
 
 	return err
-}
-
-// AddFilter adds filter that can change route stat or ignore it by returning nil.
-func (s *routeStats) AddFilter(fn func(*RouteInfo) *RouteInfo) {
-	s.filters = append(s.filters, fn)
 }

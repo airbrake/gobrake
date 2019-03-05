@@ -329,9 +329,7 @@ var _ = Describe("Notifier request filter", func() {
 
 		handler := func(w http.ResponseWriter, req *http.Request) {
 			b, err := ioutil.ReadAll(req.Body)
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			err = json.Unmarshal(b, &stats)
 			Expect(err).NotTo(HaveOccurred())
@@ -346,23 +344,20 @@ var _ = Describe("Notifier request filter", func() {
 			Host:       server.URL,
 		})
 
-		filter := func(info *gobrake.RouteInfo) *gobrake.RouteInfo {
+		notifier.Routes.AddFilter(func(info *gobrake.RouteTrace) *gobrake.RouteTrace {
 			if info.Route == "/pong" {
 				return nil
 			}
-
 			return info
-		}
-		notifier.Routes.AddFilter(filter)
+		})
 	})
 
 	It("sends route stat with route is /ping", func() {
-		req := &gobrake.RouteInfo{
+		req := &gobrake.RouteTrace{
 			Method:     "GET",
 			Route:      "/ping",
 			StatusCode: 200,
 		}
-
 		err := notifier.Routes.Notify(nil, req)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -377,12 +372,11 @@ var _ = Describe("Notifier request filter", func() {
 	})
 
 	It("ignores route stat with route is /pong", func() {
-		req := &gobrake.RouteInfo{
+		req := &gobrake.RouteTrace{
 			Method:     "GET",
 			Route:      "/pong",
 			StatusCode: 200,
 		}
-
 		err := notifier.Routes.Notify(nil, req)
 		Expect(err).NotTo(HaveOccurred())
 
