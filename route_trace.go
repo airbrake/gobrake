@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -15,10 +16,10 @@ type ctxKey string
 const traceCtxKey ctxKey = "ab_route_trace"
 
 type routeBreakdownKey struct {
-	Method      string    `json:"method"`
-	Route       string    `json:"route"`
-	ContentType string    `json:"contentType"`
-	Time        time.Time `json:"time"`
+	Method   string    `json:"method"`
+	Route    string    `json:"route"`
+	RespType string    `json:"responseType"`
+	Time     time.Time `json:"time"`
 }
 
 type routeBreakdown struct {
@@ -49,7 +50,7 @@ func (b *routeBreakdown) Add(total float64, groups map[string]float64) {
 
 	other := total - sum
 	if other < 0 {
-		other = 0
+		other = 0.000001
 	}
 
 	if groups == nil {
@@ -68,12 +69,22 @@ func (b *routeBreakdown) Add(total float64, groups map[string]float64) {
 }
 
 func (b *routeBreakdown) Pack() error {
+	max := b.Total.Count
+	for _, v := range b.Groups {
+		if v.Count > max {
+			max = v.Count
+		}
+	}
+
+	addZeroes(b.Total, max)
 	err := b.Total.Pack()
 	if err != nil {
 		return err
 	}
 
 	for _, v := range b.Groups {
+		addZeroes(v, max)
+
 		err = v.Pack()
 		if err != nil {
 			return err
@@ -81,6 +92,12 @@ func (b *routeBreakdown) Pack() error {
 	}
 
 	return nil
+}
+
+func addZeroes(s *routeStat, max int) {
+	for i := s.Count; i < max; i++ {
+		_ = s.Add(0)
+	}
 }
 
 type routeBreakdowns struct {
@@ -194,11 +211,16 @@ func (s *routeBreakdowns) send(m map[routeBreakdownKey]*routeBreakdown) error {
 }
 
 func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
+	if trace.StatusCode < 200 || (trace.StatusCode >= 300 && trace.StatusCode < 400) {
+		// ignore
+		return nil
+	}
+
 	key := routeBreakdownKey{
-		Method:      trace.Method,
-		Route:       trace.Route,
-		ContentType: trace.ContentType,
-		Time:        trace.Start.UTC().Truncate(time.Minute),
+		Method:   trace.Method,
+		Route:    trace.Route,
+		RespType: trace.respType(),
+		Time:     trace.Start.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
@@ -239,6 +261,21 @@ type RouteTrace struct {
 
 	mu     sync.Mutex
 	groups map[string]float64
+}
+
+func (t *RouteTrace) respType() string {
+	if t.ContentType != "" {
+		ind := strings.LastIndexByte(t.ContentType, '/')
+		if ind != -1 {
+			return t.ContentType[ind+1:]
+		}
+		return t.ContentType
+	}
+
+	if t.StatusCode >= 400 {
+		return "error"
+	}
+	return ""
 }
 
 func NewRouteTrace(c context.Context, trace *RouteTrace) (context.Context, *RouteTrace) {
