@@ -30,7 +30,7 @@ type routeBreakdown struct {
 	Groups map[string]*routeStat `json:"groups"`
 }
 
-func (b *routeBreakdown) Add(total float64, groups map[string]float64) {
+func (b *routeBreakdown) Add(total time.Duration, groups map[string]time.Duration) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -41,30 +41,30 @@ func (b *routeBreakdown) Add(total float64, groups map[string]float64) {
 		b.Groups = make(map[string]*routeStat)
 	}
 
-	_ = b.Total.Add(total)
+	_ = b.Total.Add(durInMs(total))
 
-	var sum float64
-	for _, ms := range groups {
-		sum += ms
+	var sum time.Duration
+	for _, dur := range groups {
+		sum += dur
 	}
 
 	other := total - sum
 	if other < 0 {
-		other = 0.000001
+		other = time.Microsecond
 	}
 
 	if groups == nil {
-		groups = make(map[string]float64)
+		groups = make(map[string]time.Duration)
 	}
 	groups["other"] = other
 
-	for name, ms := range groups {
+	for name, dur := range groups {
 		s, ok := b.Groups[name]
 		if !ok {
 			s = newRouteStat()
 			b.Groups[name] = s
 		}
-		_ = s.Add(ms)
+		_ = s.Add(durInMs(dur))
 	}
 }
 
@@ -236,7 +236,7 @@ func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 	s.addWG.Add(1)
 	s.mu.Unlock()
 
-	total := durInMs(trace.End.Sub(trace.Start))
+	total := trace.End.Sub(trace.Start)
 	trace.mu.Lock()
 	groups := trace.groups
 	trace.groups = nil
@@ -260,7 +260,7 @@ type RouteTrace struct {
 	End   time.Time
 
 	mu     sync.Mutex
-	groups map[string]float64
+	groups map[string]time.Duration
 }
 
 func (t *RouteTrace) respType() string {
@@ -300,12 +300,12 @@ func (t *RouteTrace) Group(name string) Group {
 	return s
 }
 
-func (t *RouteTrace) IncGroup(name string, ms float64) {
+func (t *RouteTrace) IncGroup(name string, dur time.Duration) {
 	t.mu.Lock()
 	if t.groups == nil {
-		t.groups = make(map[string]float64)
+		t.groups = make(map[string]time.Duration)
 	}
-	t.groups[name] += ms
+	t.groups[name] += dur
 	t.mu.Unlock()
 }
 
@@ -321,7 +321,7 @@ type group struct {
 
 func (g *group) Finish() {
 	since := time.Since(g.start)
-	g.trace.IncGroup(g.name, durInMs(since))
+	g.trace.IncGroup(g.name, since)
 }
 
 func durInMs(dur time.Duration) float64 {

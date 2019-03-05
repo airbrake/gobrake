@@ -173,11 +173,12 @@ func (s *queryStats) Notify(c context.Context, q *QueryInfo) error {
 	s.addWG.Add(1)
 	s.mu.Unlock()
 
-	ms := float64(q.End.Sub(q.Start)) / float64(time.Millisecond)
+	dur := q.End.Sub(q.Start)
+	ms := durInMs(dur)
 
 	trace := RouteTraceFromContext(c)
 	if trace != nil {
-		trace.IncGroup("queries", ms)
+		trace.IncGroup("queries", dur)
 	}
 
 	stat.mu.Lock()
