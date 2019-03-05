@@ -136,7 +136,9 @@ func (rs *routes) Flush() {
 }
 
 func (rs *routes) Notify(c context.Context, trace *RouteTrace) error {
-	trace.end = time.Now()
+	if trace.End.IsZero() {
+		trace.End = time.Now()
+	}
 
 	for _, fn := range rs.filters {
 		trace = fn(trace)

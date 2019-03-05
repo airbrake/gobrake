@@ -198,7 +198,7 @@ func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 		Method:      trace.Method,
 		Route:       trace.Route,
 		ContentType: trace.ContentType,
-		Time:        trace.start.UTC().Truncate(time.Minute),
+		Time:        trace.Start.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
@@ -214,7 +214,7 @@ func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 	s.addWG.Add(1)
 	s.mu.Unlock()
 
-	total := durInMs(trace.end.Sub(trace.start))
+	total := durInMs(trace.End.Sub(trace.Start))
 	trace.mu.Lock()
 	groups := trace.groups
 	trace.groups = nil
@@ -234,15 +234,17 @@ type RouteTrace struct {
 	StatusCode  int
 	ContentType string
 
-	start time.Time
-	end   time.Time
+	Start time.Time
+	End   time.Time
 
 	mu     sync.Mutex
 	groups map[string]float64
 }
 
 func NewRouteTrace(c context.Context, trace *RouteTrace) (context.Context, *RouteTrace) {
-	trace.start = time.Now()
+	if trace.Start.IsZero() {
+		trace.Start = time.Now()
+	}
 	c = context.WithValue(c, traceCtxKey, trace)
 	return c, trace
 }
