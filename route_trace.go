@@ -264,18 +264,17 @@ type RouteTrace struct {
 }
 
 func (t *RouteTrace) respType() string {
-	if t.ContentType != "" {
-		ind := strings.LastIndexByte(t.ContentType, '/')
-		if ind != -1 {
-			return t.ContentType[ind+1:]
-		}
-		return t.ContentType
-	}
-
 	if t.StatusCode >= 400 {
 		return "error"
 	}
-	return ""
+	if t.ContentType == "" {
+		return ""
+	}
+	ind := strings.LastIndexByte(t.ContentType, '/')
+	if ind != -1 {
+		return t.ContentType[ind+1:]
+	}
+	return t.ContentType
 }
 
 func NewRouteTrace(c context.Context, trace *RouteTrace) (context.Context, *RouteTrace) {
