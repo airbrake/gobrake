@@ -25,23 +25,23 @@ type routeBreakdownKey struct {
 type routeBreakdown struct {
 	routeBreakdownKey
 
-	mu     sync.Mutex
-	Total  *routeStat            `json:"total"`
-	Groups map[string]*routeStat `json:"groups"`
+	mu         sync.Mutex
+	*routeStat `json:"total"`
+	Groups     map[string]*routeStat `json:"groups"`
 }
 
 func (b *routeBreakdown) Add(total time.Duration, groups map[string]time.Duration) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	if b.Total == nil {
-		b.Total = newRouteStat()
+	if b.routeStat == nil {
+		b.routeStat = newRouteStat()
 	}
 	if b.Groups == nil {
 		b.Groups = make(map[string]*routeStat)
 	}
 
-	_ = b.Total.Add(durInMs(total))
+	_ = b.routeStat.Add(durInMs(total))
 
 	var sum time.Duration
 	for _, dur := range groups {
@@ -69,15 +69,15 @@ func (b *routeBreakdown) Add(total time.Duration, groups map[string]time.Duratio
 }
 
 func (b *routeBreakdown) Pack() error {
-	max := b.Total.Count
+	max := b.routeStat.Count
 	for _, v := range b.Groups {
 		if v.Count > max {
 			max = v.Count
 		}
 	}
 
-	addZeroes(b.Total, max)
-	err := b.Total.Pack()
+	addZeroes(b.routeStat, max)
+	err := b.routeStat.Pack()
 	if err != nil {
 		return err
 	}
