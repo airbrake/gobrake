@@ -23,11 +23,10 @@ func BenchmarkSendNotice(b *testing.B) {
 		Host:       server.URL,
 	})
 
-	notice := notifier.Notice(errors.New("benchmark"), nil, 0)
-
 	b.ResetTimer()
 
 	b.RunParallel(func(pb *testing.PB) {
+		notice := notifier.Notice(errors.New("benchmark"), nil, 0)
 		for pb.Next() {
 			id, err := notifier.SendNotice(notice)
 			if err != nil {
