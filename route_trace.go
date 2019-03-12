@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -232,11 +233,8 @@ func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 	addWG.Add(1)
 	s.mu.Unlock()
 
-	trace.mu.Lock()
 	total := trace.End.Sub(trace.Start)
-	groups := trace.groups
-	trace.groups = nil
-	trace.mu.Unlock()
+	groups := trace.flushGroups()
 
 	b.Add(total, groups)
 	addWG.Done()
@@ -253,8 +251,78 @@ type RouteTrace struct {
 	Start time.Time
 	End   time.Time
 
-	mu     sync.Mutex
-	groups map[string]time.Duration
+	spansMu sync.RWMutex
+	spans   map[string]Span
+
+	groupsMu sync.Mutex
+	groups   map[string]time.Duration
+}
+
+func NewRouteTrace(c context.Context, trace *RouteTrace) (context.Context, *RouteTrace) {
+	if trace.Start.IsZero() {
+		trace.Start = time.Now()
+	}
+	c = context.WithValue(c, traceCtxKey, trace)
+	return c, trace
+}
+
+func RouteTraceFromContext(c context.Context) *RouteTrace {
+	t, _ := c.Value(traceCtxKey).(*RouteTrace)
+	return t
+}
+
+func (t *RouteTrace) Span(name string) Span {
+	if t == nil {
+		return noopSpan{}
+	}
+
+	s := &span{
+		trace: t,
+		name:  name,
+		start: time.Now(),
+	}
+
+	t.spansMu.Lock()
+	if t.spans == nil {
+		t.spans = make(map[string]Span)
+	}
+	t.spans[name] = s
+	t.spansMu.Unlock()
+
+	return s
+}
+
+func (t *RouteTrace) StartSpan(name string) {
+	_ = t.Span(name)
+}
+
+func (t *RouteTrace) FinishSpan(name string) {
+	t.spansMu.RLock()
+	s := t.spans[name]
+	t.spansMu.RUnlock()
+
+	if s == nil {
+		log.Printf("no span with name=%q is in progress", name)
+		return
+	}
+	s.Finish()
+}
+
+func (t *RouteTrace) IncGroup(name string, dur time.Duration) {
+	t.groupsMu.Lock()
+	if t.groups == nil {
+		t.groups = make(map[string]time.Duration)
+	}
+	t.groups[name] += dur
+	t.groupsMu.Unlock()
+}
+
+func (t *RouteTrace) flushGroups() map[string]time.Duration {
+	t.groupsMu.Lock()
+	groups := t.groups
+	t.groups = nil
+	t.groupsMu.Unlock()
+	return groups
 }
 
 func (t *RouteTrace) respType() string {
@@ -271,51 +339,28 @@ func (t *RouteTrace) respType() string {
 	return t.ContentType
 }
 
-func NewRouteTrace(c context.Context, trace *RouteTrace) (context.Context, *RouteTrace) {
-	if trace.Start.IsZero() {
-		trace.Start = time.Now()
-	}
-	c = context.WithValue(c, traceCtxKey, trace)
-	return c, trace
-}
-
-func RouteTraceFromContext(c context.Context) *RouteTrace {
-	t, _ := c.Value(traceCtxKey).(*RouteTrace)
-	return t
-}
-
-func (t *RouteTrace) Group(name string) Group {
-	s := &group{
-		trace: t,
-		name:  name,
-		start: time.Now(),
-	}
-	return s
-}
-
-func (t *RouteTrace) IncGroup(name string, dur time.Duration) {
-	t.mu.Lock()
-	if t.groups == nil {
-		t.groups = make(map[string]time.Duration)
-	}
-	t.groups[name] += dur
-	t.mu.Unlock()
-}
-
-type Group interface {
+type Span interface {
 	Finish()
 }
 
-type group struct {
+type span struct {
 	trace *RouteTrace
 	name  string
 	start time.Time
 }
 
-func (g *group) Finish() {
-	since := time.Since(g.start)
-	g.trace.IncGroup(g.name, since)
+var _ Span = (*span)(nil)
+
+func (s *span) Finish() {
+	since := time.Since(s.start)
+	s.trace.IncGroup(s.name, since)
 }
+
+type noopSpan struct{}
+
+var _ Span = noopSpan{}
+
+func (noopSpan) Finish() {}
 
 func durInMs(dur time.Duration) float64 {
 	return float64(dur) / float64(time.Millisecond)
