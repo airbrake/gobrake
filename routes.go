@@ -36,7 +36,9 @@ func newRouteStat() *routeStat {
 
 func (s *routeStat) Add(ms float64) error {
 	if s.td == nil {
-		td, err := tdigest.New(tdigest.Compression(20))
+		seed := time.Now().UnixNano()
+		td, err := tdigest.New(
+			tdigest.Compression(20), tdigest.LocalRandomNumberGenerator(seed))
 		if err != nil {
 			return err
 		}
