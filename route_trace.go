@@ -267,6 +267,9 @@ func NewRouteTrace(c context.Context, trace *RouteTrace) (context.Context, *Rout
 }
 
 func RouteTraceFromContext(c context.Context) *RouteTrace {
+	if c == nil {
+		return nil
+	}
 	t, _ := c.Value(traceCtxKey).(*RouteTrace)
 	return t
 }
