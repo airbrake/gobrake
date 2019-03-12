@@ -25,7 +25,6 @@ type routeBreakdownKey struct {
 type routeBreakdown struct {
 	routeBreakdownKey
 
-	mu sync.Mutex
 	routeStat
 	Groups map[string]*routeStat `json:"groups"`
 }
@@ -230,19 +229,17 @@ func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 		s.m[key] = b
 	}
 	addWG := s.addWG
-	s.addWG.Add(1)
+	addWG.Add(1)
 	s.mu.Unlock()
 
-	total := trace.End.Sub(trace.Start)
 	trace.mu.Lock()
+	total := trace.End.Sub(trace.Start)
 	groups := trace.groups
 	trace.groups = nil
 	trace.mu.Unlock()
 
-	s.mu.Lock()
 	b.Add(total, groups)
 	addWG.Done()
-	s.mu.Unlock()
 
 	return nil
 }

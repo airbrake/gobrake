@@ -204,7 +204,7 @@ func (s *routeStats) Notify(c context.Context, req *RouteTrace) error {
 		s.m[key] = stat
 	}
 	addWG := s.addWG
-	s.addWG.Add(1)
+	addWG.Add(1)
 	s.mu.Unlock()
 
 	ms := durInMs(req.End.Sub(req.Start))
