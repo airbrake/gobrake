@@ -300,6 +300,10 @@ func (t *RouteTrace) StartSpan(name string) {
 }
 
 func (t *RouteTrace) FinishSpan(name string) {
+	if t == nil {
+		return
+	}
+
 	t.spansMu.RLock()
 	s := t.spans[name]
 	t.spansMu.RUnlock()
