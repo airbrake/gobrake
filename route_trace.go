@@ -66,22 +66,12 @@ func (b *routeBreakdown) Add(total time.Duration, groups map[string]time.Duratio
 }
 
 func (b *routeBreakdown) Pack() error {
-	max := b.routeStat.Count
-	for _, v := range b.Groups {
-		if v.Count > max {
-			max = v.Count
-		}
-	}
-
-	addZeroes(&b.routeStat, max)
 	err := b.routeStat.Pack()
 	if err != nil {
 		return err
 	}
 
 	for _, v := range b.Groups {
-		addZeroes(v, max)
-
 		err = v.Pack()
 		if err != nil {
 			return err
@@ -89,12 +79,6 @@ func (b *routeBreakdown) Pack() error {
 	}
 
 	return nil
-}
-
-func addZeroes(s *routeStat, max int) {
-	for i := s.Count; i < max; i++ {
-		_ = s.Add(0)
-	}
 }
 
 type routeBreakdowns struct {
