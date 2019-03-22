@@ -15,6 +15,7 @@ import (
 type ctxKey string
 
 const traceCtxKey ctxKey = "ab_route_trace"
+const spanCtxPrefix = "ab_route_span:"
 
 type routeBreakdownKey struct {
 	Method   string    `json:"method"`
@@ -247,16 +248,22 @@ func RouteTraceFromContext(c context.Context) *RouteTrace {
 	return t
 }
 
-func (t *RouteTrace) Span(name string) Span {
+func (t *RouteTrace) Span(c context.Context, name string) (context.Context, Span) {
 	if t == nil {
-		return noopSpan{}
+		return c, noopSpan{}
 	}
 
-	s := &span{
-		trace: t,
-		name:  name,
-		start: time.Now(),
+	span := newSpan(t, name)
+	c = context.WithValue(c, ctxKey(spanCtxPrefix+name), span)
+	return c, span
+}
+
+func (t *RouteTrace) StartSpan(name string) {
+	if t == nil {
+		return
 	}
+
+	s := newSpan(t, name)
 
 	t.spansMu.Lock()
 	if t.spans == nil {
@@ -264,12 +271,6 @@ func (t *RouteTrace) Span(name string) Span {
 	}
 	t.spans[name] = s
 	t.spansMu.Unlock()
-
-	return s
-}
-
-func (t *RouteTrace) StartSpan(name string) {
-	_ = t.Span(name)
 }
 
 func (t *RouteTrace) FinishSpan(name string) {
@@ -330,6 +331,14 @@ type span struct {
 }
 
 var _ Span = (*span)(nil)
+
+func newSpan(trace *RouteTrace, name string) *span {
+	return &span{
+		trace: trace,
+		name:  name,
+		start: time.Now(),
+	}
+}
 
 func (s *span) Finish() {
 	since := time.Since(s.start)
