@@ -40,20 +40,9 @@ func (b *routeBreakdown) Add(total time.Duration, groups map[string]time.Duratio
 
 	_ = b.routeStat.Add(durInMs(total))
 
-	var sum time.Duration
-	for _, dur := range groups {
-		sum += dur
-	}
-
-	other := total - sum
-	if other < 0 {
-		other = time.Microsecond
-	}
-
 	if groups == nil {
 		groups = make(map[string]time.Duration)
 	}
-	groups["other"] = other
 
 	for name, dur := range groups {
 		s, ok := b.Groups[name]
