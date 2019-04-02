@@ -273,7 +273,7 @@ func (t *RouteTrace) StartSpan(name string) {
 	t.spansMu.Unlock()
 }
 
-func (t *RouteTrace) FinishSpan(name string) {
+func (t *RouteTrace) EndSpan(name string) {
 	if t == nil {
 		return
 	}
@@ -286,7 +286,7 @@ func (t *RouteTrace) FinishSpan(name string) {
 		log.Printf("no span with name=%q is in progress", name)
 		return
 	}
-	s.Finish()
+	s.End()
 }
 
 func (t *RouteTrace) IncGroup(name string, dur time.Duration) {
@@ -321,7 +321,7 @@ func (t *RouteTrace) respType() string {
 }
 
 type Span interface {
-	Finish()
+	End()
 }
 
 type span struct {
@@ -340,7 +340,7 @@ func newSpan(trace *RouteTrace, name string) *span {
 	}
 }
 
-func (s *span) Finish() {
+func (s *span) End() {
 	since := time.Since(s.start)
 	s.trace.IncGroup(s.name, since)
 }
@@ -349,7 +349,7 @@ type noopSpan struct{}
 
 var _ Span = noopSpan{}
 
-func (noopSpan) Finish() {}
+func (noopSpan) End() {}
 
 func durInMs(dur time.Duration) float64 {
 	return float64(dur) / float64(time.Millisecond)
