@@ -229,6 +229,7 @@ type RouteTrace struct {
 	StatusCode  int
 	ContentType string
 
+	// TODO: unexport and add a mutex
 	Start time.Time
 	End   time.Time
 
@@ -307,6 +308,9 @@ func (t *RouteTrace) EndSpan(name string) {
 
 func (t *RouteTrace) IncGroup(name string, dur time.Duration) {
 	t.groupsMu.Lock()
+	if !t.End.IsZero() {
+		return
+	}
 	if t.groups == nil {
 		t.groups = make(map[string]time.Duration)
 	}
