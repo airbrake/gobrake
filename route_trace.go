@@ -39,19 +39,26 @@ func (b *routeBreakdown) Add(total time.Duration, groups map[string]time.Duratio
 		b.Groups = make(map[string]*routeStat)
 	}
 
-	_ = b.routeStat.Add(durInMs(total))
+	_ = b.routeStat.Add(total)
 
 	if groups == nil {
 		groups = make(map[string]time.Duration)
 	}
 
+	var sum time.Duration
 	for name, dur := range groups {
+		sum += dur
+
 		s, ok := b.Groups[name]
 		if !ok {
 			s = newRouteStat()
 			b.Groups[name] = s
 		}
-		_ = s.Add(durInMs(dur))
+		_ = s.Add(dur)
+	}
+
+	if sum > total {
+		logger.Printf("sum=%s > total=%s", sum, total)
 	}
 }
 
@@ -266,11 +273,16 @@ func (t *RouteTrace) StartSpan(name string) {
 	s := newSpan(t, name)
 
 	t.spansMu.Lock()
+	defer t.spansMu.Unlock()
+
+	if _, ok := t.spans[name]; ok {
+		log.Printf("span=%q is already started", name)
+		return
+	}
 	if t.spans == nil {
 		t.spans = make(map[string]Span)
 	}
 	t.spans[name] = s
-	t.spansMu.Unlock()
 }
 
 func (t *RouteTrace) EndSpan(name string) {
@@ -278,15 +290,19 @@ func (t *RouteTrace) EndSpan(name string) {
 		return
 	}
 
-	t.spansMu.RLock()
-	s := t.spans[name]
-	t.spansMu.RUnlock()
+	t.spansMu.Lock()
+	s, ok := t.spans[name]
+	if ok {
+		delete(t.spans, name)
+	}
+	t.spansMu.Unlock()
 
-	if s == nil {
-		log.Printf("no span with name=%q is in progress", name)
+	if ok {
+		s.End()
+	} else {
+		log.Printf("span=%q does not exist", name)
 		return
 	}
-	s.End()
 }
 
 func (t *RouteTrace) IncGroup(name string, dur time.Duration) {

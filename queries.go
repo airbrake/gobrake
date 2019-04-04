@@ -114,7 +114,7 @@ func (s *queryStats) send(m map[queryKey]*routeStat) error {
 		Env:     s.opt.Environment,
 		Queries: queries,
 	}
-	err := json.NewEncoder(buf).Encode(out)
+	err := json.NewEncoder(buf).Encode(&out)
 	if err != nil {
 		return err
 	}
@@ -174,17 +174,16 @@ func (s *queryStats) Notify(c context.Context, q *QueryInfo) error {
 	s.mu.Unlock()
 
 	dur := q.End.Sub(q.Start)
-	ms := durInMs(dur)
+
+	stat.mu.Lock()
+	err := stat.Add(dur)
+	addWG.Done()
+	stat.mu.Unlock()
 
 	trace := RouteTraceFromContext(c)
 	if trace != nil {
-		trace.IncGroup("queries", dur)
+		trace.IncGroup("sql", dur)
 	}
-
-	stat.mu.Lock()
-	err := stat.Add(ms)
-	addWG.Done()
-	stat.mu.Unlock()
 
 	return err
 }

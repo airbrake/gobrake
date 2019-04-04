@@ -34,7 +34,7 @@ func newRouteStat() *routeStat {
 	return new(routeStat)
 }
 
-func (s *routeStat) Add(ms float64) error {
+func (s *routeStat) Add(dur time.Duration) error {
 	if s.td == nil {
 		seed := time.Now().UnixNano()
 		td, err := tdigest.New(
@@ -45,6 +45,7 @@ func (s *routeStat) Add(ms float64) error {
 		s.td = td
 	}
 
+	ms := durInMs(dur)
 	s.Count++
 	s.Sum += ms
 	s.Sumsq += ms * ms
@@ -209,10 +210,10 @@ func (s *routeStats) Notify(c context.Context, req *RouteTrace) error {
 	addWG.Add(1)
 	s.mu.Unlock()
 
-	ms := durInMs(req.End.Sub(req.Start))
+	dur := req.End.Sub(req.Start)
 
 	stat.mu.Lock()
-	err := stat.Add(ms)
+	err := stat.Add(dur)
 	addWG.Done()
 	stat.mu.Unlock()
 
