@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -233,8 +232,8 @@ type RouteTrace struct {
 	Start time.Time
 	End   time.Time
 
-	spansMu sync.RWMutex
-	spans   map[string]Span
+	currSpanMu sync.Mutex
+	currSpan   *span
 
 	groupsMu sync.Mutex
 	groups   map[string]time.Duration
@@ -271,19 +270,13 @@ func (t *RouteTrace) StartSpan(name string) {
 		return
 	}
 
-	s := newSpan(t, name)
+	t.currSpanMu.Lock()
+	defer t.currSpanMu.Unlock()
 
-	t.spansMu.Lock()
-	defer t.spansMu.Unlock()
-
-	if _, ok := t.spans[name]; ok {
-		log.Printf("span=%q is already started", name)
+	if t.currSpan != nil {
 		return
 	}
-	if t.spans == nil {
-		t.spans = make(map[string]Span)
-	}
-	t.spans[name] = s
+	t.currSpan = newSpan(t, name)
 }
 
 func (t *RouteTrace) EndSpan(name string) {
@@ -291,18 +284,12 @@ func (t *RouteTrace) EndSpan(name string) {
 		return
 	}
 
-	t.spansMu.Lock()
-	s, ok := t.spans[name]
-	if ok {
-		delete(t.spans, name)
-	}
-	t.spansMu.Unlock()
+	t.currSpanMu.Lock()
+	defer t.currSpanMu.Unlock()
 
-	if ok {
-		s.End()
-	} else {
-		log.Printf("span=%q does not exist", name)
-		return
+	if t.currSpan != nil && t.currSpan.name == name {
+		t.currSpan.End()
+		t.currSpan = nil
 	}
 }
 
