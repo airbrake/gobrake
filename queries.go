@@ -180,10 +180,5 @@ func (s *queryStats) Notify(c context.Context, q *QueryInfo) error {
 	addWG.Done()
 	stat.mu.Unlock()
 
-	trace := RouteTraceFromContext(c)
-	if trace != nil {
-		trace.IncGroup("sql", dur)
-	}
-
 	return err
 }
