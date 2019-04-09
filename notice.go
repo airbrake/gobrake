@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -36,11 +37,25 @@ func getDefaultContext() map[string]interface{} {
 			defaultContext["rootDirectory"] = wd
 		}
 
-		if s := os.Getenv("GOPATH"); s != "" {
+		if s := gopath(); s != "" {
 			defaultContext["gopath"] = s
 		}
 	})
 	return defaultContext
+}
+
+func gopath() string {
+	path := os.Getenv("GOPATH")
+	if path != "" {
+		return path
+	}
+
+	path, ok := os.LookupEnv("HOME")
+	if ok {
+		return filepath.Join(path, "go")
+	}
+
+	return ""
 }
 
 type Error struct {
