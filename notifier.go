@@ -194,6 +194,7 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 	n.AddFilter(newNotifierFilter(n))
 	n.AddFilter(gopathFilter)
 	n.AddFilter(gitFilter)
+	n.AddFilter(httpUnsolicitedResponseFilter)
 
 	if len(opt.KeysBlacklist) > 0 {
 		n.AddFilter(NewBlacklistKeysFilter(opt.KeysBlacklist...))
