@@ -111,3 +111,16 @@ func gitFilter(notice *Notice) *Notice {
 
 	return notice
 }
+
+func httpUnsolicitedResponseFilter(notice *Notice) *Notice {
+	if notice.Errors[0].Type != "string" {
+		return notice
+	}
+
+	prefix := "Unsolicited response received on idle HTTP channel starting with"
+	if !strings.HasPrefix(notice.Errors[0].Message, prefix) {
+		return notice
+	}
+
+	return nil
+}

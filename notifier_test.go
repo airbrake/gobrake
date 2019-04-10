@@ -238,6 +238,15 @@ var _ = Describe("Notifier", func() {
 		notify(notice, nil)
 		Expect(sentNotice.Context["severity"]).To(Equal(customSeverity))
 	})
+
+	It("filters errors with message that starts with '(string)Unsolicited response received on idle HTTP channel starting with", func() {
+		sentNotice = nil
+
+		msg := "Unsolicited response received on idle HTTP channel starting with HTTP/1.0 408 Request Time-out"
+		notify(msg, nil)
+
+		Expect(sentNotice).To(BeNil())
+	})
 })
 
 var _ = Describe("rate limiting", func() {
