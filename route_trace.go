@@ -320,7 +320,7 @@ func (t *RouteTrace) endSpan(span *span) bool {
 	return true
 }
 
-func (t *RouteTrace) IncGroup(name string, dur time.Duration) {
+func (t *RouteTrace) incGroup(name string, dur time.Duration) {
 	t.groupsMu.Lock()
 	if !t.End.IsZero() {
 		return
@@ -380,7 +380,7 @@ func newSpan(trace *RouteTrace, name string) *span {
 
 func (s *span) End() {
 	s.dur += clock.Since(s.start)
-	s.trace.IncGroup(s.name, s.dur)
+	s.trace.incGroup(s.name, s.dur)
 	s.trace = nil
 }
 
