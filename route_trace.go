@@ -231,8 +231,9 @@ type RouteTrace struct {
 	Start time.Time
 	End   time.Time
 
-	currSpanMu sync.Mutex
-	currSpan   *span
+	spansMu  sync.Mutex
+	spans    map[string]*span
+	currSpan *span
 
 	groupsMu sync.Mutex
 	groups   map[string]time.Duration
@@ -240,7 +241,7 @@ type RouteTrace struct {
 
 func NewRouteTrace(c context.Context, trace *RouteTrace) (context.Context, *RouteTrace) {
 	if trace.Start.IsZero() {
-		trace.Start = time.Now()
+		trace.Start = clock.Now()
 	}
 	c = context.WithValue(c, traceCtxKey, trace)
 	return c, trace
@@ -259,13 +260,30 @@ func (t *RouteTrace) StartSpan(name string) {
 		return
 	}
 
-	t.currSpanMu.Lock()
-	defer t.currSpanMu.Unlock()
+	t.spansMu.Lock()
+	defer t.spansMu.Unlock()
 
-	if t.currSpan != nil {
+	if t.spans == nil {
+		t.spans = make(map[string]*span)
+	}
+
+	if t.currSpan != nil && t.currSpan.name == name {
+		t.currSpan.level++
 		return
 	}
-	t.currSpan = newSpan(t, name)
+
+	t.currSpan.pause()
+
+	span, ok := t.spans[name]
+	if ok {
+		span.resume()
+	} else {
+		span = newSpan(t, name)
+		t.spans[name] = span
+	}
+
+	span.parent = t.currSpan
+	t.currSpan = span
 }
 
 func (t *RouteTrace) EndSpan(name string) {
@@ -273,13 +291,33 @@ func (t *RouteTrace) EndSpan(name string) {
 		return
 	}
 
-	t.currSpanMu.Lock()
-	defer t.currSpanMu.Unlock()
+	t.spansMu.Lock()
+	defer t.spansMu.Unlock()
 
 	if t.currSpan != nil && t.currSpan.name == name {
-		t.currSpan.End()
-		t.currSpan = nil
+		if t.endSpan(t.currSpan) {
+			t.currSpan = t.currSpan.parent
+			t.currSpan.resume()
+		}
+		return
 	}
+
+	span, ok := t.spans[name]
+	if !ok {
+		logger.Printf("gobrake: span=%q does not exist", name)
+		return
+	}
+	t.endSpan(span)
+}
+
+func (t *RouteTrace) endSpan(span *span) bool {
+	if span.level > 0 {
+		span.level--
+		return false
+	}
+	span.End()
+	delete(t.spans, span.name)
+	return true
 }
 
 func (t *RouteTrace) IncGroup(name string, dur time.Duration) {
@@ -321,9 +359,13 @@ type Span interface {
 }
 
 type span struct {
-	trace *RouteTrace
+	trace  *RouteTrace
+	parent *span
+
 	name  string
 	start time.Time
+	dur   time.Duration
+	level int
 }
 
 var _ Span = (*span)(nil)
@@ -332,13 +374,33 @@ func newSpan(trace *RouteTrace, name string) *span {
 	return &span{
 		trace: trace,
 		name:  name,
-		start: time.Now(),
+		start: clock.Now(),
 	}
 }
 
 func (s *span) End() {
-	since := time.Since(s.start)
-	s.trace.IncGroup(s.name, since)
+	s.dur += clock.Since(s.start)
+	s.trace.IncGroup(s.name, s.dur)
+	s.trace = nil
+}
+
+func (s *span) pause() {
+	if s == nil || s.paused() {
+		return
+	}
+	s.dur += clock.Since(s.start)
+	s.start = time.Time{}
+}
+
+func (s *span) paused() bool {
+	return s.start.IsZero()
+}
+
+func (s *span) resume() {
+	if s == nil || !s.paused() {
+		return
+	}
+	s.start = clock.Now()
 }
 
 type noopSpan struct{}
