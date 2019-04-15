@@ -12,11 +12,11 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/airbrake/gobrake"
-	"github.com/airbrake/gobrake/internal/testpkg1"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/airbrake/gobrake"
+	"github.com/airbrake/gobrake/internal/testpkg1"
 )
 
 func TestGobrake(t *testing.T) {
@@ -48,7 +48,8 @@ var _ = Describe("Notifier", func() {
 			Expect(err).To(BeNil())
 
 			w.WriteHeader(http.StatusCreated)
-			w.Write([]byte(`{"id":"123"}`))
+			_, err = w.Write([]byte(`{"id":"123"}`))
+			Expect(err).To(BeNil())
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
 

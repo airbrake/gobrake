@@ -5,6 +5,7 @@ go:
   - 1.9.x
   - 1.10.x
   - 1.11.x
+  - 1.12.x
   - tip
 
 matrix:
@@ -12,9 +13,10 @@ matrix:
     - go: tip
 
 install:
+  - go get github.com/jonboulle/clockwork
   - go get github.com/onsi/ginkgo
   - go get github.com/onsi/gomega
   - go get github.com/pkg/errors
-  - go get -u github.com/caio/go-tdigest
-  - go get -u github.com/gin-gonic/gin
-  - go get -u github.com/astaxie/beego
+  - go get github.com/caio/go-tdigest
+  - go get github.com/gin-gonic/gin
+  - go get github.com/astaxie/beego
