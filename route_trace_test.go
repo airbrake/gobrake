@@ -37,7 +37,8 @@ var _ = Describe("RouteTrace", func() {
 		fakeClock.Advance(time.Millisecond)
 		trace.EndSpan("root")
 
-		Expect(trace.groups["root"]).To(BeNumerically("~", 2*time.Millisecond))
-		Expect(trace.groups["nested1"]).To(BeNumerically("~", 3*time.Millisecond))
+		Expect(trace.groups["root"]).To(BeNumerically("==", 2*time.Millisecond))
+		Expect(trace.groups["nested1"]).To(BeNumerically("==", 3*time.Millisecond))
+		Expect(trace.groups["other"]).To(BeNumerically("==", 0))
 	})
 })
