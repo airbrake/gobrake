@@ -347,8 +347,11 @@ func (t *RouteTrace) flushGroups() map[string]time.Duration {
 }
 
 func (t *RouteTrace) respType() string {
+	if t.StatusCode >= 500 {
+		return "5xx"
+	}
 	if t.StatusCode >= 400 {
-		return "error"
+		return "4xx"
 	}
 	if t.ContentType == "" {
 		return ""
