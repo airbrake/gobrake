@@ -46,18 +46,24 @@ func (b *routeBreakdown) Add(total time.Duration, groups map[string]time.Duratio
 	var sum time.Duration
 	for name, dur := range groups {
 		sum += dur
-
-		s, ok := b.Groups[name]
-		if !ok {
-			s = newRouteStat()
-			b.Groups[name] = s
-		}
-		_ = s.Add(dur)
+		b.addGroup(name, dur)
 	}
 
 	if sum > total {
 		logger.Printf("sum=%s > total=%s", sum, total)
+		b.addGroup("other", 0)
+	} else {
+		b.addGroup("other", total-sum)
 	}
+}
+
+func (b *routeBreakdown) addGroup(name string, dur time.Duration) {
+	s, ok := b.Groups[name]
+	if !ok {
+		s = newRouteStat()
+		b.Groups[name] = s
+	}
+	_ = s.Add(dur)
 }
 
 func (b *routeBreakdown) Pack() error {
