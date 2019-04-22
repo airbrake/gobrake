@@ -273,12 +273,14 @@ func (t *RouteTrace) StartSpan(name string) {
 		t.spans = make(map[string]*span)
 	}
 
-	if t.currSpan != nil && t.currSpan.name == name {
-		t.currSpan.level++
-		return
-	}
+	if t.currSpan != nil {
+		if t.currSpan.name == name {
+			t.currSpan.level++
+			return
+		}
 
-	t.currSpan.pause()
+		t.currSpan.pause()
+	}
 
 	span, ok := t.spans[name]
 	if ok {
