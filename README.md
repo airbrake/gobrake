@@ -72,13 +72,47 @@ You can use [glog fork](https://github.com/airbrake/glog) to send your logs to A
 In order to collect some basic routes stats you can instrument your application using `notifier.Routes.Notify` API:
 
 ```go
-notifier.Routes.Notify(&gobrake.RouteInfo{
-    Method:     "GET",
-    Route:      "/hello/:name",
-    StatusCode: http.StatusOK,
+notifier.Routes.Notify(ctx, &gobrake.RouteTrace{
+    Method:     c.Request.Method,
+    Route:      routeName,
+    StatusCode: c.Writer.Status(),
     Start:      startTime,
     End:        time.Now(),
 })
 ```
 
 We also prepared HTTP middlewares for [Gin](examples/gin) and [Beego](examples/beego) users.
+
+To get more detailed timing you can wrap important blocks of code into spans. For example, you can create 2 spans `sql` and `http` to measure timing of specific operations:
+
+``` go
+trace := &gobrake.RouteTrace{
+    Method: c.Request.Method,
+    Route:  routeName,
+    Start:  time.Now(),
+}
+
+trace.StartSpan("sql")
+users, err := fetchUser(ctx, userID)
+trace.EndSpan("sql")
+
+trace.StartSpan("http")
+resp, err := http.Get("http://example.com/")
+trace.EndSpan("http")
+
+trace.StatusCode = http.StatusOK
+notifier.Routes.Notify(ctx, trace)
+```
+
+You can also collect stats about individual SQL queries performance using following API:
+
+```go
+notifier.Queries.Notify(&gobrake.QueryInfo{
+    Query: "SELECT * FROM users WHERE id = ?", // query must be normalized
+    Func:  "optional function name",
+    File:  "optional file name",
+    Line:  123,
+    Start: startTime,
+    End:   time.Now(),
+})
+```
