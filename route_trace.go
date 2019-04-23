@@ -202,7 +202,7 @@ func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 		Method:   trace.Method,
 		Route:    trace.Route,
 		RespType: trace.respType(),
-		Time:     trace.Start.UTC().Truncate(time.Minute),
+		Time:     trace.StartTime.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
@@ -218,7 +218,7 @@ func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 	addWG.Add(1)
 	s.mu.Unlock()
 
-	total := trace.End.Sub(trace.Start)
+	total := trace.EndTime.Sub(trace.StartTime)
 	groups := trace.flushGroups()
 
 	b.Add(total, groups)
@@ -233,9 +233,8 @@ type RouteTrace struct {
 	StatusCode  int
 	ContentType string
 
-	// TODO: unexport and add a mutex
-	Start time.Time
-	End   time.Time
+	StartTime time.Time
+	EndTime   time.Time
 
 	spansMu  sync.Mutex
 	spans    map[string]*span
@@ -246,8 +245,8 @@ type RouteTrace struct {
 }
 
 func NewRouteTrace(c context.Context, trace *RouteTrace) (context.Context, *RouteTrace) {
-	if trace.Start.IsZero() {
-		trace.Start = clock.Now()
+	if trace.StartTime.IsZero() {
+		trace.StartTime = clock.Now()
 	}
 	c = context.WithValue(c, traceCtxKey, trace)
 	return c, trace
@@ -330,7 +329,7 @@ func (t *RouteTrace) endSpan(span *span) bool {
 
 func (t *RouteTrace) incGroup(name string, dur time.Duration) {
 	t.groupsMu.Lock()
-	if !t.End.IsZero() {
+	if !t.EndTime.IsZero() {
 		return
 	}
 	if t.groups == nil {
