@@ -76,8 +76,8 @@ notifier.Routes.Notify(ctx, &gobrake.RouteTrace{
     Method:     c.Request.Method,
     Route:      routeName,
     StatusCode: c.Writer.Status(),
-    Start:      startTime,
-    End:        time.Now(),
+    StartTime:  startTime,
+    EndTime:    time.Now(),
 })
 ```
 
@@ -89,7 +89,7 @@ To get more detailed timing you can wrap important blocks of code into spans. Fo
 trace := &gobrake.RouteTrace{
     Method: c.Request.Method,
     Route:  routeName,
-    Start:  time.Now(),
+    StartTime:  time.Now(),
 }
 
 trace.StartSpan("sql")
@@ -108,11 +108,11 @@ You can also collect stats about individual SQL queries performance using follow
 
 ```go
 notifier.Queries.Notify(&gobrake.QueryInfo{
-    Query: "SELECT * FROM users WHERE id = ?", // query must be normalized
-    Func:  "optional function name",
-    File:  "optional file name",
-    Line:  123,
-    Start: startTime,
-    End:   time.Now(),
+    Query:     "SELECT * FROM users WHERE id = ?", // query must be normalized
+    Func:      "fetchUser", // optional
+    File:      "models/user.go", // optional
+    Line:      123, // optional
+    StartTime: startTime,
+    EndTime:   time.Now(),
 })
 ```
