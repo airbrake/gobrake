@@ -17,7 +17,7 @@ func init() {
 var _ = Describe("RouteTrace", func() {
 	It("supports nested spans", func() {
 		trace := &RouteTrace{
-			Start: clock.Now(),
+			StartTime: clock.Now(),
 		}
 
 		trace.StartSpan("root")

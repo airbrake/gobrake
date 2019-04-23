@@ -36,8 +36,8 @@ func afterExecFunc(notifier *gobrake.Notifier) func(c *context.Context) {
 			Method:     c.Input.Method(),
 			Route:      routerPattern,
 			StatusCode: statusCode,
-			Start:      startTime,
-			End:        time.Now(),
+			StartTime:  startTime,
+			EndTime:    time.Now(),
 		})
 	}
 }

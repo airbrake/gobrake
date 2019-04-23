@@ -196,7 +196,7 @@ func (s *routeStats) Notify(c context.Context, req *RouteTrace) error {
 		Method:     req.Method,
 		Route:      req.Route,
 		StatusCode: req.StatusCode,
-		Time:       req.Start.UTC().Truncate(time.Minute),
+		Time:       req.StartTime.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
@@ -210,7 +210,7 @@ func (s *routeStats) Notify(c context.Context, req *RouteTrace) error {
 	addWG.Add(1)
 	s.mu.Unlock()
 
-	dur := req.End.Sub(req.Start)
+	dur := req.EndTime.Sub(req.StartTime)
 
 	stat.mu.Lock()
 	err := stat.Add(dur)
