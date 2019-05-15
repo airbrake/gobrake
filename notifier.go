@@ -305,6 +305,8 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 		return "", errIPRateLimited
 	case httpEnhanceYourCalm:
 		return "", errAccountRateLimited
+	case http.StatusRequestEntityTooLarge:
+		return "", errNoticeTooBig
 	}
 
 	err = fmt.Errorf("got unexpected response status=%q", resp.Status)
