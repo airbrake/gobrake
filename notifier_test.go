@@ -165,6 +165,10 @@ var _ = Describe("Notifier", func() {
 		Expect(sendNoticeReq.Header.Get("Authorization")).To(Equal("Bearer key"))
 	})
 
+	It("sets user agent", func() {
+		Expect(sendNoticeReq.Header.Get("User-Agent")).To(Equal("gobrake/3.4.0"))
+	})
+
 	It("reports context using SetContext", func() {
 		notifier.AddFilter(func(notice *gobrake.Notice) *gobrake.Notice {
 			notice.Context["environment"] = "production"

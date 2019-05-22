@@ -165,6 +165,7 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 
 	req.Header.Set("Authorization", "Bearer "+s.opt.ProjectKey)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", userAgent)
 	resp, err := s.opt.HTTPClient.Do(req)
 	if err != nil {
 		return err

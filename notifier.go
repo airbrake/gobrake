@@ -18,6 +18,10 @@ import (
 	"time"
 )
 
+const notifierName = "gobrake"
+const notifierVersion = "3.4.0"
+const userAgent = notifierName + "/" + notifierVersion
+
 const waitTimeout = 5 * time.Second
 
 const httpEnhanceYourCalm = 420
@@ -272,6 +276,7 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 
 	req.Header.Set("Authorization", "Bearer "+n.opt.ProjectKey)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", userAgent)
 	resp, err := n.opt.HTTPClient.Do(req)
 	if err != nil {
 		return "", err

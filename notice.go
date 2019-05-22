@@ -19,8 +19,8 @@ func getDefaultContext() map[string]interface{} {
 	defaultContextOnce.Do(func() {
 		defaultContext = map[string]interface{}{
 			"notifier": map[string]interface{}{
-				"name":    "gobrake",
-				"version": "3.4.0",
+				"name":    notifierName,
+				"version": notifierVersion,
 				"url":     "https://github.com/airbrake/gobrake",
 			},
 
