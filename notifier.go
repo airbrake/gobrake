@@ -176,6 +176,7 @@ type Notifier struct {
 
 	Routes  *routes
 	Queries *queryStats
+	Queues  *queueStats
 
 	rateLimitReset uint32 // atomic
 	_closed        uint32 // atomic
@@ -193,6 +194,7 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 
 		Routes:  newRoutes(opt),
 		Queries: newQueryStats(opt),
+		Queues:  newQueueStats(opt),
 	}
 
 	n.AddFilter(newNotifierFilter(n))

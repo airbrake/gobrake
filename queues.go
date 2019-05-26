@@ -10,33 +10,29 @@ import (
 	"time"
 )
 
-type QueryInfo struct {
-	Method string
-	Route  string
-	Query  string
-	Func   string
-	File   string
-	Line   int
-	Start  time.Time
-	End    time.Time
+type QueueInfo struct {
+	Queue string
+	Func  string
+	File  string
+	Line  int
+	Start time.Time
+	End   time.Time
 }
 
-type queryKey struct {
-	Method string    `json:"method"`
-	Route  string    `json:"route"`
-	Query  string    `json:"query"`
-	Func   string    `json:"function"`
-	File   string    `json:"file"`
-	Line   int       `json:"line"`
-	Time   time.Time `json:"time"`
+type queueKey struct {
+	Queue string    `json:"queue"`
+	Func  string    `json:"function"`
+	File  string    `json:"file"`
+	Line  int       `json:"line"`
+	Time  time.Time `json:"time"`
 }
 
-type queryKeyStat struct {
-	queryKey
+type queueKeyStat struct {
+	queueKey
 	*routeStat
 }
 
-type queryStats struct {
+type queueStats struct {
 	opt    *NotifierOptions
 	apiURL string
 
@@ -44,26 +40,26 @@ type queryStats struct {
 	addWG      *sync.WaitGroup
 
 	mu sync.Mutex
-	m  map[queryKey]*routeStat
+	m  map[queueKey]*routeStat
 }
 
-func newQueryStats(opt *NotifierOptions) *queryStats {
-	return &queryStats{
+func newQueueStats(opt *NotifierOptions) *queueStats {
+	return &queueStats{
 		opt: opt,
-		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/queries-stats",
+		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/queues-stats",
 			opt.Host, opt.ProjectId),
 	}
 }
 
-func (s *queryStats) init() {
+func (s *queueStats) init() {
 	if s.flushTimer == nil {
 		s.flushTimer = time.AfterFunc(flushPeriod, s.flush)
 		s.addWG = new(sync.WaitGroup)
-		s.m = make(map[queryKey]*routeStat)
+		s.m = make(map[queueKey]*routeStat)
 	}
 }
 
-func (s *queryStats) flush() {
+func (s *queueStats) flush() {
 	s.mu.Lock()
 
 	s.flushTimer = nil
@@ -77,17 +73,17 @@ func (s *queryStats) flush() {
 	addWG.Wait()
 	err := s.send(m)
 	if err != nil {
-		logger.Printf("queryStats.send failed: %s", err)
+		logger.Printf("queueStats.send failed: %s", err)
 	}
 }
 
-type queriesOut struct {
-	Env     string         `json:"environment"`
-	Queries []queryKeyStat `json:"queries"`
+type queuesOut struct {
+	Env    string         `json:"environment"`
+	Queues []queueKeyStat `json:"queues"`
 }
 
-func (s *queryStats) send(m map[queryKey]*routeStat) error {
-	var queries []queryKeyStat
+func (s *queueStats) send(m map[queueKey]*routeStat) error {
+	var queues []queueKeyStat
 	for k, v := range m {
 		err := v.td.Compress()
 		if err != nil {
@@ -100,8 +96,8 @@ func (s *queryStats) send(m map[queryKey]*routeStat) error {
 		}
 		v.TDigest = b
 
-		queries = append(queries, queryKeyStat{
-			queryKey:  k,
+		queues = append(queues, queueKeyStat{
+			queueKey:  k,
 			routeStat: v,
 		})
 	}
@@ -110,9 +106,9 @@ func (s *queryStats) send(m map[queryKey]*routeStat) error {
 	defer buffers.Put(buf)
 	buf.Reset()
 
-	out := queriesOut{
-		Env:     s.opt.Environment,
-		Queries: queries,
+	out := queuesOut{
+		Env:    s.opt.Environment,
+		Queues: queues,
 	}
 	err := json.NewEncoder(buf).Encode(&out)
 	if err != nil {
@@ -154,15 +150,13 @@ func (s *queryStats) send(m map[queryKey]*routeStat) error {
 	return err
 }
 
-func (s *queryStats) Notify(c context.Context, q *QueryInfo) error {
-	key := queryKey{
-		Method: q.Method,
-		Route:  q.Route,
-		Query:  q.Query,
-		Func:   q.Func,
-		File:   q.File,
-		Line:   q.Line,
-		Time:   q.Start.UTC().Truncate(time.Minute),
+func (s *queueStats) Notify(c context.Context, q *QueueInfo) error {
+	key := queueKey{
+		Queue: q.Queue,
+		Func:  q.Func,
+		File:  q.File,
+		Line:  q.Line,
+		Time:  q.Start.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()

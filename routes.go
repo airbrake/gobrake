@@ -185,6 +185,8 @@ func (s *routeStats) send(m map[routeKey]*routeStat) error {
 	switch resp.StatusCode {
 	case http.StatusUnauthorized:
 		return errUnauthorized
+	case httpStatusTooManyRequests:
+		return errIPRateLimited
 	}
 
 	err = fmt.Errorf("got unexpected response status=%q", resp.Status)
