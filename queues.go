@@ -12,18 +12,12 @@ import (
 
 type QueueInfo struct {
 	Queue string
-	Func  string
-	File  string
-	Line  int
 	Start time.Time
 	End   time.Time
 }
 
 type queueKey struct {
 	Queue string    `json:"queue"`
-	Func  string    `json:"function"`
-	File  string    `json:"file"`
-	Line  int       `json:"line"`
 	Time  time.Time `json:"time"`
 }
 
@@ -153,9 +147,6 @@ func (s *queueStats) send(m map[queueKey]*routeStat) error {
 func (s *queueStats) Notify(c context.Context, q *QueueInfo) error {
 	key := queueKey{
 		Queue: q.Queue,
-		Func:  q.Func,
-		File:  q.File,
-		Line:  q.Line,
 		Time:  q.Start.UTC().Truncate(time.Minute),
 	}
 
