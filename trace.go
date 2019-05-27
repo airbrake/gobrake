@@ -1,10 +1,39 @@
 package gobrake
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"time"
 )
+
+type ctxKey string
+
+const traceCtxKey ctxKey = "ab_trace"
+
+type Trace interface {
+	StartSpan(name string)
+	EndSpan(name string)
+}
+
+func TraceFromContext(c context.Context) Trace {
+	if c == nil {
+		return nil
+	}
+	t, ok := c.Value(traceCtxKey).(Trace)
+	if !ok {
+		return noopTrace{}
+	}
+	return t
+}
+
+type noopTrace struct{}
+
+var _ Trace = noopTrace{}
+
+func (noopTrace) StartSpan(name string) {}
+
+func (noopTrace) EndSpan(name string) {}
 
 type trace struct {
 	startTime time.Time
@@ -17,6 +46,8 @@ type trace struct {
 	groupsMu sync.Mutex
 	groups   map[string]time.Duration
 }
+
+var _ Trace = (*trace)(nil)
 
 func (t *trace) end() {
 	if t.endTime.IsZero() {

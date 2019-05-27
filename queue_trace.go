@@ -4,12 +4,12 @@ import (
 	"context"
 )
 
-const queueTraceCtxKey ctxKey = "ab_queue_trace"
-
 type QueueTrace struct {
 	trace
 	Queue string
 }
+
+var _ Trace = (*QueueTrace)(nil)
 
 func NewQueueTrace(c context.Context, name string) (context.Context, *QueueTrace) {
 	t := &QueueTrace{
@@ -17,7 +17,7 @@ func NewQueueTrace(c context.Context, name string) (context.Context, *QueueTrace
 	}
 	t.startTime = clock.Now()
 	if c != nil {
-		c = context.WithValue(c, queueTraceCtxKey, t)
+		c = context.WithValue(c, traceCtxKey, t)
 	}
 	return c, t
 }
@@ -38,6 +38,6 @@ func QueueTraceFromContext(c context.Context) *QueueTrace {
 	if c == nil {
 		return nil
 	}
-	t, _ := c.Value(queueTraceCtxKey).(*QueueTrace)
+	t, _ := c.Value(traceCtxKey).(*QueueTrace)
 	return t
 }

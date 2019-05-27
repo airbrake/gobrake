@@ -5,10 +5,6 @@ import (
 	"strings"
 )
 
-type ctxKey string
-
-const routeTraceCtxKey ctxKey = "ab_route_trace"
-
 type RouteTrace struct {
 	trace
 	Method      string
@@ -17,6 +13,8 @@ type RouteTrace struct {
 	ContentType string
 }
 
+var _ Trace = (*RouteTrace)(nil)
+
 func NewRouteTrace(c context.Context, method, route string) (context.Context, *RouteTrace) {
 	t := &RouteTrace{
 		Method: method,
@@ -24,7 +22,7 @@ func NewRouteTrace(c context.Context, method, route string) (context.Context, *R
 	}
 	t.startTime = clock.Now()
 	if c != nil {
-		c = context.WithValue(c, routeTraceCtxKey, t)
+		c = context.WithValue(c, traceCtxKey, t)
 	}
 	return c, t
 }
@@ -33,7 +31,7 @@ func RouteTraceFromContext(c context.Context) *RouteTrace {
 	if c == nil {
 		return nil
 	}
-	t, _ := c.Value(routeTraceCtxKey).(*RouteTrace)
+	t, _ := c.Value(traceCtxKey).(*RouteTrace)
 	return t
 }
 
