@@ -10,20 +10,14 @@ import (
 	"time"
 )
 
-type QueueInfo struct {
-	Queue string
-	Start time.Time
-	End   time.Time
-}
-
 type queueKey struct {
 	Queue string    `json:"queue"`
 	Time  time.Time `json:"time"`
 }
 
-type queueKeyStat struct {
+type queueBreakdown struct {
 	queueKey
-	*routeStat
+	tdigestStatGroups
 }
 
 type queueStats struct {
@@ -34,7 +28,7 @@ type queueStats struct {
 	addWG      *sync.WaitGroup
 
 	mu sync.Mutex
-	m  map[queueKey]*routeStat
+	m  map[queueKey]*queueBreakdown
 }
 
 func newQueueStats(opt *NotifierOptions) *queueStats {
@@ -49,7 +43,7 @@ func (s *queueStats) init() {
 	if s.flushTimer == nil {
 		s.flushTimer = time.AfterFunc(flushPeriod, s.flush)
 		s.addWG = new(sync.WaitGroup)
-		s.m = make(map[queueKey]*routeStat)
+		s.m = make(map[queueKey]*queueBreakdown)
 	}
 }
 
@@ -72,28 +66,18 @@ func (s *queueStats) flush() {
 }
 
 type queuesOut struct {
-	Env    string         `json:"environment"`
-	Queues []queueKeyStat `json:"queues"`
+	Env    string            `json:"environment"`
+	Queues []*queueBreakdown `json:"queues"`
 }
 
-func (s *queueStats) send(m map[queueKey]*routeStat) error {
-	var queues []queueKeyStat
-	for k, v := range m {
-		err := v.td.Compress()
+func (s *queueStats) send(m map[queueKey]*queueBreakdown) error {
+	var queues []*queueBreakdown
+	for _, v := range m {
+		err := v.Pack()
 		if err != nil {
 			return err
 		}
-
-		b, err := v.td.AsBytes()
-		if err != nil {
-			return err
-		}
-		v.TDigest = b
-
-		queues = append(queues, queueKeyStat{
-			queueKey:  k,
-			routeStat: v,
-		})
+		queues = append(queues, v)
 	}
 
 	buf := buffers.Get().(*bytes.Buffer)
@@ -144,29 +128,30 @@ func (s *queueStats) send(m map[queueKey]*routeStat) error {
 	return err
 }
 
-func (s *queueStats) Notify(c context.Context, q *QueueInfo) error {
+func (s *queueStats) Notify(c context.Context, trace *QueueTrace) error {
 	key := queueKey{
-		Queue: q.Queue,
-		Time:  q.Start.UTC().Truncate(time.Minute),
+		Queue: trace.Queue,
+		Time:  trace.startTime.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
 	s.init()
-	stat, ok := s.m[key]
+	b, ok := s.m[key]
 	if !ok {
-		stat = &routeStat{}
-		s.m[key] = stat
+		b = &queueBreakdown{
+			queueKey: key,
+		}
+		s.m[key] = b
 	}
 	addWG := s.addWG
 	s.addWG.Add(1)
 	s.mu.Unlock()
 
-	dur := q.End.Sub(q.Start)
+	total := trace.endTime.Sub(trace.startTime)
+	groups := trace.flushGroups()
 
-	stat.mu.Lock()
-	err := stat.Add(dur)
+	b.Add(total, groups)
 	addWG.Done()
-	stat.mu.Unlock()
 
-	return err
+	return nil
 }

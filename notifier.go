@@ -140,9 +140,7 @@ func (rs *routes) Flush() {
 }
 
 func (rs *routes) Notify(c context.Context, trace *RouteTrace) error {
-	if trace.EndTime.IsZero() {
-		trace.EndTime = time.Now()
-	}
+	trace.end()
 
 	for _, fn := range rs.filters {
 		trace = fn(trace)

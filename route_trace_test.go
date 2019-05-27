@@ -16,9 +16,7 @@ func init() {
 
 var _ = Describe("RouteTrace", func() {
 	It("supports nested spans", func() {
-		trace := &RouteTrace{
-			StartTime: clock.Now(),
-		}
+		_, trace := NewRouteTrace(nil, &RouteTrace{})
 
 		trace.StartSpan("root")
 		fakeClock.Advance(time.Millisecond)

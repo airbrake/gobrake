@@ -11,14 +11,14 @@ import (
 )
 
 type QueryInfo struct {
-	Method string
-	Route  string
-	Query  string
-	Func   string
-	File   string
-	Line   int
-	Start  time.Time
-	End    time.Time
+	Method    string
+	Route     string
+	Query     string
+	Func      string
+	File      string
+	Line      int
+	StartTime time.Time
+	EndTime   time.Time
 }
 
 type queryKey struct {
@@ -33,7 +33,7 @@ type queryKey struct {
 
 type queryKeyStat struct {
 	queryKey
-	*routeStat
+	*tdigestStat
 }
 
 type queryStats struct {
@@ -44,7 +44,7 @@ type queryStats struct {
 	addWG      *sync.WaitGroup
 
 	mu sync.Mutex
-	m  map[queryKey]*routeStat
+	m  map[queryKey]*tdigestStat
 }
 
 func newQueryStats(opt *NotifierOptions) *queryStats {
@@ -59,7 +59,7 @@ func (s *queryStats) init() {
 	if s.flushTimer == nil {
 		s.flushTimer = time.AfterFunc(flushPeriod, s.flush)
 		s.addWG = new(sync.WaitGroup)
-		s.m = make(map[queryKey]*routeStat)
+		s.m = make(map[queryKey]*tdigestStat)
 	}
 }
 
@@ -86,23 +86,17 @@ type queriesOut struct {
 	Queries []queryKeyStat `json:"queries"`
 }
 
-func (s *queryStats) send(m map[queryKey]*routeStat) error {
+func (s *queryStats) send(m map[queryKey]*tdigestStat) error {
 	var queries []queryKeyStat
 	for k, v := range m {
-		err := v.td.Compress()
+		err := v.Pack()
 		if err != nil {
 			return err
 		}
-
-		b, err := v.td.AsBytes()
-		if err != nil {
-			return err
-		}
-		v.TDigest = b
 
 		queries = append(queries, queryKeyStat{
-			queryKey:  k,
-			routeStat: v,
+			queryKey:    k,
+			tdigestStat: v,
 		})
 	}
 
@@ -162,26 +156,23 @@ func (s *queryStats) Notify(c context.Context, q *QueryInfo) error {
 		Func:   q.Func,
 		File:   q.File,
 		Line:   q.Line,
-		Time:   q.Start.UTC().Truncate(time.Minute),
+		Time:   q.StartTime.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
 	s.init()
 	stat, ok := s.m[key]
 	if !ok {
-		stat = &routeStat{}
+		stat = newTDigestStat()
 		s.m[key] = stat
 	}
 	addWG := s.addWG
 	s.addWG.Add(1)
 	s.mu.Unlock()
 
-	dur := q.End.Sub(q.Start)
-
-	stat.mu.Lock()
+	dur := q.EndTime.Sub(q.StartTime)
 	err := stat.Add(dur)
 	addWG.Done()
-	stat.mu.Unlock()
 
 	return err
 }
