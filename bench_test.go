@@ -48,11 +48,8 @@ func BenchmarkNotifyRequest(b *testing.B) {
 	const n = 100
 	reqs := make([]*gobrake.RouteTrace, n)
 	for i := 0; i < n; i++ {
-		reqs[i] = &gobrake.RouteTrace{
-			Method:     "GET",
-			Route:      fmt.Sprintf("/api/v4/groups/%d", i),
-			StatusCode: 200,
-		}
+		_, trace := gobrake.NewRouteTrace(nil, "GET", fmt.Sprintf("/api/v4/groups/%d", i))
+		reqs[i] = trace
 	}
 
 	b.ResetTimer()
