@@ -66,15 +66,15 @@ func durInMs(dur time.Duration) float64 {
 
 type tdigestStatGroups struct {
 	tdigestStat                         // total
-	groups      map[string]*tdigestStat `json:"groups"`
+	Groups      map[string]*tdigestStat `json:"groups"`
 }
 
 func (b *tdigestStatGroups) Add(total time.Duration, groups map[string]time.Duration) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	if b.groups == nil {
-		b.groups = make(map[string]*tdigestStat)
+	if b.Groups == nil {
+		b.Groups = make(map[string]*tdigestStat)
 	}
 
 	_ = b.tdigestStat.add(total)
@@ -94,10 +94,10 @@ func (b *tdigestStatGroups) Add(total time.Duration, groups map[string]time.Dura
 }
 
 func (b *tdigestStatGroups) addGroup(name string, dur time.Duration) {
-	s, ok := b.groups[name]
+	s, ok := b.Groups[name]
 	if !ok {
 		s = newTDigestStat()
-		b.groups[name] = s
+		b.Groups[name] = s
 	}
 	_ = s.Add(dur)
 }
@@ -108,7 +108,7 @@ func (b *tdigestStatGroups) Pack() error {
 		return err
 	}
 
-	for _, v := range b.groups {
+	for _, v := range b.Groups {
 		err = v.Pack()
 		if err != nil {
 			return err
