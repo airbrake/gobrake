@@ -24,7 +24,7 @@ func (t *trace) end() {
 }
 
 func (t *trace) StartSpan(name string) {
-	if t.isZero() {
+	if t == nil {
 		return
 	}
 
@@ -57,7 +57,7 @@ func (t *trace) StartSpan(name string) {
 }
 
 func (t *trace) EndSpan(name string) {
-	if t.isZero() {
+	if t == nil {
 		return
 	}
 
@@ -108,10 +108,6 @@ func (t *trace) flushGroups() map[string]time.Duration {
 	t.groups = nil
 	t.groupsMu.Unlock()
 	return groups
-}
-
-func (t *trace) isZero() bool {
-	return t.startTime.IsZero()
 }
 
 type Span interface {

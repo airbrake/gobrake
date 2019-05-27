@@ -22,6 +22,18 @@ func NewQueueTrace(c context.Context, name string) (context.Context, *QueueTrace
 	return c, t
 }
 
+func (t *QueueTrace) StartSpan(name string) {
+	if t != nil {
+		t.trace.StartSpan(name)
+	}
+}
+
+func (t *QueueTrace) EndSpan(name string) {
+	if t != nil {
+		t.trace.EndSpan(name)
+	}
+}
+
 func QueueTraceFromContext(c context.Context) *QueueTrace {
 	if c == nil {
 		return nil

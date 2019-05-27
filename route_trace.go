@@ -37,6 +37,18 @@ func RouteTraceFromContext(c context.Context) *RouteTrace {
 	return t
 }
 
+func (t *RouteTrace) StartSpan(name string) {
+	if t != nil {
+		t.trace.StartSpan(name)
+	}
+}
+
+func (t *RouteTrace) EndSpan(name string) {
+	if t != nil {
+		t.trace.EndSpan(name)
+	}
+}
+
 func (t *RouteTrace) respType() string {
 	if t.StatusCode >= 500 {
 		return "5xx"

@@ -15,6 +15,12 @@ func init() {
 }
 
 var _ = Describe("RouteTrace", func() {
+	It("supports nil trace", func() {
+		var trace *RouteTrace
+		trace.StartSpan("foo")
+		trace.EndSpan("bar")
+	})
+
 	It("supports nested spans", func() {
 		_, trace := NewRouteTrace(nil, "GET", "/some")
 
