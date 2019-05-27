@@ -11,10 +11,15 @@ type QueueTrace struct {
 	Queue string
 }
 
-func NewQueueTrace(c context.Context, trace *QueueTrace) (context.Context, *QueueTrace) {
-	trace.startTime = clock.Now()
-	c = context.WithValue(c, queueTraceCtxKey, trace)
-	return c, trace
+func NewQueueTrace(c context.Context, name string) (context.Context, *QueueTrace) {
+	t := &QueueTrace{
+		Queue: name,
+	}
+	t.startTime = clock.Now()
+	if c != nil {
+		c = context.WithValue(c, queueTraceCtxKey, t)
+	}
+	return c, t
 }
 
 func QueueTraceFromContext(c context.Context) *QueueTrace {

@@ -17,10 +17,16 @@ type RouteTrace struct {
 	ContentType string
 }
 
-func NewRouteTrace(c context.Context, trace *RouteTrace) (context.Context, *RouteTrace) {
-	trace.startTime = clock.Now()
-	c = context.WithValue(c, routeTraceCtxKey, trace)
-	return c, trace
+func NewRouteTrace(c context.Context, method, route string) (context.Context, *RouteTrace) {
+	t := &RouteTrace{
+		Method: method,
+		Route:  route,
+	}
+	t.startTime = clock.Now()
+	if c != nil {
+		c = context.WithValue(c, routeTraceCtxKey, t)
+	}
+	return c, t
 }
 
 func RouteTraceFromContext(c context.Context) *RouteTrace {
