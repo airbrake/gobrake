@@ -18,7 +18,7 @@ type Trace interface {
 
 func TraceFromContext(c context.Context) Trace {
 	if c == nil {
-		return nil
+		return noopTrace{}
 	}
 	t, ok := c.Value(traceCtxKey).(Trace)
 	if !ok {
