@@ -129,6 +129,8 @@ func (s *queueStats) send(m map[queueKey]*queueBreakdown) error {
 }
 
 func (s *queueStats) Notify(c context.Context, trace *QueueTrace) error {
+	trace.end()
+
 	key := queueKey{
 		Queue: trace.Queue,
 		Time:  trace.startTime.UTC().Truncate(time.Minute),
