@@ -130,6 +130,10 @@ func (s *queueStats) send(m map[queueKey]*queueBreakdown) error {
 
 func (s *queueStats) Notify(c context.Context, trace *QueueTrace) error {
 	trace.end()
+	total, err := trace.Duration()
+	if err != nil {
+		return err
+	}
 
 	key := queueKey{
 		Queue: trace.Queue,
@@ -149,9 +153,7 @@ func (s *queueStats) Notify(c context.Context, trace *QueueTrace) error {
 	s.addWG.Add(1)
 	s.mu.Unlock()
 
-	total := trace.endTime.Sub(trace.startTime)
 	groups := trace.flushGroups()
-
 	b.Add(total, groups)
 	addWG.Done()
 

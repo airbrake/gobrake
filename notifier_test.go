@@ -367,12 +367,9 @@ var _ = Describe("Notifier request filter", func() {
 	})
 
 	It("sends route stat with route is /ping", func() {
-		req := &gobrake.RouteTrace{
-			Method:     "GET",
-			Route:      "/ping",
-			StatusCode: 200,
-		}
-		err := notifier.Routes.Notify(nil, req)
+		_, trace := gobrake.NewRouteTrace(nil, "GET", "/ping")
+		trace.StatusCode = http.StatusOK
+		err := notifier.Routes.Notify(nil, trace)
 		Expect(err).NotTo(HaveOccurred())
 
 		notifier.Routes.Flush()
@@ -386,12 +383,9 @@ var _ = Describe("Notifier request filter", func() {
 	})
 
 	It("ignores route stat with route is /pong", func() {
-		req := &gobrake.RouteTrace{
-			Method:     "GET",
-			Route:      "/pong",
-			StatusCode: 200,
-		}
-		err := notifier.Routes.Notify(nil, req)
+		_, trace := gobrake.NewRouteTrace(nil, "GET", "/pong")
+		trace.StatusCode = http.StatusOK
+		err := notifier.Routes.Notify(nil, trace)
 		Expect(err).NotTo(HaveOccurred())
 
 		notifier.Routes.Flush()

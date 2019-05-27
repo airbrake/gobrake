@@ -1,44 +1,39 @@
 package beego
 
 import (
-	"time"
-
 	"github.com/airbrake/gobrake"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 )
 
-func beforeExecFunc() func(c *context.Context) {
-	return func(c *context.Context) {
-		c.Input.SetData("StartTime", time.Now())
-	}
-}
+const abTraceKey = "ab_trace"
 
-func afterExecFunc(notifier *gobrake.Notifier) func(c *context.Context) {
+func beforeExecFunc() func(c *context.Context) {
 	return func(c *context.Context) {
 		routerPattern, ok := c.Input.GetData("RouterPattern").(string)
 		if !ok {
 			return
 		}
 
-		statusCode := c.Output.Status
-		if statusCode == 0 {
-			statusCode = 200
-		}
+		_, trace := gobrake.NewRouteTrace(nil, c.Input.Method(), routerPattern)
+		c.Input.SetData(abTraceKey, trace)
+	}
+}
 
-		startTime, ok := c.Input.GetData("StartTime").(time.Time)
+func afterExecFunc(notifier *gobrake.Notifier) func(c *context.Context) {
+	return func(c *context.Context) {
+		trace, ok := c.Input.GetData(abTraceKey).(*gobrake.RouteTrace)
 		if !ok {
 			return
 		}
 
-		notifier.Routes.Notify(nil, &gobrake.RouteTrace{
-			Method:     c.Input.Method(),
-			Route:      routerPattern,
-			StatusCode: statusCode,
-			StartTime:  startTime,
-			EndTime:    time.Now(),
-		})
+		trace.StatusCode = c.Output.Status
+		if trace.StatusCode == 0 {
+			trace.StatusCode = 200
+		}
+
+		notifier.Routes.Notify(nil, trace)
 	}
 }
 

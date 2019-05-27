@@ -2,34 +2,25 @@ package gin
 
 import (
 	"sync"
-	"time"
 
 	"github.com/airbrake/gobrake"
 	"github.com/gin-gonic/gin"
 )
 
-var pathMapOnce sync.Once
-var pathMap map[string]string
-
 func NewMiddleware(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		start := time.Now()
-		c.Next()
-		end := time.Now()
+		routeName := routeName(c, engine)
+		_, trace := gobrake.NewRouteTrace(nil, c.Request.Method, routeName)
 
-		routeName := getRouteName(c, engine)
-		notifier.Routes.Notify(nil, &gobrake.RouteTrace{
-			Method:     c.Request.Method,
-			Route:      routeName,
-			StatusCode: c.Writer.Status(),
-			StartTime:  start,
-			EndTime:    end,
-		})
+		c.Next()
+
+		trace.StatusCode = c.Writer.Status()
+		notifier.Routes.Notify(nil, trace)
 	}
 }
 
-func getRouteName(c *gin.Context, engine *gin.Engine) string {
-	extractRouteNames(engine)
+func routeName(c *gin.Context, engine *gin.Engine) string {
+	initPathMap(engine)
 	route, ok := pathMap[c.HandlerName()]
 	if ok {
 		return route
@@ -37,7 +28,12 @@ func getRouteName(c *gin.Context, engine *gin.Engine) string {
 	return "UNKNOWN"
 }
 
-func extractRouteNames(engine *gin.Engine) {
+var (
+	pathMapOnce sync.Once
+	pathMap     map[string]string
+)
+
+func initPathMap(engine *gin.Engine) {
 	pathMapOnce.Do(func() {
 		pathMap = make(map[string]string)
 		for _, ri := range engine.Routes() {

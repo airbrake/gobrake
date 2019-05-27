@@ -1,6 +1,7 @@
 package gobrake
 
 import (
+	"errors"
 	"sync"
 	"time"
 )
@@ -21,6 +22,16 @@ func (t *trace) end() {
 	if t.endTime.IsZero() {
 		t.endTime = clock.Now()
 	}
+}
+
+func (t *trace) Duration() (time.Duration, error) {
+	if t.startTime.IsZero() {
+		return 0, errors.New("trace.startTime is zero")
+	}
+	if t.endTime.IsZero() {
+		return 0, errors.New("trace.endTime is zero")
+	}
+	return t.endTime.Sub(t.startTime), nil
 }
 
 func (t *trace) StartSpan(name string) {

@@ -139,6 +139,11 @@ func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 		return nil
 	}
 
+	total, err := trace.Duration()
+	if err != nil {
+		return err
+	}
+
 	key := routeBreakdownKey{
 		Method:   trace.Method,
 		Route:    trace.Route,
@@ -159,9 +164,7 @@ func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 	addWG.Add(1)
 	s.mu.Unlock()
 
-	total := trace.endTime.Sub(trace.startTime)
 	groups := trace.flushGroups()
-
 	b.Add(total, groups)
 	addWG.Done()
 
