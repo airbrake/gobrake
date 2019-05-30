@@ -6,7 +6,8 @@ import (
 
 type QueueTrace struct {
 	trace
-	Queue string
+	Queue   string
+	Errored bool
 }
 
 var _ Trace = (*QueueTrace)(nil)

@@ -71,8 +71,11 @@ type tdigestStatGroups struct {
 
 func (b *tdigestStatGroups) Add(total time.Duration, groups map[string]time.Duration) {
 	b.mu.Lock()
-	defer b.mu.Unlock()
+	b.add(total, groups)
+	b.mu.Unlock()
+}
 
+func (b *tdigestStatGroups) add(total time.Duration, groups map[string]time.Duration) {
 	if b.Groups == nil {
 		b.Groups = make(map[string]*tdigestStat)
 	}

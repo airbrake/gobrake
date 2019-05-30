@@ -18,6 +18,17 @@ type queueKey struct {
 type queueBreakdown struct {
 	queueKey
 	tdigestStatGroups
+	ErrorCount int `json:"errorCount"`
+}
+
+func (b *queueBreakdown) Add(total time.Duration, groups map[string]time.Duration, errored bool) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.tdigestStatGroups.add(total, groups)
+	if errored {
+		b.ErrorCount++
+	}
 }
 
 type queueStats struct {
@@ -154,7 +165,7 @@ func (s *queueStats) Notify(c context.Context, trace *QueueTrace) error {
 	s.mu.Unlock()
 
 	groups := trace.flushGroups()
-	b.Add(total, groups)
+	b.Add(total, groups, trace.Errored)
 	addWG.Done()
 
 	return nil
