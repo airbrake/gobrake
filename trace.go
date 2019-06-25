@@ -3,6 +3,7 @@ package gobrake
 import (
 	"context"
 	"errors"
+	"net/http/httptrace"
 	"sync"
 	"time"
 )
@@ -16,7 +17,23 @@ type Trace interface {
 	EndSpan(name string)
 }
 
-func TraceFromContext(c context.Context) Trace {
+func withTrace(c context.Context, t Trace) context.Context {
+	c = context.WithValue(c, traceCtxKey, t)
+
+	clientTrace := &httptrace.ClientTrace{
+		GetConn: func(hostPort string) {
+			t.StartSpan("http.client")
+		},
+		GotFirstResponseByte: func() {
+			t.EndSpan("http.client")
+		},
+	}
+	c = httptrace.WithClientTrace(c, clientTrace)
+
+	return c
+}
+
+func ContextTrace(c context.Context) Trace {
 	if c == nil {
 		return noopTrace{}
 	}

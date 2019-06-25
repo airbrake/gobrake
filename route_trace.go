@@ -21,13 +21,15 @@ func NewRouteTrace(c context.Context, method, route string) (context.Context, *R
 		Route:  route,
 	}
 	t.startTime = clock.Now()
+
 	if c != nil {
-		c = context.WithValue(c, traceCtxKey, t)
+		c = withTrace(c, t)
 	}
+
 	return c, t
 }
 
-func RouteTraceFromContext(c context.Context) *RouteTrace {
+func ContextRouteTrace(c context.Context) *RouteTrace {
 	if c == nil {
 		return nil
 	}
