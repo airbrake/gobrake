@@ -2,6 +2,8 @@ package gobrake
 
 import (
 	"context"
+	"fmt"
+	"net/http/httptrace"
 	"strings"
 )
 
@@ -21,8 +23,20 @@ func NewRouteTrace(c context.Context, method, route string) (context.Context, *R
 		Route:  route,
 	}
 	t.startTime = clock.Now()
+
+	name := fmt.Sprintf("%s:%s", method, route)
 	if c != nil {
 		c = context.WithValue(c, traceCtxKey, t)
+
+		clientTrace := &httptrace.ClientTrace{
+			ConnectStart: func(network, addr string) {
+				t.StartSpan(name)
+			},
+			ConnectDone: func(network, addr string, err error) {
+				t.EndSpan(name)
+			},
+		}
+		c = httptrace.WithClientTrace(c, clientTrace)
 	}
 	return c, t
 }
