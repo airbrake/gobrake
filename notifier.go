@@ -3,11 +3,9 @@ package gobrake
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"regexp"
@@ -46,19 +44,6 @@ var (
 func defaultHTTPClient() *http.Client {
 	httpClientOnce.Do(func() {
 		httpClient = &http.Client{
-			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-				Dial: (&net.Dialer{
-					Timeout:   15 * time.Second,
-					KeepAlive: 30 * time.Second,
-				}).Dial,
-				TLSHandshakeTimeout: 10 * time.Second,
-				TLSClientConfig: &tls.Config{
-					ClientSessionCache: tls.NewLRUClientSessionCache(1024),
-				},
-				MaxIdleConnsPerHost:   10,
-				ResponseHeaderTimeout: 10 * time.Second,
-			},
 			Timeout: 10 * time.Second,
 		}
 	})
