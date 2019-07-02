@@ -15,8 +15,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/airbrake/gobrake"
-	"github.com/airbrake/gobrake/internal/testpkg1"
+	"github.com/airbrake/gobrake/v4"
+	"github.com/airbrake/gobrake/v4/internal/testpkg1"
 )
 
 func TestGobrake(t *testing.T) {
@@ -224,7 +224,7 @@ var _ = Describe("Notifier", func() {
 		Expect(sentNotice.Context["hostname"]).To(Equal(hostname))
 		Expect(sentNotice.Context["rootDirectory"]).To(Equal(wd))
 		Expect(sentNotice.Context["gopath"]).To(Equal(gopath))
-		Expect(sentNotice.Context["component"]).To(Equal("github.com/airbrake/gobrake_test"))
+		Expect(sentNotice.Context["component"]).To(Equal("github.com/airbrake/gobrake/v4_test"))
 		Expect(sentNotice.Context["repository"]).To(Equal("https://github.com/airbrake/gobrake"))
 		Expect(sentNotice.Context["revision"]).NotTo(BeEmpty())
 		Expect(sentNotice.Context["lastCheckout"]).NotTo(BeEmpty())

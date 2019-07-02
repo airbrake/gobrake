@@ -10,7 +10,7 @@ package main
 import (
     "errors"
 
-    "github.com/airbrake/gobrake"
+    "github.com/airbrake/gobrake/v4"
 )
 
 var airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{

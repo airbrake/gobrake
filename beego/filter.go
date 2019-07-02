@@ -3,7 +3,7 @@ package beego
 import (
 	goctx "context"
 
-	"github.com/airbrake/gobrake"
+	"github.com/airbrake/gobrake/v4"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"

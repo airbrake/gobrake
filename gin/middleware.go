@@ -4,7 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/airbrake/gobrake"
+	"github.com/airbrake/gobrake/v4"
+
 	"github.com/gin-gonic/gin"
 )
 
