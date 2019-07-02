@@ -1,4 +1,4 @@
-module github.com/airbrake/gobrake
+module github.com/airbrake/gobrake/v4
 
 go 1.13
 

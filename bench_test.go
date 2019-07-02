@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/airbrake/gobrake"
+	"github.com/airbrake/gobrake/v4"
 )
 
 func BenchmarkSendNotice(b *testing.B) {
