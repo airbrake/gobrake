@@ -337,14 +337,14 @@ func (n *Notifier) NotifyOnPanic() {
 	if v := recover(); v != nil {
 		notice := n.Notice(v, nil, 2)
 		notice.Context["severity"] = "critical"
-		n.SendNotice(notice)
+		_, _ = n.SendNotice(notice)
 		panic(v)
 	}
 }
 
 // Flush waits for pending requests to finish.
 func (n *Notifier) Flush() {
-	n.waitTimeout(waitTimeout)
+	_ = n.waitTimeout(waitTimeout)
 }
 
 func (n *Notifier) Close() error {
