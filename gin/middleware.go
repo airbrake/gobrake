@@ -1,6 +1,7 @@
 package gin
 
 import (
+	"context"
 	"sync"
 
 	"github.com/airbrake/gobrake"
@@ -10,12 +11,12 @@ import (
 func NewMiddleware(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		routeName := routeName(c, engine)
-		_, trace := gobrake.NewRouteTrace(nil, c.Request.Method, routeName)
+		_, trace := gobrake.NewRouteTrace(context.TODO(), c.Request.Method, routeName)
 
 		c.Next()
 
 		trace.StatusCode = c.Writer.Status()
-		notifier.Routes.Notify(nil, trace)
+		_ = notifier.Routes.Notify(context.TODO(), trace)
 	}
 }
 

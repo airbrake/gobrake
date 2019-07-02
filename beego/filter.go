@@ -1,6 +1,8 @@
 package beego
 
 import (
+	goctx "context"
+
 	"github.com/airbrake/gobrake"
 
 	"github.com/astaxie/beego"
@@ -16,7 +18,7 @@ func beforeExecFunc() func(c *context.Context) {
 			return
 		}
 
-		_, trace := gobrake.NewRouteTrace(nil, c.Input.Method(), routerPattern)
+		_, trace := gobrake.NewRouteTrace(goctx.TODO(), c.Input.Method(), routerPattern)
 		c.Input.SetData(abTraceKey, trace)
 	}
 }
@@ -33,7 +35,7 @@ func afterExecFunc(notifier *gobrake.Notifier) func(c *context.Context) {
 			trace.StatusCode = 200
 		}
 
-		notifier.Routes.Notify(nil, trace)
+		_ = notifier.Routes.Notify(goctx.TODO(), trace)
 	}
 }
 
