@@ -13,19 +13,19 @@ type ctxKey string
 const traceCtxKey ctxKey = "ab_trace"
 
 type Trace interface {
-	StartSpan(name string)
-	EndSpan(name string)
+	StartSpan(name string) Span
 }
 
 func withTrace(c context.Context, t Trace) context.Context {
 	c = context.WithValue(c, traceCtxKey, t)
 
+	var span Span
 	clientTrace := &httptrace.ClientTrace{
 		GetConn: func(hostPort string) {
-			t.StartSpan("http.client")
+			span = t.StartSpan("http.client")
 		},
 		GotFirstResponseByte: func() {
-			t.EndSpan("http.client")
+			span.End()
 		},
 	}
 	c = httptrace.WithClientTrace(c, clientTrace)
@@ -44,20 +44,23 @@ func ContextTrace(c context.Context) Trace {
 	return t
 }
 
+//------------------------------------------------------------------------------
+
 type noopTrace struct{}
 
 var _ Trace = noopTrace{}
 
-func (noopTrace) StartSpan(name string) {}
+func (noopTrace) StartSpan(name string) Span {
+	return noopSpan{}
+}
 
-func (noopTrace) EndSpan(name string) {}
+//------------------------------------------------------------------------------
 
 type trace struct {
 	startTime time.Time
 	endTime   time.Time
 
 	spansMu  sync.Mutex
-	spans    map[string]*span
 	currSpan *span
 
 	groupsMu sync.Mutex
@@ -82,71 +85,22 @@ func (t *trace) Duration() (time.Duration, error) {
 	return t.endTime.Sub(t.startTime), nil
 }
 
-func (t *trace) StartSpan(name string) {
+func (t *trace) StartSpan(name string) Span {
 	if t == nil {
-		return
+		return noopSpan{}
 	}
 
 	t.spansMu.Lock()
 	defer t.spansMu.Unlock()
 
-	if t.spans == nil {
-		t.spans = make(map[string]*span)
-	}
-
+	span := newSpan(t, name)
 	if t.currSpan != nil {
-		if t.currSpan.name == name {
-			t.currSpan.level++
-			return
-		}
-
 		t.currSpan.pause()
+		span.parent = t.currSpan
 	}
-
-	span, ok := t.spans[name]
-	if ok {
-		span.resume()
-	} else {
-		span = newSpan(t, name)
-		t.spans[name] = span
-	}
-
-	span.parent = t.currSpan
 	t.currSpan = span
-}
 
-func (t *trace) EndSpan(name string) {
-	if t == nil {
-		return
-	}
-
-	t.spansMu.Lock()
-	defer t.spansMu.Unlock()
-
-	if t.currSpan != nil && t.currSpan.name == name {
-		if t.endSpan(t.currSpan) {
-			t.currSpan = t.currSpan.parent
-			t.currSpan.resume()
-		}
-		return
-	}
-
-	span, ok := t.spans[name]
-	if !ok {
-		logger.Printf("gobrake: span=%q does not exist", name)
-		return
-	}
-	t.endSpan(span)
-}
-
-func (t *trace) endSpan(span *span) bool {
-	if span.level > 0 {
-		span.level--
-		return false
-	}
-	span.End()
-	delete(t.spans, span.name)
-	return true
+	return span
 }
 
 func (t *trace) incGroup(name string, dur time.Duration) {
@@ -170,9 +124,21 @@ func (t *trace) flushGroups() map[string]time.Duration {
 	return groups
 }
 
+//------------------------------------------------------------------------------
+
 type Span interface {
 	End()
 }
+
+//------------------------------------------------------------------------------
+
+type noopSpan struct{}
+
+var _ Span = noopSpan{}
+
+func (noopSpan) End() {}
+
+//------------------------------------------------------------------------------
 
 type span struct {
 	trace  *trace
@@ -181,7 +147,6 @@ type span struct {
 	name  string
 	start time.Time
 	dur   time.Duration
-	level int
 }
 
 var _ Span = (*span)(nil)
@@ -195,13 +160,23 @@ func newSpan(trace *trace, name string) *span {
 }
 
 func (s *span) End() {
+	if s.trace == nil {
+		logger.Printf("gobrake: span=%q is already ended", s.name)
+		return
+	}
+
 	s.dur += clock.Since(s.start)
 	s.trace.incGroup(s.name, s.dur)
+	if s.parent != nil {
+		s.parent.resume()
+	}
+
 	s.trace = nil
+	s.parent = nil
 }
 
 func (s *span) pause() {
-	if s == nil || s.paused() {
+	if s.paused() {
 		return
 	}
 	s.dur += clock.Since(s.start)

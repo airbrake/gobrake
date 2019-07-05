@@ -15,7 +15,7 @@ var (
 	fakeClock = clockwork.NewFakeClock()
 )
 
-var _ = Describe("RouteTrace", func() {
+var _ = Describe("trace", func() {
 	BeforeEach(func() {
 		clock = fakeClock
 	})
@@ -24,35 +24,64 @@ var _ = Describe("RouteTrace", func() {
 		clock = realClock
 	})
 
-	It("supports nil trace", func() {
-		var trace *RouteTrace
-		trace.StartSpan("foo")
-		trace.EndSpan("bar")
-	})
-
 	It("supports nested spans", func() {
-		_, trace := NewRouteTrace(nil, "GET", "/some")
+		var trace trace
 
-		trace.StartSpan("root")
-		fakeClock.Advance(time.Millisecond)
-
-		trace.StartSpan("nested1")
-		fakeClock.Advance(time.Millisecond)
-
-		trace.StartSpan("nested1")
-		fakeClock.Advance(time.Millisecond)
-
-		trace.EndSpan("nested1")
-
-		fakeClock.Advance(time.Millisecond)
-		trace.EndSpan("nested1")
-
-		fakeClock.Advance(time.Millisecond)
-		trace.EndSpan("root")
+		sp0 := trace.StartSpan("root")
+		{
+			fakeClock.Advance(time.Millisecond)
+			sp1 := trace.StartSpan("nested1")
+			{
+				fakeClock.Advance(time.Millisecond)
+				sp2 := trace.StartSpan("nested1")
+				{
+					fakeClock.Advance(time.Millisecond)
+					sp2.End()
+				}
+				fakeClock.Advance(time.Millisecond)
+				sp1.End()
+			}
+			fakeClock.Advance(time.Millisecond)
+			sp0.End()
+		}
 
 		Expect(trace.groups["root"]).To(BeNumerically("==", 2*time.Millisecond))
 		Expect(trace.groups["nested1"]).To(BeNumerically("==", 3*time.Millisecond))
 		Expect(trace.groups["other"]).To(BeNumerically("==", 0))
+	})
+
+	It("supports resuming same span", func() {
+		var trace trace
+
+		sp0 := trace.StartSpan("root")
+		{
+			fakeClock.Advance(time.Millisecond)
+			sp1 := trace.StartSpan("nested1")
+			{
+				fakeClock.Advance(time.Millisecond)
+				sp2 := trace.StartSpan("root")
+				{
+					fakeClock.Advance(time.Millisecond)
+					sp2.End()
+				}
+				fakeClock.Advance(time.Millisecond)
+				sp1.End()
+			}
+			fakeClock.Advance(time.Millisecond)
+			sp0.End()
+		}
+
+		Expect(trace.groups["root"]).To(BeNumerically("==", 3*time.Millisecond))
+		Expect(trace.groups["nested1"]).To(BeNumerically("==", 2*time.Millisecond))
+		Expect(trace.groups["other"]).To(BeNumerically("==", 0))
+	})
+})
+
+var _ = Describe("RouteTrace", func() {
+	It("supports nil trace", func() {
+		var trace *RouteTrace
+		span := trace.StartSpan("foo")
+		span.End()
 	})
 })
 

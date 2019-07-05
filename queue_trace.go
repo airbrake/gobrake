@@ -31,14 +31,9 @@ func ContextQueueTrace(c context.Context) *QueueTrace {
 	return t
 }
 
-func (t *QueueTrace) StartSpan(name string) {
-	if t != nil {
-		t.trace.StartSpan(name)
+func (t *QueueTrace) StartSpan(name string) Span {
+	if t == nil {
+		return noopSpan{}
 	}
-}
-
-func (t *QueueTrace) EndSpan(name string) {
-	if t != nil {
-		t.trace.EndSpan(name)
-	}
+	return t.trace.StartSpan(name)
 }
