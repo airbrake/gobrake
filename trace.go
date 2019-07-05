@@ -150,10 +150,11 @@ func (t *trace) endSpan(span *span) bool {
 }
 
 func (t *trace) incGroup(name string, dur time.Duration) {
-	t.groupsMu.Lock()
 	if !t.endTime.IsZero() {
 		return
 	}
+
+	t.groupsMu.Lock()
 	if t.groups == nil {
 		t.groups = make(map[string]time.Duration)
 	}
