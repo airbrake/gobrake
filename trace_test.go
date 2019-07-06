@@ -86,7 +86,7 @@ var _ = Describe("trace", func() {
 		fakeClock.Advance(time.Millisecond)
 		sp0.Finish()
 
-		c, sp1 := trace.Start(c, "sp1")
+		_, sp1 := trace.Start(c, "sp1")
 		fakeClock.Advance(time.Millisecond)
 		sp1.Finish()
 
@@ -101,7 +101,7 @@ var _ = Describe("RouteTrace", func() {
 	It("supports nil trace", func() {
 		c := context.Background()
 		var trace *RouteTrace
-		c, span := trace.Start(c, "foo")
+		_, span := trace.Start(c, "foo")
 		span.Finish()
 	})
 })
