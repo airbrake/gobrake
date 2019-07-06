@@ -37,11 +37,11 @@ func ContextRouteTrace(c context.Context) *RouteTrace {
 	return t
 }
 
-func (t *RouteTrace) StartSpan(name string) Span {
+func (t *RouteTrace) Start(c context.Context, name string) (context.Context, Span) {
 	if t == nil {
-		return noopSpan{}
+		return c, noopSpan{}
 	}
-	return t.trace.StartSpan(name)
+	return t.trace.Start(c, name)
 }
 
 func (t *RouteTrace) respType() string {

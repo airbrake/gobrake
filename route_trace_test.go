@@ -25,24 +25,25 @@ var _ = Describe("trace", func() {
 	})
 
 	It("supports nested spans", func() {
+		c := context.Background()
 		var trace trace
 
-		sp0 := trace.StartSpan("root")
+		_, sp0 := trace.Start(c, "root")
 		{
 			fakeClock.Advance(time.Millisecond)
-			sp1 := trace.StartSpan("nested1")
+			_, sp1 := trace.Start(c, "nested1")
 			{
 				fakeClock.Advance(time.Millisecond)
-				sp2 := trace.StartSpan("nested1")
+				_, sp2 := trace.Start(c, "nested1")
 				{
 					fakeClock.Advance(time.Millisecond)
-					sp2.End()
+					sp2.Finish()
 				}
 				fakeClock.Advance(time.Millisecond)
-				sp1.End()
+				sp1.Finish()
 			}
 			fakeClock.Advance(time.Millisecond)
-			sp0.End()
+			sp0.Finish()
 		}
 
 		Expect(trace.groups["root"]).To(BeNumerically("==", 2*time.Millisecond))
@@ -51,24 +52,25 @@ var _ = Describe("trace", func() {
 	})
 
 	It("supports resuming same span", func() {
+		c := context.Background()
 		var trace trace
 
-		sp0 := trace.StartSpan("root")
+		c, sp0 := trace.Start(c, "root")
 		{
 			fakeClock.Advance(time.Millisecond)
-			sp1 := trace.StartSpan("nested1")
+			_, sp1 := trace.Start(c, "nested1")
 			{
 				fakeClock.Advance(time.Millisecond)
-				sp2 := trace.StartSpan("root")
+				_, sp2 := trace.Start(c, "root")
 				{
 					fakeClock.Advance(time.Millisecond)
-					sp2.End()
+					sp2.Finish()
 				}
 				fakeClock.Advance(time.Millisecond)
-				sp1.End()
+				sp1.Finish()
 			}
 			fakeClock.Advance(time.Millisecond)
-			sp0.End()
+			sp0.Finish()
 		}
 
 		Expect(trace.groups["root"]).To(BeNumerically("==", 3*time.Millisecond))
@@ -79,9 +81,10 @@ var _ = Describe("trace", func() {
 
 var _ = Describe("RouteTrace", func() {
 	It("supports nil trace", func() {
+		c := context.Background()
 		var trace *RouteTrace
-		span := trace.StartSpan("foo")
-		span.End()
+		c, span := trace.Start(c, "foo")
+		span.Finish()
 	})
 })
 

@@ -102,7 +102,7 @@ func (b *tdigestStatGroups) addGroup(name string, dur time.Duration) {
 		s = newTDigestStat()
 		b.Groups[name] = s
 	}
-	_ = s.Add(dur)
+	_ = s.add(dur)
 }
 
 func (b *tdigestStatGroups) Pack() error {
