@@ -70,9 +70,6 @@ type trace struct {
 	startTime time.Time
 	endTime   time.Time
 
-	spansMu  sync.Mutex
-	currSpan *span
-
 	groupsMu sync.Mutex
 	groups   map[string]time.Duration
 }
@@ -100,18 +97,14 @@ func (t *trace) Start(c context.Context, name string) (context.Context, Span) {
 		return c, noopSpan{}
 	}
 
-	t.spansMu.Lock()
-	defer t.spansMu.Unlock()
-
-	span := newSpan(t, name)
-	if t.currSpan != nil {
-		t.currSpan.pause()
-		span.parent = t.currSpan
+	sp := newSpan(t, name)
+	if parent, ok := ContextSpan(c).(*span); ok {
+		parent.pause()
+		sp.parent = parent
 	}
-	t.currSpan = span
 
-	c = context.WithValue(c, spanCtxKey, span)
-	return c, span
+	c = context.WithValue(c, spanCtxKey, sp)
+	return c, sp
 }
 
 func (t *trace) WithSpan(ctx context.Context, name string, body func(context.Context) error) error {
@@ -193,7 +186,6 @@ func (s *span) Finish() {
 	s.trace.incGroup(s.name, s.dur)
 	if s.parent != nil {
 		s.parent.resume()
-		s.trace.currSpan = s.parent
 	}
 
 	s.trace = nil

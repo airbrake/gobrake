@@ -28,10 +28,10 @@ var _ = Describe("trace", func() {
 		c := context.Background()
 		var trace trace
 
-		_, sp0 := trace.Start(c, "root")
+		c, sp0 := trace.Start(c, "root")
 		{
 			fakeClock.Advance(time.Millisecond)
-			_, sp1 := trace.Start(c, "nested1")
+			c, sp1 := trace.Start(c, "nested1")
 			{
 				fakeClock.Advance(time.Millisecond)
 				_, sp2 := trace.Start(c, "nested1")
@@ -58,7 +58,7 @@ var _ = Describe("trace", func() {
 		c, sp0 := trace.Start(c, "root")
 		{
 			fakeClock.Advance(time.Millisecond)
-			_, sp1 := trace.Start(c, "nested1")
+			c, sp1 := trace.Start(c, "nested1")
 			{
 				fakeClock.Advance(time.Millisecond)
 				_, sp2 := trace.Start(c, "root")
