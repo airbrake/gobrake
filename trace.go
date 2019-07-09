@@ -97,11 +97,12 @@ func (t *trace) Start(c context.Context, name string) (context.Context, Span) {
 		return c, noopSpan{}
 	}
 
-	sp := newSpan(t, name)
-	if parent, ok := ContextSpan(c).(*span); ok {
+	parent, ok := ContextSpan(c).(*span)
+	if ok {
 		parent.pause()
-		sp.parent = parent
 	}
+	sp := newSpan(t, name)
+	sp.parent = parent
 
 	c = context.WithValue(c, spanCtxKey, sp)
 	return c, sp
