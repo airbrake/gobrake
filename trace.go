@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http/httptrace"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -165,6 +166,8 @@ type span struct {
 	name  string
 	start time.Time
 	dur   time.Duration
+
+	paused int32 // atomic
 }
 
 var _ Span = (*span)(nil)
@@ -179,13 +182,11 @@ func newSpan(trace *trace, name string) *span {
 
 func (s *span) Finish() {
 	if s.trace == nil {
-		logger.Printf("gobrake: span=%q is already ended", s.name)
+		logger.Printf("gobrake: span=%q is already finished", s.name)
 		return
 	}
-	if s.paused() {
-		logger.Printf("gobrake: span=%q is paused", s.name)
-	} else {
-		s.dur += clock.Since(s.start)
+	if !s.pause() {
+		return
 	}
 
 	s.trace.incGroup(s.name, s.dur)
@@ -197,20 +198,17 @@ func (s *span) Finish() {
 	s.parent = nil
 }
 
-func (s *span) pause() {
-	if s.paused() {
-		return
+func (s *span) pause() bool {
+	if !atomic.CompareAndSwapInt32(&s.paused, 0, 1) {
+		return false
 	}
 	s.dur += clock.Since(s.start)
 	s.start = time.Time{}
-}
-
-func (s *span) paused() bool {
-	return s.start.IsZero()
+	return true
 }
 
 func (s *span) resume() {
-	if s == nil || !s.paused() {
+	if !atomic.CompareAndSwapInt32(&s.paused, 1, 0) {
 		return
 	}
 	s.start = clock.Now()
