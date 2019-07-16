@@ -11,6 +11,8 @@ type RouteTrace struct {
 	Route       string
 	StatusCode  int
 	ContentType string
+
+	root Span
 }
 
 var _ Trace = (*RouteTrace)(nil)
@@ -21,11 +23,10 @@ func NewRouteTrace(c context.Context, method, route string) (context.Context, *R
 		Route:  route,
 	}
 	t.trace.init()
-
 	if c != nil {
 		c = withTrace(c, t)
 	}
-
+	c, t.root = t.Start(c, "http.handler")
 	return c, t
 }
 
@@ -42,6 +43,11 @@ func (t *RouteTrace) Start(c context.Context, name string) (context.Context, Spa
 		return c, noopSpan{}
 	}
 	return t.trace.Start(c, name)
+}
+
+func (t *RouteTrace) finish() {
+	t.root.Finish()
+	t.trace.finish()
 }
 
 func (t *RouteTrace) respType() string {

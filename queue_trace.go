@@ -8,6 +8,8 @@ type QueueTrace struct {
 	trace
 	Queue   string
 	Errored bool
+
+	root Span
 }
 
 var _ Trace = (*QueueTrace)(nil)
@@ -20,6 +22,7 @@ func NewQueueTrace(c context.Context, name string) (context.Context, *QueueTrace
 	if c != nil {
 		c = withTrace(c, t)
 	}
+	c, t.root = t.Start(c, "queue.handler")
 	return c, t
 }
 
@@ -36,4 +39,9 @@ func (t *QueueTrace) Start(c context.Context, name string) (context.Context, Spa
 		return c, noopSpan{}
 	}
 	return t.trace.Start(c, name)
+}
+
+func (t *QueueTrace) finish() {
+	t.root.Finish()
+	t.trace.finish()
 }

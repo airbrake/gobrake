@@ -139,7 +139,7 @@ func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 		return nil
 	}
 
-	total, err := trace.Duration()
+	total, err := trace.duration()
 	if err != nil {
 		return err
 	}

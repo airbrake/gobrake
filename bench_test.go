@@ -39,24 +39,18 @@ func BenchmarkSendNotice(b *testing.B) {
 	})
 }
 
-func BenchmarkNotifyRequest(b *testing.B) {
+func BenchmarkRoutesNotify(b *testing.B) {
 	notifier := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
 		ProjectId:  1,
 		ProjectKey: "",
 	})
 
-	const n = 100
-	reqs := make([]*gobrake.RouteTrace, n)
-	for i := 0; i < n; i++ {
-		_, trace := gobrake.NewRouteTrace(nil, "GET", fmt.Sprintf("/api/v4/groups/%d", i))
-		reqs[i] = trace
-	}
-
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		var i int
 		for pb.Next() {
-			err := notifier.Routes.Notify(nil, reqs[i%n])
+			_, trace := gobrake.NewRouteTrace(nil, "GET", fmt.Sprintf("/api/v4/groups/%d", i))
+			err := notifier.Routes.Notify(nil, trace)
 			if err != nil {
 				b.Fatal(err)
 			}

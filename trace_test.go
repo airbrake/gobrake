@@ -44,7 +44,7 @@ var _ = Describe("trace with real clock", func() {
 
 		Expect(trace.groups["sp0"]).To(BeNumerically("==", 100*time.Millisecond, 10*time.Millisecond))
 		Expect(trace.groups["sp1"]).To(BeNumerically("==", 200*time.Millisecond, 10*time.Millisecond))
-		Expect(trace.Duration()).To(BeNumerically("==", 200*time.Millisecond, 10*time.Millisecond))
+		Expect(trace.duration()).To(BeNumerically("==", 200*time.Millisecond, 10*time.Millisecond))
 	})
 })
 
@@ -126,15 +126,6 @@ var _ = Describe("trace with fake clock", func() {
 	})
 })
 
-var _ = Describe("RouteTrace", func() {
-	It("supports nil trace", func() {
-		c := context.Background()
-		var trace *RouteTrace
-		_, span := trace.Start(c, "foo")
-		span.Finish()
-	})
-})
-
 var _ = Describe("httptrace", func() {
 	It("measures timing until first response byte", func() {
 		c := context.Background()
@@ -148,5 +139,73 @@ var _ = Describe("httptrace", func() {
 
 		Expect(trace.groups).To(HaveLen(1))
 		Expect(trace.groups["http.client"]).NotTo(BeZero())
+	})
+})
+
+var _ = Describe("RouteTrace", func() {
+	BeforeEach(func() {
+		clock = fakeClock
+	})
+
+	AfterEach(func() {
+		clock = realClock
+	})
+
+	It("supports nil trace", func() {
+		c := context.Background()
+		var trace *RouteTrace
+		_, span := trace.Start(c, "foo")
+		span.Finish()
+	})
+
+	It("automatically starts http.handler span", func() {
+		c := context.Background()
+
+		c, trace := NewRouteTrace(c, "GET", "/foo")
+		fakeClock.Advance(time.Millisecond)
+
+		_, sp0 := trace.Start(c, "sp0")
+		fakeClock.Advance(time.Millisecond)
+		sp0.Finish()
+
+		trace.finish()
+
+		Expect(trace.groups["http.handler"]).To(BeNumerically("==", 1*time.Millisecond))
+		Expect(trace.groups["sp0"]).To(BeNumerically("==", 1*time.Millisecond))
+		Expect(trace.duration()).To(BeNumerically("==", 2*time.Millisecond))
+	})
+})
+
+var _ = Describe("QueueTrace", func() {
+	BeforeEach(func() {
+		clock = fakeClock
+	})
+
+	AfterEach(func() {
+		clock = realClock
+	})
+
+	It("supports nil trace", func() {
+		c := context.Background()
+		var trace *QueueTrace
+		_, span := trace.Start(c, "foo")
+		span.Finish()
+	})
+
+	It("automatically starts queue.handler span", func() {
+		c := context.Background()
+
+		c, trace := NewQueueTrace(c, "send-emails")
+		fakeClock.Advance(time.Millisecond)
+
+		_, sp0 := trace.Start(c, "sp0")
+		fakeClock.Advance(time.Millisecond)
+		sp0.Finish()
+
+		trace.finish()
+
+		Expect(trace.groups["queue.handler"]).To(BeNumerically("==", 1*time.Millisecond))
+		Expect(trace.groups["sp0"]).To(BeNumerically("==", 1*time.Millisecond))
+		Expect(trace.duration()).To(BeNumerically("==", 2*time.Millisecond))
 	})
 })
