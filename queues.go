@@ -141,7 +141,7 @@ func (s *queueStats) send(m map[queueKey]*queueBreakdown) error {
 
 func (s *queueStats) Notify(c context.Context, trace *QueueTrace) error {
 	trace.finish()
-	total, err := trace.Duration()
+	total, err := trace.duration()
 	if err != nil {
 		return err
 	}

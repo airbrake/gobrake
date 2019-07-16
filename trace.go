@@ -103,7 +103,7 @@ func (t *trace) finish() {
 	}
 }
 
-func (t *trace) Duration() (time.Duration, error) {
+func (t *trace) duration() (time.Duration, error) {
 	if t.startTime.IsZero() {
 		return 0, errors.New("trace.startTime is zero")
 	}
