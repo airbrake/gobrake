@@ -16,7 +16,7 @@ func NewQueueTrace(c context.Context, name string) (context.Context, *QueueTrace
 	t := &QueueTrace{
 		Queue: name,
 	}
-	t.startTime = clock.Now()
+	t.init()
 	if c != nil {
 		c = withTrace(c, t)
 	}

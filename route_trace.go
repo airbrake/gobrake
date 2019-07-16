@@ -20,7 +20,7 @@ func NewRouteTrace(c context.Context, method, route string) (context.Context, *R
 		Method: method,
 		Route:  route,
 	}
-	t.startTime = clock.Now()
+	t.trace.init()
 
 	if c != nil {
 		c = withTrace(c, t)

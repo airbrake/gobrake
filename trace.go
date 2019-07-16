@@ -76,20 +76,8 @@ type trace struct {
 
 var _ Trace = (*trace)(nil)
 
-func (t *trace) end() {
-	if t.endTime.IsZero() {
-		t.endTime = clock.Now()
-	}
-}
-
-func (t *trace) Duration() (time.Duration, error) {
-	if t.startTime.IsZero() {
-		return 0, errors.New("trace.startTime is zero")
-	}
-	if t.endTime.IsZero() {
-		return 0, errors.New("trace.endTime is zero")
-	}
-	return t.endTime.Sub(t.startTime), nil
+func (t *trace) init() {
+	t.startTime = clock.Now()
 }
 
 func (t *trace) Start(c context.Context, name string) (context.Context, Span) {
@@ -106,6 +94,22 @@ func (t *trace) Start(c context.Context, name string) (context.Context, Span) {
 
 	c = context.WithValue(c, spanCtxKey, sp)
 	return c, sp
+}
+
+func (t *trace) finish() {
+	if t.endTime.IsZero() {
+		t.endTime = clock.Now()
+	}
+}
+
+func (t *trace) Duration() (time.Duration, error) {
+	if t.startTime.IsZero() {
+		return 0, errors.New("trace.startTime is zero")
+	}
+	if t.endTime.IsZero() {
+		return 0, errors.New("trace.endTime is zero")
+	}
+	return t.endTime.Sub(t.startTime), nil
 }
 
 func (t *trace) WithSpan(ctx context.Context, name string, body func(context.Context) error) error {

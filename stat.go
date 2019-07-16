@@ -81,17 +81,8 @@ func (b *tdigestStatGroups) add(total time.Duration, groups map[string]time.Dura
 	}
 
 	_ = b.tdigestStat.add(total)
-
-	var sum time.Duration
 	for name, dur := range groups {
-		sum += dur
 		b.addGroup(name, dur)
-	}
-
-	if total > sum {
-		b.addGroup("other", total-sum)
-	} else {
-		logger.Printf("trace total=%s <= sum=%s of groups", total, sum)
 	}
 }
 

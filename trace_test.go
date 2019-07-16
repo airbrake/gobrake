@@ -3,6 +3,7 @@ package gobrake
 import (
 	"context"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/jonboulle/clockwork"
@@ -15,7 +16,39 @@ var (
 	fakeClock = clockwork.NewFakeClock()
 )
 
-var _ = Describe("trace", func() {
+var _ = Describe("trace with real clock", func() {
+	It("supports measuring spans in goroutines", func() {
+		c := context.Background()
+
+		var trace trace
+		trace.init()
+
+		c, sp0 := trace.Start(c, "sp0")
+		time.Sleep(100 * time.Millisecond)
+
+		var wg sync.WaitGroup
+		for i := 0; i < 2; i++ {
+			wg.Add(1)
+			go func(c context.Context) {
+				defer wg.Done()
+
+				_, sp1 := trace.Start(c, "sp1")
+				time.Sleep(100 * time.Millisecond)
+				sp1.Finish()
+			}(c)
+		}
+		wg.Wait()
+
+		sp0.Finish()
+		trace.finish()
+
+		Expect(trace.groups["sp0"]).To(BeNumerically("==", 100*time.Millisecond, 10*time.Millisecond))
+		Expect(trace.groups["sp1"]).To(BeNumerically("==", 200*time.Millisecond, 10*time.Millisecond))
+		Expect(trace.Duration()).To(BeNumerically("==", 200*time.Millisecond, 10*time.Millisecond))
+	})
+})
+
+var _ = Describe("trace with fake clock", func() {
 	BeforeEach(func() {
 		clock = fakeClock
 	})
@@ -48,7 +81,6 @@ var _ = Describe("trace", func() {
 
 		Expect(trace.groups["root"]).To(BeNumerically("==", 2*time.Millisecond))
 		Expect(trace.groups["nested1"]).To(BeNumerically("==", 3*time.Millisecond))
-		Expect(trace.groups["other"]).To(BeNumerically("==", 0))
 	})
 
 	It("supports resuming same span", func() {
@@ -75,7 +107,6 @@ var _ = Describe("trace", func() {
 
 		Expect(trace.groups["root"]).To(BeNumerically("==", 3*time.Millisecond))
 		Expect(trace.groups["nested1"]).To(BeNumerically("==", 2*time.Millisecond))
-		Expect(trace.groups["other"]).To(BeNumerically("==", 0))
 	})
 
 	It("supports spans on same level", func() {
@@ -92,8 +123,6 @@ var _ = Describe("trace", func() {
 
 		Expect(trace.groups["sp0"]).To(BeNumerically("==", 1*time.Millisecond))
 		Expect(trace.groups["sp1"]).To(BeNumerically("==", 1*time.Millisecond))
-		Expect(trace.groups["other"]).To(BeNumerically("==", 0))
-
 	})
 })
 
