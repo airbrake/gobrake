@@ -12,12 +12,12 @@ import (
 func NewMiddleware(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		routeName := routeName(c, engine)
-		_, trace := gobrake.NewRouteTrace(context.TODO(), c.Request.Method, routeName)
+		_, metric := gobrake.NewRouteMetric(context.TODO(), c.Request.Method, routeName)
 
 		c.Next()
 
-		trace.StatusCode = c.Writer.Status()
-		_ = notifier.Routes.Notify(context.TODO(), trace)
+		metric.StatusCode = c.Writer.Status()
+		_ = notifier.Routes.Notify(context.TODO(), metric)
 	}
 }
 

@@ -49,8 +49,8 @@ func BenchmarkRoutesNotify(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		var i int
 		for pb.Next() {
-			_, trace := gobrake.NewRouteTrace(nil, "GET", fmt.Sprintf("/api/v4/groups/%d", i))
-			err := notifier.Routes.Notify(nil, trace)
+			_, metric := gobrake.NewRouteMetric(nil, "GET", fmt.Sprintf("/api/v4/groups/%d", i))
+			err := notifier.Routes.Notify(nil, metric)
 			if err != nil {
 				b.Fatal(err)
 			}

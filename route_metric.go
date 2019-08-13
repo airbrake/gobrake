@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-type RouteTrace struct {
-	trace
+type RouteMetric struct {
+	metric
 	Method      string
 	Route       string
 	StatusCode  int
@@ -15,42 +15,42 @@ type RouteTrace struct {
 	root Span
 }
 
-var _ Trace = (*RouteTrace)(nil)
+var _ Metric = (*RouteMetric)(nil)
 
-func NewRouteTrace(c context.Context, method, route string) (context.Context, *RouteTrace) {
-	t := &RouteTrace{
+func NewRouteMetric(c context.Context, method, route string) (context.Context, *RouteMetric) {
+	t := &RouteMetric{
 		Method: method,
 		Route:  route,
 	}
-	t.trace.init()
+	t.metric.init()
 	if c != nil {
-		c = withTrace(c, t)
+		c = withMetric(c, t)
 	}
 	c, t.root = t.Start(c, "http.handler")
 	return c, t
 }
 
-func ContextRouteTrace(c context.Context) *RouteTrace {
+func ContextRouteMetric(c context.Context) *RouteMetric {
 	if c == nil {
 		return nil
 	}
-	t, _ := c.Value(traceCtxKey).(*RouteTrace)
+	t, _ := c.Value(metricCtxKey).(*RouteMetric)
 	return t
 }
 
-func (t *RouteTrace) Start(c context.Context, name string) (context.Context, Span) {
+func (t *RouteMetric) Start(c context.Context, name string) (context.Context, Span) {
 	if t == nil {
 		return c, noopSpan{}
 	}
-	return t.trace.Start(c, name)
+	return t.metric.Start(c, name)
 }
 
-func (t *RouteTrace) finish() {
+func (t *RouteMetric) finish() {
 	t.root.Finish()
-	t.trace.finish()
+	t.metric.finish()
 }
 
-func (t *RouteTrace) respType() string {
+func (t *RouteMetric) respType() string {
 	if t.StatusCode >= 500 {
 		return "5xx"
 	}

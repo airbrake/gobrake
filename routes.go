@@ -24,7 +24,7 @@ type routeKeyStat struct {
 	*tdigestStat
 }
 
-type routeFilter func(*RouteTrace) *RouteTrace
+type routeFilter func(*RouteMetric) *RouteMetric
 
 // routeStats aggregates information about requests and periodically sends
 // collected data to Airbrake.
@@ -146,7 +146,7 @@ func (s *routeStats) send(m map[routeKey]*tdigestStat) error {
 }
 
 // Notify adds new route stats.
-func (s *routeStats) Notify(c context.Context, req *RouteTrace) error {
+func (s *routeStats) Notify(c context.Context, req *RouteMetric) error {
 	key := routeKey{
 		Method:     req.Method,
 		Route:      req.Route,

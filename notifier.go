@@ -115,7 +115,7 @@ func newRoutes(opt *NotifierOptions) *routes {
 }
 
 // AddFilter adds filter that can change route stat or ignore it by returning nil.
-func (rs *routes) AddFilter(fn func(*RouteTrace) *RouteTrace) {
+func (rs *routes) AddFilter(fn func(*RouteMetric) *RouteMetric) {
 	rs.filters = append(rs.filters, fn)
 }
 
@@ -124,22 +124,22 @@ func (rs *routes) Flush() {
 	rs.breakdowns.Flush()
 }
 
-func (rs *routes) Notify(c context.Context, trace *RouteTrace) error {
-	trace.finish()
+func (rs *routes) Notify(c context.Context, metric *RouteMetric) error {
+	metric.finish()
 
 	for _, fn := range rs.filters {
-		trace = fn(trace)
-		if trace == nil {
+		metric = fn(metric)
+		if metric == nil {
 			return nil
 		}
 	}
 
-	err := rs.stats.Notify(c, trace)
+	err := rs.stats.Notify(c, metric)
 	if err != nil {
 		return err
 	}
 
-	err = rs.breakdowns.Notify(c, trace)
+	err = rs.breakdowns.Notify(c, metric)
 	if err != nil {
 		return err
 	}

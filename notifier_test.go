@@ -358,7 +358,7 @@ var _ = Describe("Notifier request filter", func() {
 			Host:       server.URL,
 		})
 
-		notifier.Routes.AddFilter(func(info *gobrake.RouteTrace) *gobrake.RouteTrace {
+		notifier.Routes.AddFilter(func(info *gobrake.RouteMetric) *gobrake.RouteMetric {
 			if info.Route == "/pong" {
 				return nil
 			}
@@ -367,9 +367,9 @@ var _ = Describe("Notifier request filter", func() {
 	})
 
 	It("sends route stat with route is /ping", func() {
-		_, trace := gobrake.NewRouteTrace(nil, "GET", "/ping")
-		trace.StatusCode = http.StatusOK
-		err := notifier.Routes.Notify(nil, trace)
+		_, metric := gobrake.NewRouteMetric(nil, "GET", "/ping")
+		metric.StatusCode = http.StatusOK
+		err := notifier.Routes.Notify(nil, metric)
 		Expect(err).NotTo(HaveOccurred())
 
 		notifier.Routes.Flush()
@@ -383,9 +383,9 @@ var _ = Describe("Notifier request filter", func() {
 	})
 
 	It("ignores route stat with route is /pong", func() {
-		_, trace := gobrake.NewRouteTrace(nil, "GET", "/pong")
-		trace.StatusCode = http.StatusOK
-		err := notifier.Routes.Notify(nil, trace)
+		_, metric := gobrake.NewRouteMetric(nil, "GET", "/pong")
+		metric.StatusCode = http.StatusOK
+		err := notifier.Routes.Notify(nil, metric)
 		Expect(err).NotTo(HaveOccurred())
 
 		notifier.Routes.Flush()

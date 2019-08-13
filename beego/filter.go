@@ -9,7 +9,7 @@ import (
 	"github.com/astaxie/beego/context"
 )
 
-const abTraceKey = "ab_trace"
+const abMetricKey = "ab_metric"
 
 func beforeExecFunc() func(c *context.Context) {
 	return func(c *context.Context) {
@@ -18,24 +18,24 @@ func beforeExecFunc() func(c *context.Context) {
 			return
 		}
 
-		_, trace := gobrake.NewRouteTrace(goctx.TODO(), c.Input.Method(), routerPattern)
-		c.Input.SetData(abTraceKey, trace)
+		_, metric := gobrake.NewRouteMetric(goctx.TODO(), c.Input.Method(), routerPattern)
+		c.Input.SetData(abMetricKey, metric)
 	}
 }
 
 func afterExecFunc(notifier *gobrake.Notifier) func(c *context.Context) {
 	return func(c *context.Context) {
-		trace, ok := c.Input.GetData(abTraceKey).(*gobrake.RouteTrace)
+		metric, ok := c.Input.GetData(abMetricKey).(*gobrake.RouteMetric)
 		if !ok {
 			return
 		}
 
-		trace.StatusCode = c.Output.Status
-		if trace.StatusCode == 0 {
-			trace.StatusCode = 200
+		metric.StatusCode = c.Output.Status
+		if metric.StatusCode == 0 {
+			metric.StatusCode = 200
 		}
 
-		_ = notifier.Routes.Notify(goctx.TODO(), trace)
+		_ = notifier.Routes.Notify(goctx.TODO(), metric)
 	}
 }
 

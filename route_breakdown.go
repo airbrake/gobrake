@@ -133,22 +133,22 @@ func (s *routeBreakdowns) send(m map[routeBreakdownKey]*routeBreakdown) error {
 	return err
 }
 
-func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
-	if trace.StatusCode < 200 || (trace.StatusCode >= 300 && trace.StatusCode < 400) {
+func (s *routeBreakdowns) Notify(c context.Context, metric *RouteMetric) error {
+	if metric.StatusCode < 200 || (metric.StatusCode >= 300 && metric.StatusCode < 400) {
 		// ignore
 		return nil
 	}
 
-	total, err := trace.duration()
+	total, err := metric.duration()
 	if err != nil {
 		return err
 	}
 
 	key := routeBreakdownKey{
-		Method:   trace.Method,
-		Route:    trace.Route,
-		RespType: trace.respType(),
-		Time:     trace.startTime.UTC().Truncate(time.Minute),
+		Method:   metric.Method,
+		Route:    metric.Route,
+		RespType: metric.respType(),
+		Time:     metric.startTime.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
@@ -164,7 +164,7 @@ func (s *routeBreakdowns) Notify(c context.Context, trace *RouteTrace) error {
 	addWG.Add(1)
 	s.mu.Unlock()
 
-	groups := trace.flushGroups()
+	groups := metric.flushGroups()
 	b.Add(total, groups)
 	addWG.Done()
 

@@ -86,22 +86,22 @@ We also prepared HTTP middlewares for [Gin](examples/gin) and [Beego](examples/b
 To get more detailed timing you can wrap important blocks of code into spans. For example, you can create 2 spans `sql` and `http` to measure timing of specific operations:
 
 ``` go
-trace := &gobrake.RouteTrace{
+metric := &gobrake.RouteMetric{
     Method: c.Request.Method,
     Route:  routeName,
     StartTime:  time.Now(),
 }
 
-trace.StartSpan("sql")
+metric.StartSpan("sql")
 users, err := fetchUser(ctx, userID)
-trace.EndSpan("sql")
+metric.EndSpan("sql")
 
-trace.StartSpan("http")
+metric.StartSpan("http")
 resp, err := http.Get("http://example.com/")
-trace.EndSpan("http")
+metric.EndSpan("http")
 
-trace.StatusCode = http.StatusOK
-notifier.Routes.Notify(ctx, trace)
+metric.StatusCode = http.StatusOK
+notifier.Routes.Notify(ctx, metric)
 ```
 
 You can also collect stats about individual SQL queries performance using following API:

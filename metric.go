@@ -11,15 +11,15 @@ import (
 
 type ctxKey string
 
-const traceCtxKey ctxKey = "ab_trace"
+const metricCtxKey ctxKey = "ab_metric"
 const spanCtxKey ctxKey = "ab_span"
 
-type Trace interface {
+type Metric interface {
 	Start(c context.Context, name string) (context.Context, Span)
 }
 
-func withTrace(c context.Context, t Trace) context.Context {
-	c = context.WithValue(c, traceCtxKey, t)
+func withMetric(c context.Context, t Metric) context.Context {
+	c = context.WithValue(c, metricCtxKey, t)
 
 	var span Span
 	clientTrace := &httptrace.ClientTrace{
@@ -35,14 +35,14 @@ func withTrace(c context.Context, t Trace) context.Context {
 	return c
 }
 
-func ContextTrace(c context.Context) Trace {
+func ContextMetric(c context.Context) Metric {
 	if c == nil {
-		return noopTrace{}
+		return noopMetric{}
 	}
-	if t, ok := c.Value(traceCtxKey).(Trace); ok {
+	if t, ok := c.Value(metricCtxKey).(Metric); ok {
 		return t
 	}
-	return noopTrace{}
+	return noopMetric{}
 }
 
 func ContextSpan(c context.Context) Span {
@@ -57,17 +57,17 @@ func ContextSpan(c context.Context) Span {
 
 //------------------------------------------------------------------------------
 
-type noopTrace struct{}
+type noopMetric struct{}
 
-var _ Trace = noopTrace{}
+var _ Metric = noopMetric{}
 
-func (noopTrace) Start(c context.Context, name string) (context.Context, Span) {
+func (noopMetric) Start(c context.Context, name string) (context.Context, Span) {
 	return c, noopSpan{}
 }
 
 //------------------------------------------------------------------------------
 
-type trace struct {
+type metric struct {
 	startTime time.Time
 	endTime   time.Time
 
@@ -75,13 +75,13 @@ type trace struct {
 	groups   map[string]time.Duration
 }
 
-var _ Trace = (*trace)(nil)
+var _ Metric = (*metric)(nil)
 
-func (t *trace) init() {
+func (t *metric) init() {
 	t.startTime = clock.Now()
 }
 
-func (t *trace) Start(c context.Context, name string) (context.Context, Span) {
+func (t *metric) Start(c context.Context, name string) (context.Context, Span) {
 	if t == nil {
 		return c, noopSpan{}
 	}
@@ -97,23 +97,23 @@ func (t *trace) Start(c context.Context, name string) (context.Context, Span) {
 	return c, sp
 }
 
-func (t *trace) finish() {
+func (t *metric) finish() {
 	if t.endTime.IsZero() {
 		t.endTime = clock.Now()
 	}
 }
 
-func (t *trace) duration() (time.Duration, error) {
+func (t *metric) duration() (time.Duration, error) {
 	if t.startTime.IsZero() {
-		return 0, errors.New("trace.startTime is zero")
+		return 0, errors.New("metric.startTime is zero")
 	}
 	if t.endTime.IsZero() {
-		return 0, errors.New("trace.endTime is zero")
+		return 0, errors.New("metric.endTime is zero")
 	}
 	return t.endTime.Sub(t.startTime), nil
 }
 
-func (t *trace) WithSpan(ctx context.Context, name string, body func(context.Context) error) error {
+func (t *metric) WithSpan(ctx context.Context, name string, body func(context.Context) error) error {
 	ctx, span := t.Start(ctx, name)
 	defer span.Finish()
 	if err := body(ctx); err != nil {
@@ -122,7 +122,7 @@ func (t *trace) WithSpan(ctx context.Context, name string, body func(context.Con
 	return nil
 }
 
-func (t *trace) incGroup(name string, dur time.Duration) {
+func (t *metric) incGroup(name string, dur time.Duration) {
 	if !t.endTime.IsZero() {
 		return
 	}
@@ -135,7 +135,7 @@ func (t *trace) incGroup(name string, dur time.Duration) {
 	t.groupsMu.Unlock()
 }
 
-func (t *trace) flushGroups() map[string]time.Duration {
+func (t *metric) flushGroups() map[string]time.Duration {
 	t.groupsMu.Lock()
 	groups := t.groups
 	t.groups = nil
@@ -160,7 +160,7 @@ func (noopSpan) Finish() {}
 //------------------------------------------------------------------------------
 
 type span struct {
-	trace  *trace
+	metric *metric
 	parent *span
 
 	name  string
@@ -172,16 +172,16 @@ type span struct {
 
 var _ Span = (*span)(nil)
 
-func newSpan(trace *trace, name string) *span {
+func newSpan(metric *metric, name string) *span {
 	return &span{
-		trace: trace,
-		name:  name,
-		start: clock.Now(),
+		metric: metric,
+		name:   name,
+		start:  clock.Now(),
 	}
 }
 
 func (s *span) Finish() {
-	if s.trace == nil {
+	if s.metric == nil {
 		logger.Printf("gobrake: span=%q is already finished", s.name)
 		return
 	}
@@ -189,12 +189,12 @@ func (s *span) Finish() {
 		return
 	}
 
-	s.trace.incGroup(s.name, s.dur)
+	s.metric.incGroup(s.name, s.dur)
 	if s.parent != nil {
 		s.parent.resume()
 	}
 
-	s.trace = nil
+	s.metric = nil
 	s.parent = nil
 }
 

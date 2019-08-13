@@ -139,16 +139,17 @@ func (s *queueStats) send(m map[queueKey]*queueBreakdown) error {
 	return err
 }
 
-func (s *queueStats) Notify(c context.Context, trace *QueueTrace) error {
-	trace.finish()
-	total, err := trace.duration()
+func (s *queueStats) Notify(c context.Context, metric *QueueMetric) error {
+	metric.finish()
+
+	total, err := metric.duration()
 	if err != nil {
 		return err
 	}
 
 	key := queueKey{
-		Queue: trace.Queue,
-		Time:  trace.startTime.UTC().Truncate(time.Minute),
+		Queue: metric.Queue,
+		Time:  metric.startTime.UTC().Truncate(time.Minute),
 	}
 
 	s.mu.Lock()
@@ -164,8 +165,8 @@ func (s *queueStats) Notify(c context.Context, trace *QueueTrace) error {
 	s.addWG.Add(1)
 	s.mu.Unlock()
 
-	groups := trace.flushGroups()
-	b.Add(total, groups, trace.Errored)
+	groups := metric.flushGroups()
+	b.Add(total, groups, metric.Errored)
 	addWG.Done()
 
 	return nil
