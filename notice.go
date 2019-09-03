@@ -128,7 +128,7 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 	}
 
 	typeName := getTypeName(e)
-	packageName, backtrace := getBacktrace(e, depth)
+	packageName, backtrace := getBacktrace(e, depth+2)
 
 	for i := range backtrace {
 		frame := &backtrace[i]
