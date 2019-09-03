@@ -213,7 +213,7 @@ func (n *Notifier) Notify(e interface{}, req *http.Request) {
 // Notice returns Aibrake notice created from error and request. depth
 // determines which call frame to use when constructing backtrace.
 func (n *Notifier) Notice(err interface{}, req *http.Request, depth int) *Notice {
-	return NewNotice(err, req, depth+3)
+	return NewNotice(err, req, depth+1)
 }
 
 type sendResponse struct {
