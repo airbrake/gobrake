@@ -2,6 +2,13 @@
 
 <img src="http://f.cl.ly/items/3J3h1L05222X3o1w2l2L/golang.jpg" width=800px>
 
+# Installation
+gobrake can be installed like any other go package:
+
+```bash
+$ go get github.com/airbrake/gobrake
+```
+
 # Example
 
 ```go
