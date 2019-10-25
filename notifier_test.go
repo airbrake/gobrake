@@ -166,7 +166,7 @@ var _ = Describe("Notifier", func() {
 	})
 
 	It("sets user agent", func() {
-		Expect(sendNoticeReq.Header.Get("User-Agent")).To(Equal("gobrake/3.4.0"))
+		Expect(sendNoticeReq.Header.Get("User-Agent")).To(ContainSubstring("gobrake/"))
 	})
 
 	It("reports context using SetContext", func() {
