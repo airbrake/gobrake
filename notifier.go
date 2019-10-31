@@ -337,7 +337,11 @@ func (n *Notifier) NotifyOnPanic() {
 	if v := recover(); v != nil {
 		notice := n.Notice(v, nil, 2)
 		notice.Context["severity"] = "critical"
-		_, _ = n.SendNotice(notice)
+		_, err := n.SendNotice(notice)
+		if err != nil {
+			logger.Printf("Unable to send notice: %v", err)
+		}
+
 		panic(v)
 	}
 }
