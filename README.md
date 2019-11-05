@@ -6,7 +6,7 @@
 gobrake can be installed like any other go package:
 
 ```bash
-$ go get github.com/airbrake/gobrake
+$ go get github.com/airbrake/gobrake/v4
 ```
 
 # Example
