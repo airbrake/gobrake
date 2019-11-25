@@ -128,26 +128,10 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 	}
 
 	typeName := getTypeName(e)
-	packageName, backtrace := getBacktrace(e, depth+2)
-
-	for i := range backtrace {
-		frame := &backtrace[i]
-		code, err := getCode(frame.File, frame.Line)
-		if err != nil {
-			if !os.IsNotExist(err) {
-				logger.Printf("getCode file=%q line=%d failed: %s",
-					frame.File, frame.Line, err)
-			}
-			continue
-		}
-		frame.Code = code
-	}
-
 	notice = &Notice{
 		Errors: []Error{{
-			Type:      typeName,
-			Message:   fmt.Sprint(e),
-			Backtrace: backtrace,
+			Type:    typeName,
+			Message: fmt.Sprint(e),
 		}},
 		Context: make(map[string]interface{}),
 		Env:     make(map[string]interface{}),
@@ -158,7 +142,26 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 	for k, v := range getDefaultContext() {
 		notice.Context[k] = v
 	}
-	notice.Context["component"] = packageName
+
+	if depth != -1 {
+		packageName, backtrace := getBacktrace(e, depth+2)
+
+		for i := range backtrace {
+			frame := &backtrace[i]
+			code, err := getCode(frame.File, frame.Line)
+			if err != nil {
+				if !os.IsNotExist(err) {
+					logger.Printf("getCode file=%q line=%d failed: %s",
+						frame.File, frame.Line, err)
+				}
+				continue
+			}
+			frame.Code = code
+		}
+
+		notice.Errors[0].Backtrace = backtrace
+		notice.Context["component"] = packageName
+	}
 
 	if req != nil {
 		notice.SetRequest(req)
