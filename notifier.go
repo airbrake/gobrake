@@ -73,6 +73,8 @@ type NotifierOptions struct {
 	// List of keys containing sensitive information that must be filtered out.
 	// Default is password, secret.
 	KeysBlacklist []interface{}
+	// Disables code hunks.
+	DisableCodeHunks bool
 
 	// http.Client that is used to interact with Airbrake API.
 	HTTPClient *http.Client
@@ -180,10 +182,13 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 		Queues:  newQueueStats(opt),
 	}
 
-	n.AddFilter(newNotifierFilter(n))
-	n.AddFilter(gopathFilter)
-	n.AddFilter(gitFilter)
 	n.AddFilter(httpUnsolicitedResponseFilter)
+	n.AddFilter(newNotifierFilter(n))
+	n.AddFilter(gitFilter)
+	if !opt.DisableCodeHunks {
+		n.AddFilter(codeHunksFilter)
+	}
+	n.AddFilter(gopathFilter)
 
 	if len(opt.KeysBlacklist) > 0 {
 		n.AddFilter(NewBlacklistKeysFilter(opt.KeysBlacklist...))

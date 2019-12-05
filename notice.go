@@ -145,20 +145,6 @@ func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
 
 	if depth != -1 {
 		packageName, backtrace := getBacktrace(e, depth+2)
-
-		for i := range backtrace {
-			frame := &backtrace[i]
-			code, err := getCode(frame.File, frame.Line)
-			if err != nil {
-				if !os.IsNotExist(err) {
-					logger.Printf("getCode file=%q line=%d failed: %s",
-						frame.File, frame.Line, err)
-				}
-				continue
-			}
-			frame.Code = code
-		}
-
 		notice.Errors[0].Backtrace = backtrace
 		notice.Context["component"] = packageName
 	}

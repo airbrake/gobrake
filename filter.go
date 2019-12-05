@@ -2,6 +2,7 @@ package gobrake
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -123,4 +124,23 @@ func httpUnsolicitedResponseFilter(notice *Notice) *Notice {
 	}
 
 	return nil
+}
+
+func codeHunksFilter(notice *Notice) *Notice {
+	for i := range notice.Errors {
+		error := &notice.Errors[i]
+		for j := range error.Backtrace {
+			frame := &error.Backtrace[j]
+			code, err := getCode(frame.File, frame.Line)
+			if err != nil {
+				if !os.IsNotExist(err) {
+					logger.Printf("getCode file=%q line=%d failed: %s",
+						frame.File, frame.Line, err)
+				}
+				continue
+			}
+			frame.Code = code
+		}
+	}
+	return notice
 }

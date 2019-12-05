@@ -34,6 +34,8 @@ var _ = Describe("Notifier", func() {
 		notifier.Flush()
 	}
 
+	var opt *gobrake.NotifierOptions
+
 	BeforeEach(func() {
 		handler := func(w http.ResponseWriter, req *http.Request) {
 			sendNoticeReq = req
@@ -53,11 +55,15 @@ var _ = Describe("Notifier", func() {
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
 
-		notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
+		opt = &gobrake.NotifierOptions{
 			ProjectId:  1,
 			ProjectKey: "key",
 			Host:       server.URL,
-		})
+		}
+	})
+
+	JustBeforeEach(func() {
+		notifier = gobrake.NewNotifierWithOptions(opt)
 	})
 
 	AfterEach(func() {
@@ -104,6 +110,24 @@ var _ = Describe("Notifier", func() {
 		Expect(frame.Line).To(Equal(33))
 		Expect(frame.Func).To(ContainSubstring("glob..func"))
 		Expect(frame.Code[33]).To(Equal("\t\tnotifier.Notify(e, req)"))
+	})
+
+	Context("DisableCodeHunks", func() {
+		BeforeEach(func() {
+			opt.DisableCodeHunks = true
+		})
+
+		AfterEach(func() {
+			opt.DisableCodeHunks = false
+		})
+
+		It("does not report code hunks", func() {
+			notify("hello", nil)
+
+			for _, frame := range sentNotice.Errors[0].Backtrace {
+				Expect(frame.Code).To(BeNil())
+			}
+		})
 	})
 
 	It("reports error and backtrace when error is created with pkg/errors", func() {
