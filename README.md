@@ -3,15 +3,18 @@
 <img src="http://f.cl.ly/items/3J3h1L05222X3o1w2l2L/golang.jpg" width=800px>
 
 # Installation
+
 gobrake can be installed like any other go package:
 
-```bash
-$ go get github.com/airbrake/gobrake/v4
+``` bash
+mkdir airbrake_example && cd airbrake_example
+go mod init airbrake_example
+go get github.com/airbrake/gobrake/v4
 ```
 
 # Example
 
-```go
+``` go
 package main
 
 import (
@@ -47,7 +50,7 @@ func main() {
 
 ## Ignoring notices
 
-```go
+``` go
 airbrake.AddFilter(func(notice *gobrake.Notice) *gobrake.Notice {
     if notice.Context["environment"] == "development" {
         // Ignore notices in development environment.
@@ -80,7 +83,7 @@ In order to collect some basic routes stats you can instrument your application
 using `notifier.Routes.Notify` API. We also have prepared HTTP middleware examples for [Gin](examples/gin) and
 [Beego](examples/beego).  Here is an example using the net/http middleware.
 
-```go
+``` go
 package main
 
 import (
@@ -164,7 +167,7 @@ notifier.Routes.Notify(ctx, metric)
 
 You can also collect stats about individual SQL queries performance using following API:
 
-```go
+``` go
 notifier.Queries.Notify(&gobrake.QueryInfo{
     Query:     "SELECT * FROM users WHERE id = ?", // query must be normalized
     Func:      "fetchUser", // optional

@@ -1,6 +1,6 @@
 module github.com/airbrake/gobrake/v4
 
-go 1.13
+go 1.11
 
 require (
 	github.com/caio/go-tdigest v2.3.0+incompatible
