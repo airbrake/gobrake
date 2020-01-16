@@ -106,7 +106,7 @@ var _ = Describe("Notifier", func() {
 		Expect(e.Message).To(Equal("hello"))
 
 		frame := e.Backtrace[0]
-		Expect(frame.File).To(Equal("/GOPATH/github.com/airbrake/gobrake/notifier_test.go"))
+		Expect(frame.File).To(ContainSubstring("airbrake/gobrake/notifier_test.go"))
 		Expect(frame.Line).To(Equal(33))
 		Expect(frame.Func).To(ContainSubstring("glob..func"))
 		Expect(frame.Code[33]).To(Equal("\t\tnotifier.Notify(e, req)"))
@@ -139,13 +139,13 @@ var _ = Describe("Notifier", func() {
 		Expect(e.Message).To(Equal("Test"))
 
 		frame := e.Backtrace[0]
-		Expect(frame.File).To(Equal("/GOPATH/github.com/airbrake/gobrake/internal/testpkg1/testhelper.go"))
+		Expect(frame.File).To(ContainSubstring("airbrake/gobrake/internal/testpkg1/testhelper.go"))
 		Expect(frame.Line).To(Equal(10))
 		Expect(frame.Func).To(Equal("Bar"))
 		Expect(frame.Code[10]).To(Equal(`	return errors.New("Test")`))
 
 		frame = e.Backtrace[1]
-		Expect(frame.File).To(Equal("/GOPATH/github.com/airbrake/gobrake/internal/testpkg1/testhelper.go"))
+		Expect(frame.File).To(ContainSubstring("airbrake/gobrake/internal/testpkg1/testhelper.go"))
 		Expect(frame.Line).To(Equal(6))
 		Expect(frame.Func).To(Equal("Foo"))
 		Expect(frame.Code[6]).To(Equal("\treturn Bar()"))
@@ -249,7 +249,7 @@ var _ = Describe("Notifier", func() {
 		Expect(sentNotice.Context["rootDirectory"]).To(Equal(wd))
 		Expect(sentNotice.Context["gopath"]).To(Equal(gopath))
 		Expect(sentNotice.Context["component"]).To(Equal("github.com/airbrake/gobrake/v4_test"))
-		Expect(sentNotice.Context["repository"]).To(Equal("https://github.com/airbrake/gobrake"))
+		Expect(sentNotice.Context["repository"]).To(ContainSubstring("airbrake/gobrake"))
 		Expect(sentNotice.Context["revision"]).NotTo(BeEmpty())
 		Expect(sentNotice.Context["lastCheckout"]).NotTo(BeEmpty())
 	})
