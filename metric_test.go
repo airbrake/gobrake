@@ -42,9 +42,9 @@ var _ = Describe("metric with real clock", func() {
 		sp0.Finish()
 		metric.finish()
 
-		Expect(metric.groups["sp0"]).To(BeNumerically("==", 100*time.Millisecond, 10*time.Millisecond))
-		Expect(metric.groups["sp1"]).To(BeNumerically("==", 200*time.Millisecond, 10*time.Millisecond))
-		Expect(metric.duration()).To(BeNumerically("==", 200*time.Millisecond, 10*time.Millisecond))
+		Expect(metric.groups["sp0"]).To(BeNumerically("==", 100*time.Millisecond, 20*time.Millisecond))
+		Expect(metric.groups["sp1"]).To(BeNumerically("==", 200*time.Millisecond, 20*time.Millisecond))
+		Expect(metric.duration()).To(BeNumerically("==", 200*time.Millisecond, 20*time.Millisecond))
 	})
 })
 
