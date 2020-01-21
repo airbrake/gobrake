@@ -34,6 +34,7 @@ var (
 	errAccountRateLimited = errors.New("gobrake: account is rate limited")
 	errIPRateLimited      = errors.New("gobrake: IP is rate limited")
 	errNoticeTooBig       = errors.New("gobrake: notice exceeds 64KB max size limit")
+	errBadRequest         = errors.New("gobrake: bad request")
 )
 
 var (
@@ -302,6 +303,8 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 		return "", errAccountRateLimited
 	case http.StatusRequestEntityTooLarge:
 		return "", errNoticeTooBig
+	case http.StatusBadRequest:
+		return "", badRequest
 	}
 
 	err = fmt.Errorf("got unexpected response status=%q", resp.Status)
