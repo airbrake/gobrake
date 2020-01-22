@@ -344,6 +344,35 @@ var _ = Describe("Notice exceeds 64KB", func() {
 	})
 })
 
+var _ = Describe("server returns HTTP 400 error message", func() {
+	var notifier *gobrake.Notifier
+
+	BeforeEach(func() {
+		handler := func(w http.ResponseWriter, req *http.Request) {
+			w.WriteHeader(http.StatusBadRequest)
+			_, err := w.Write([]byte(`{"message":"error 400!"}`))
+			Expect(err).To(BeNil())
+		}
+		server := httptest.NewServer(http.HandlerFunc(handler))
+
+		notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
+			ProjectId:  1,
+			ProjectKey: "key",
+			Host:       server.URL,
+		})
+	})
+
+	AfterEach(func() {
+		Expect(notifier.Close()).NotTo(HaveOccurred())
+	})
+
+	It("returns notice too big error", func() {
+		notice := notifier.Notice("hello", nil, 3)
+		_, err := notifier.SendNotice(notice)
+		Expect(err).To(MatchError("error 400!"))
+	})
+})
+
 var _ = Describe("Notifier request filter", func() {
 	type routeStat struct {
 		Method     string

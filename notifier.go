@@ -222,7 +222,8 @@ func (n *Notifier) Notice(err interface{}, req *http.Request, depth int) *Notice
 }
 
 type sendResponse struct {
-	Id string `json:"id"`
+	Id      string `json:"id"`
+	Message string `json:"message"`
 }
 
 // SendNotice sends notice to Airbrake.
@@ -302,6 +303,13 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 		return "", errAccountRateLimited
 	case http.StatusRequestEntityTooLarge:
 		return "", errNoticeTooBig
+	case http.StatusBadRequest:
+		var sendResp sendResponse
+		err = json.NewDecoder(buf).Decode(&sendResp)
+		if err != nil {
+			return "", err
+		}
+		return "", errors.New(sendResp.Message)
 	}
 
 	err = fmt.Errorf("got unexpected response status=%q", resp.Status)
