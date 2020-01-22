@@ -34,7 +34,6 @@ var (
 	errAccountRateLimited = errors.New("gobrake: account is rate limited")
 	errIPRateLimited      = errors.New("gobrake: IP is rate limited")
 	errNoticeTooBig       = errors.New("gobrake: notice exceeds 64KB max size limit")
-	errBadRequest         = errors.New("gobrake: bad request")
 )
 
 var (
@@ -223,7 +222,8 @@ func (n *Notifier) Notice(err interface{}, req *http.Request, depth int) *Notice
 }
 
 type sendResponse struct {
-	Id string `json:"id"`
+	Id      string `json:"id"`
+	Message string `json:"message"`
 }
 
 // SendNotice sends notice to Airbrake.
@@ -304,7 +304,12 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 	case http.StatusRequestEntityTooLarge:
 		return "", errNoticeTooBig
 	case http.StatusBadRequest:
-		return "", badRequest
+		var sendResp sendResponse
+		err = json.NewDecoder(buf).Decode(&sendResp)
+		if err != nil {
+			return "", err
+		}
+		return "", errors.New(sendResp.Message)
 	}
 
 	err = fmt.Errorf("got unexpected response status=%q", resp.Status)
