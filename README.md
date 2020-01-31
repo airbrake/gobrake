@@ -67,7 +67,7 @@ categorizing how severe an error is. By default, it's set to `error`. To
 redefine severity, simply overwrite `context/severity` of a notice object. For
 example:
 
-```go
+``` go
 notice := airbrake.NewNotice("operation failed", nil, 0)
 notice.Context["severity"] = "critical"
 airbrake.Notify(notice, nil)
@@ -153,13 +153,13 @@ metric := &gobrake.RouteMetric{
     StartTime:  time.Now(),
 }
 
-metric.StartSpan("sql")
+ctx, span := metric.Start(ctx, "sql")
 users, err := fetchUser(ctx, userID)
-metric.EndSpan("sql")
+span.Finish()
 
-metric.StartSpan("http")
+ctx, span = metric.Start(ctx, "http")
 resp, err := http.Get("http://example.com/")
-metric.EndSpan("http")
+span.Finish()
 
 metric.StatusCode = http.StatusOK
 notifier.Routes.Notify(ctx, metric)
@@ -176,4 +176,23 @@ notifier.Queries.Notify(&gobrake.QueryInfo{
     StartTime: startTime,
     EndTime:   time.Now(),
 })
+```
+
+## Sending queue stats
+
+``` go
+metric := &gobrake.QueueMetric{
+    Queue: "my-queue-name",
+    StartTime:  time.Now(),
+}
+
+ctx, span := metric.Start(ctx, "sql")
+users, err := fetchUser(ctx, userID)
+span.Finish()
+
+ctx, span = metric.Start(ctx, "http")
+resp, err := http.Get("http://example.com/")
+span.Finish()
+
+notifier.Queues.Notify(ctx, metric)
 ```
