@@ -17,6 +17,25 @@ provides a minimalist API that enables the ability to send _any_ Go error or
 panic to the Airbrake dashboard. The library is extremely lightweight, with
 minimal overhead.
 
+Key features
+------------
+
+* Simple, consistent and easy-to-use library API
+* Asynchronous exception reporting
+* Flexible configuration options
+* Support for environments
+* Filters support (filter out sensitive or unwanted data that shouldn't be sent)
+* Ability to ignore certain errors
+* SSL support (all communication with Airbrake is encrypted by default)
+* Panic reporting support
+* Severity support
+* Support for code hunks (lines of code surrounding each backtrace frame)
+* Automatic deploy tracking
+* Performance monitoring features such as HTTP route statistics, SQL queries,
+  and Job execution statistics
+* Integrations with [Beego][beego] and [Gin][gin]
+* Last but not least, we follow [semantic versioning 2.0.0][semver2]
+
 # Installation
 
 gobrake can be installed like any other go package:
@@ -216,3 +235,6 @@ notifier.Queues.Notify(ctx, metric)
 [airbrake.io]: https://airbrake.io
 [gobrake-github]: https://github.com/airbrake/gobrake
 [docs]: https://pkg.go.dev/github.com/airbrake/gobrake?tab=doc
+[beego]: https://beego.me
+[gin]: https://github.com/gin-gonic/gin
+[semver2]: http://semver.org/spec/v2.0.0.html
