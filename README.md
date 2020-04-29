@@ -5,6 +5,15 @@ Gobrake
 
 <img src="http://f.cl.ly/items/3J3h1L05222X3o1w2l2L/golang.jpg" width=800px>
 
+Introduction
+------------
+
+_Gobrake_ is the official notifier library for [Airbrake][airbrake.io] for the
+Go programming language, the leading exception reporting service. Gobrake
+provides a minimalist API that enables the ability to send _any_ Go error or
+panic to the Airbrake dashboard. The library is extremely lightweight, with
+minimal overhead.
+
 # Installation
 
 gobrake can be installed like any other go package:
@@ -199,3 +208,5 @@ span.Finish()
 
 notifier.Queues.Notify(ctx, metric)
 ```
+
+[airbrake.io]: https://airbrake.io
