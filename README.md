@@ -3,7 +3,7 @@ Gobrake
 
 [![Build Status](https://travis-ci.org/airbrake/gobrake.svg?branch=v2)](https://travis-ci.org/airbrake/gobrake)
 
-<img src="http://f.cl.ly/items/3J3h1L05222X3o1w2l2L/golang.jpg" width=800px>
+![Gobrake][arthur-go]
 
 Introduction
 ------------
@@ -209,4 +209,5 @@ span.Finish()
 notifier.Queues.Notify(ctx, metric)
 ```
 
+[arthur-go]: http://f.cl.ly/items/3J3h1L05222X3o1w2l2L/golang.jpg
 [airbrake.io]: https://airbrake.io
