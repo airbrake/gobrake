@@ -62,39 +62,29 @@ go mod init airbrake_example
 go get github.com/airbrake/gobrake/v4
 ```
 
-# Example
+Example
+-------
 
-``` go
+This is the minimal example that you can use to test Gobrake with your project.
+
+```go
 package main
 
 import (
-    "errors"
+	"errors"
 
-    "github.com/airbrake/gobrake/v4"
+	"github.com/airbrake/gobrake/v4"
 )
 
 var airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-    ProjectId: 123456,
-    ProjectKey: "FIXME",
-    Environment: "production",
+	ProjectId:  105138,
+	ProjectKey: "fd04e13d806a90f96614ad8e529b2822",
 })
 
-func init() {
-    airbrake.AddFilter(func(notice *gobrake.Notice) *gobrake.Notice {
-        notice.Params["user"] = map[string]string{
-            "id": "1",
-            "username": "johnsmith",
-            "name": "John Smith",
-        }
-        return notice
-    })
-}
-
 func main() {
-    defer airbrake.Close()
-    defer airbrake.NotifyOnPanic()
+	defer airbrake.Close()
 
-    airbrake.Notify(errors.New("operation failed"), nil)
+	airbrake.Notify(errors.New("operation failed"), nil)
 }
 ```
 
