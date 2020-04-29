@@ -5,6 +5,9 @@ Gobrake
 
 ![Gobrake][arthur-go]
 
+* [Gobrake README][gobrake-github]
+* [pkg.go.dev documentation][docs]
+
 Introduction
 ------------
 
@@ -211,3 +214,5 @@ notifier.Queues.Notify(ctx, metric)
 
 [arthur-go]: http://f.cl.ly/items/3J3h1L05222X3o1w2l2L/golang.jpg
 [airbrake.io]: https://airbrake.io
+[gobrake-github]: https://github.com/airbrake/gobrake
+[docs]: https://pkg.go.dev/github.com/airbrake/gobrake?tab=doc
