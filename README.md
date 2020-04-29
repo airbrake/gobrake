@@ -36,11 +36,27 @@ Key features
 * Integrations with [Beego][beego] and [Gin][gin]
 * Last but not least, we follow [semantic versioning 2.0.0][semver2]
 
-# Installation
+Installation
+------------
 
-gobrake can be installed like any other go package:
+### Go modules
 
-``` bash
+Gobrake can be installed like any other Go package that supports [Go
+modules][go-mod].
+
+#### Installing in an existing project
+
+Just `go get` the library:
+
+```sh
+go get github.com/airbrake/gobrake/v4
+```
+
+#### Installing in a new project
+
+Create a new directory, initialize a new module and `go get` the library:
+
+```sh
 mkdir airbrake_example && cd airbrake_example
 go mod init airbrake_example
 go get github.com/airbrake/gobrake/v4
@@ -238,3 +254,4 @@ notifier.Queues.Notify(ctx, metric)
 [beego]: https://beego.me
 [gin]: https://github.com/gin-gonic/gin
 [semver2]: http://semver.org/spec/v2.0.0.html
+[go-mod]: https://github.com/golang/go/wiki/Modules
