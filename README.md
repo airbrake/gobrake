@@ -361,6 +361,17 @@ span.Finish()
 notifier.Queues.Notify(ctx, metric)
 ```
 
+Contact
+-------
+
+In case you have a problem, question or a bug report, feel free to:
+
+* [file an issue][issues]
+* [send us an email](mailto:support@airbrake.io)
+* [tweet at us][twitter]
+* chat with us (visit [airbrake.io][airbrake.io] and click on the round orange
+  button in the bottom right corner)
+
 License
 -------
 
@@ -375,3 +386,5 @@ The project uses the MIT License. See LICENSE.md for details.
 [semver2]: http://semver.org/spec/v2.0.0.html
 [go-mod]: https://github.com/golang/go/wiki/Modules
 [project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/airbrake-ruby/project-id-key.png
+[issues]: https://github.com/airbrake/gobrake/issues
+[twitter]: https://twitter.com/airbrake
