@@ -261,7 +261,7 @@ notice.Context["severity"] = "critical"
 airbrake.Notify(notice, nil)
 ```
 
-## Sending routes stats
+#### Sending routes stats
 
 In order to collect some basic routes stats you can instrument your application
 using `notifier.Routes.Notify` API. We also have prepared HTTP middleware examples for [Gin](examples/gin) and
