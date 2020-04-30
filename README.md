@@ -1,7 +1,7 @@
 Gobrake
 =======
 
-[![Build Status](https://travis-ci.org/airbrake/gobrake.svg?branch=v2)](https://travis-ci.org/airbrake/gobrake)
+[![Build Status](https://travis-ci.org/airbrake/gobrake.svg)](https://travis-ci.org/airbrake/gobrake)
 
 ![Gobrake][arthur-go]
 
