@@ -261,10 +261,6 @@ notice.Context["severity"] = "critical"
 airbrake.Notify(notice, nil)
 ```
 
-#### Logging
-
-You can use [glog fork](https://github.com/airbrake/glog) to send your logs to Airbrake.
-
 ## Sending routes stats
 
 In order to collect some basic routes stats you can instrument your application
@@ -396,6 +392,12 @@ Additional notes
 The maximum size of an exception is 64KB. Exceptions that exceed this limit
 will be truncated to fit the size.
 
+### Logging
+
+There's a [glog fork][glog], which integrates with Gobrake. It provides all of
+original glog's functionality and adds the ability to send errors/logs to
+[Airbrake.io][airbrake.io].
+
 Supported Go versions
 ---------------------
 
@@ -429,3 +431,4 @@ The project uses the MIT License. See LICENSE.md for details.
 [project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/airbrake-ruby/project-id-key.png
 [issues]: https://github.com/airbrake/gobrake/issues
 [twitter]: https://twitter.com/airbrake
+[glog]: https://github.com/airbrake/glog
