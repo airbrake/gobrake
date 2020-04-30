@@ -212,19 +212,43 @@ opts := gobrake.NotifierOptions{
 }
 ```
 
-## Ignoring notices
+API
+---
 
-``` go
-airbrake.AddFilter(func(notice *gobrake.Notice) *gobrake.Notice {
-    if notice.Context["environment"] == "development" {
-        // Ignore notices in development environment.
-        return nil
-    }
-    return notice
+For complete API description please follow documentation on [pkg.go.dev
+documentation][docs].
+
+#### AddFilter
+
+`AddFilter` accepts a callback function which will be executed every time a
+`gobrake.Notice` is sent. You can use that for two purposes: filtering of
+unwanted or sensitive params or ignoring the whole notice completely.
+
+##### Filtering unwanted params
+
+```go
+// Filter out sensitive information such as credit cards.
+airbrake.AddFilter(func(n *gobrake.Notice) *gobrake.Notice {
+	if _, ok := n.Context["creditCard"] {
+		n.Context["creditCard"] = "Filtered"
+	}
+	return n
 })
 ```
 
-## Setting severity
+##### Ignoring notices
+
+```go
+// Ignore all notices in development.
+airbrake.AddFilter(func(n *gobrake.Notice) *gobrake.Notice {
+	if n.Context["environment"] == "development" {
+		return nil
+	}
+	return n
+})
+```
+
+#### Setting severity
 
 [Severity](https://airbrake.io/docs/airbrake-faq/what-is-severity/) allows
 categorizing how severe an error is. By default, it's set to `error`. To
@@ -237,7 +261,7 @@ notice.Context["severity"] = "critical"
 airbrake.Notify(notice, nil)
 ```
 
-## Logging
+#### Logging
 
 You can use [glog fork](https://github.com/airbrake/glog) to send your logs to Airbrake.
 
@@ -247,7 +271,7 @@ In order to collect some basic routes stats you can instrument your application
 using `notifier.Routes.Notify` API. We also have prepared HTTP middleware examples for [Gin](examples/gin) and
 [Beego](examples/beego).  Here is an example using the net/http middleware.
 
-``` go
+```go
 package main
 
 import (
@@ -259,7 +283,7 @@ import (
 
 // Airbrake is used to report errors and track performance
 var Airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-  ProjectId:   123123,              // <-- Fill in this value
+  ProjectId:   123123,				// <-- Fill in this value
   ProjectKey:  "YourProjectAPIKey", // <-- Fill in this value
   Environment: "Production",
 })
@@ -277,15 +301,15 @@ func main() {
 
 func airbrakePerformance(route string, h http.HandlerFunc) (string, http.HandlerFunc) {
   handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-    ctx := req.Context()
-    ctx, routeMetric := gobrake.NewRouteMetric(ctx, req.Method, route) // Starts the timing
-    arw := newAirbrakeResponseWriter(w)
+	ctx := req.Context()
+	ctx, routeMetric := gobrake.NewRouteMetric(ctx, req.Method, route) // Starts the timing
+	arw := newAirbrakeResponseWriter(w)
 
-    h.ServeHTTP(arw, req)
+	h.ServeHTTP(arw, req)
 
-    routeMetric.StatusCode = arw.statusCode
-    Airbrake.Routes.Notify(ctx, routeMetric) // Stops the timing and reports
-    fmt.Printf("code: %v, method: %v, route: %v\n", arw.statusCode, req.Method, route)
+	routeMetric.StatusCode = arw.statusCode
+	Airbrake.Routes.Notify(ctx, routeMetric) // Stops the timing and reports
+	fmt.Printf("code: %v, method: %v, route: %v\n", arw.statusCode, req.Method, route)
   })
 
   return route, handler
@@ -308,13 +332,15 @@ func (arw *airbrakeResponseWriter) WriteHeader(code int) {
 ```
 
 
-To get more detailed timing you can wrap important blocks of code into spans. For example, you can create 2 spans `sql` and `http` to measure timing of specific operations:
+To get more detailed timing you can wrap important blocks of code into
+spans. For example, you can create 2 spans `sql` and `http` to measure timing of
+specific operations:
 
-``` go
+```go
 metric := &gobrake.RouteMetric{
-    Method: c.Request.Method,
-    Route:  routeName,
-    StartTime:  time.Now(),
+	Method: c.Request.Method,
+	Route:	routeName,
+	StartTime:	time.Now(),
 }
 
 ctx, span := metric.Start(ctx, "sql")
@@ -329,25 +355,26 @@ metric.StatusCode = http.StatusOK
 notifier.Routes.Notify(ctx, metric)
 ```
 
-You can also collect stats about individual SQL queries performance using following API:
+You can also collect stats about individual SQL queries performance using
+following API:
 
-``` go
+```go
 notifier.Queries.Notify(&gobrake.QueryInfo{
-    Query:     "SELECT * FROM users WHERE id = ?", // query must be normalized
-    Func:      "fetchUser", // optional
-    File:      "models/user.go", // optional
-    Line:      123, // optional
-    StartTime: startTime,
-    EndTime:   time.Now(),
+	Query:	   "SELECT * FROM users WHERE id = ?", // query must be normalized
+	Func:	   "fetchUser", // optional
+	File:	   "models/user.go", // optional
+	Line:	   123, // optional
+	StartTime: startTime,
+	EndTime:   time.Now(),
 })
 ```
 
-## Sending queue stats
+#### Sending queue stats
 
-``` go
+```go
 metric := &gobrake.QueueMetric{
-    Queue: "my-queue-name",
-    StartTime:  time.Now(),
+	Queue: "my-queue-name",
+	StartTime:	time.Now(),
 }
 
 ctx, span := metric.Start(ctx, "sql")
@@ -360,6 +387,14 @@ span.Finish()
 
 notifier.Queues.Notify(ctx, metric)
 ```
+
+Additional notes
+----------------
+
+### Exception limit
+
+The maximum size of an exception is 64KB. Exceptions that exceed this limit
+will be truncated to fit the size.
 
 Supported Go versions
 ---------------------
