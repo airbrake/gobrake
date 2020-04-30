@@ -361,6 +361,12 @@ span.Finish()
 notifier.Queues.Notify(ctx, metric)
 ```
 
+Supported Go versions
+---------------------
+
+The library supports Go v1.11+. The CI file would be the best source of truth
+because it contains all Go versions that we test against.
+
 Contact
 -------
 
