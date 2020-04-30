@@ -88,6 +88,130 @@ func main() {
 }
 ```
 
+Configuration
+-------------
+
+There are two ways to configure Gobrake: quick and dirty & full.
+
+### Quick and dirty configuration
+
+To configure a notifier quickly, you can call `gobrake.NewNotifier`, which
+accepts only two arguments: project id and project key. All of the other options
+will be set to default values.
+
+```go
+airbrake := gobrake.NewNotifier(105138, "fd04e13d806a90f96614ad8e529b2822")
+```
+
+### Full configuration
+
+Full configuration is done through `gobrake.NotifierOptions` struct, which you
+are supposed to pass to `gobrake.NewNotifierWithOptions`. This way is much more
+flexible as it allows configuring all aspects of the notifier. It's the
+recommended way to configure your notifier.
+
+```go
+airbrake := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
+	ProjectId:  105138,
+	ProjectKey: "fd04e13d806a90f96614ad8e529b2822",
+})
+```
+
+#### ProjectId & ProjectKey
+
+You **must** set both `ProjectId` & `ProjectKey`.
+
+To find your `ProjectId` (`int64`) and `ProjectKey` (`string`) navigate to your
+project's _General Settings_ and copy the values from the right sidebar.
+
+![][project-idkey]
+
+#### Host
+
+By default, it is set to `https://api.airbrake.io`. A `host` (`string`) is a web
+address containing a scheme ("http" or "https"), a host and a port. You can omit
+the port (80 will be assumed) and the scheme ("https" will be assumed).
+
+```go
+opts := gobrake.NotifierOptions{
+	Host: "http://localhost:8080/api/",
+}
+```
+
+#### Environment
+
+Configures the environment the application is running in. Helps Airbrake
+dashboard to distinguish between exceptions occurring in different
+environments. By default, it's not set. Expects `string` type.
+
+```go
+opts := gobrake.NotifierOptions{
+	Environment: "production",
+}
+```
+
+#### Revision
+
+Specifies current version control revision. If your app runs on Heroku, its
+value will be defaulted to `SOURCE_VERSION` environment variable. For non-Heroku
+apps this option is not set. Expects `string` type.
+
+```go
+opts := gobrake.NotifierOptions{
+	Revision: "d34db33f",
+}
+```
+
+#### KeysBlacklist
+
+Specifies which keys in the payload (parameters, session data, environment data,
+etc) should be filtered. Before sending an error, filtered keys will be
+substituted with the `[Filtered]` label.
+
+By default, `password` and `secret` are filtered out. `string` and
+`*regexp.Regexp` types are permitted.
+
+```go
+// String keys.
+secrets := []string{"mySecretKey"}
+
+// OR regexp keys
+// secrets := []*regexp.Regexp{regexp.MustCompile("mySecretKey")}
+
+blacklist := make([]interface{}, len(secrets))
+for i, v := range secrets {
+	blacklist[i] = v
+}
+
+opts := gobrake.NotifierOptions{
+	KeysBlacklist: blacklist,
+}
+```
+
+#### DisableCodeHunks
+
+Controls code hunk collection. Code hunks are lines of code surrounding each
+backtrace frame. By default, it's set to `false`. Expects `bool` type.
+
+```go
+opts := gobrake.NotifierOptions{
+	DisableCodeHunks: true,
+}
+```
+
+#### HTTPClient
+
+HTTP client that is used to send data to Airbrake API. Expects `*http.Client`
+type. Normally, you shouldn't configure it.
+
+```go
+opts := gobrake.NotifierOptions{
+	HTTPClient: &http.Client{
+		Timeout: 10 * time.Second,
+	},
+}
+```
+
 ## Ignoring notices
 
 ``` go
@@ -245,3 +369,4 @@ notifier.Queues.Notify(ctx, metric)
 [gin]: https://github.com/gin-gonic/gin
 [semver2]: http://semver.org/spec/v2.0.0.html
 [go-mod]: https://github.com/golang/go/wiki/Modules
+[project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/airbrake-ruby/project-id-key.png
