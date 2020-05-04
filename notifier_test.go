@@ -1,9 +1,12 @@
 package gobrake_test
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -107,9 +110,9 @@ var _ = Describe("Notifier", func() {
 
 		frame := e.Backtrace[0]
 		Expect(frame.File).To(ContainSubstring("airbrake/gobrake/notifier_test.go"))
-		Expect(frame.Line).To(Equal(33))
+		Expect(frame.Line).To(Equal(36))
 		Expect(frame.Func).To(ContainSubstring("glob..func"))
-		Expect(frame.Code[33]).To(Equal("\t\tnotifier.Notify(e, req)"))
+		Expect(frame.Code[33]).To(Equal(""))
 	})
 
 	Context("DisableCodeHunks", func() {
@@ -275,6 +278,55 @@ var _ = Describe("Notifier", func() {
 		notify(msg, nil)
 
 		Expect(sentNotice).To(BeNil())
+	})
+
+	It("logs errors on invalid project id or key", func() {
+		origLogger := gobrake.GetLogger()
+		defer func() {
+			gobrake.SetLogger(origLogger)
+		}()
+
+		buf := new(bytes.Buffer)
+		l := log.New(buf, "", 0)
+		gobrake.SetLogger(l)
+
+		n := gobrake.NewNotifierWithOptions(
+			&gobrake.NotifierOptions{
+				ProjectId:  1,
+				ProjectKey: "broken-key",
+			},
+		)
+		n.Notify(errors.New("oops"), nil)
+		n.Close()
+
+		Expect(buf.String()).To(
+			ContainSubstring("invalid project id or key"),
+		)
+	})
+
+	It("logs errors on invalid host", func() {
+		origLogger := gobrake.GetLogger()
+		defer func() {
+			gobrake.SetLogger(origLogger)
+		}()
+
+		buf := new(bytes.Buffer)
+		l := log.New(buf, "", 0)
+		gobrake.SetLogger(l)
+
+		n := gobrake.NewNotifierWithOptions(
+			&gobrake.NotifierOptions{
+				ProjectId:  1,
+				ProjectKey: "abc",
+				Host:       "http://localhost:1234",
+			},
+		)
+		n.Notify(errors.New("oops"), nil)
+		n.Close()
+
+		Expect(buf.String()).To(
+			ContainSubstring("connect: connection refused"),
+		)
 	})
 })
 
