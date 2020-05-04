@@ -337,6 +337,13 @@ func (n *Notifier) SendNoticeAsync(notice *Notice) {
 		n.limit <- struct{}{}
 
 		notice.Id, notice.Error = n.sendNotice(notice)
+		if notice.Error != nil {
+			logger.Printf(
+				"sendNotice failed reporting notice=%q: %s",
+				notice, notice.Error,
+			)
+		}
+
 		atomic.AddInt32(&n.inFlight, -1)
 		n.wg.Done()
 
@@ -350,7 +357,15 @@ func (n *Notifier) NotifyOnPanic() {
 	if v := recover(); v != nil {
 		notice := n.Notice(v, nil, 2)
 		notice.Context["severity"] = "critical"
-		_, _ = n.SendNotice(notice)
+		_, err := n.SendNotice(notice)
+		if err != nil {
+			logger.Printf(
+				"SendNotice failed reporting notice=%q: %s",
+				notice, err,
+			)
+			return
+		}
+
 		panic(v)
 	}
 }

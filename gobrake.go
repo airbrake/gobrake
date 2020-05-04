@@ -13,3 +13,7 @@ var clock = clockwork.NewRealClock()
 func SetLogger(l *log.Logger) {
 	logger = l
 }
+
+func GetLogger() *log.Logger {
+	return logger
+}
