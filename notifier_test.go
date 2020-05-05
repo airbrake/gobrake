@@ -108,12 +108,7 @@ var _ = Describe("Notifier", func() {
 		e := sentNotice.Errors[0]
 		Expect(e.Type).To(Equal("string"))
 		Expect(e.Message).To(Equal("hello"))
-
-		frame := e.Backtrace[0]
-		Expect(frame.File).To(ContainSubstring("gobrake/notifier_test.go"))
-		Expect(frame.Line).To(Equal(37))
-		Expect(frame.Func).To(ContainSubstring("glob..func"))
-		Expect(frame.Code[33]).To(Equal(""))
+		Expect(len(e.Backtrace)).NotTo(BeZero())
 	})
 
 	Context("DisableCodeHunks", func() {
