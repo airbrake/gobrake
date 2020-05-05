@@ -1,6 +1,7 @@
 package gobrake_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,7 +14,10 @@ import (
 func BenchmarkSendNotice(b *testing.B) {
 	handler := func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(`{"id":"123"}`))
+		_, err := w.Write([]byte(`{"id":"123"}`))
+		if err != nil {
+			panic(err)
+		}
 	}
 	server := httptest.NewServer(http.HandlerFunc(handler))
 
@@ -49,8 +53,8 @@ func BenchmarkRoutesNotify(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		var i int
 		for pb.Next() {
-			_, metric := gobrake.NewRouteMetric(nil, "GET", fmt.Sprintf("/api/v4/groups/%d", i))
-			err := notifier.Routes.Notify(nil, metric)
+			_, metric := gobrake.NewRouteMetric(context.TODO(), "GET", fmt.Sprintf("/api/v4/groups/%d", i))
+			err := notifier.Routes.Notify(context.TODO(), metric)
 			if err != nil {
 				b.Fatal(err)
 			}

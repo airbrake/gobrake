@@ -2,6 +2,7 @@ package gobrake_test
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
@@ -109,8 +110,8 @@ var _ = Describe("Notifier", func() {
 		Expect(e.Message).To(Equal("hello"))
 
 		frame := e.Backtrace[0]
-		Expect(frame.File).To(ContainSubstring("airbrake/gobrake/notifier_test.go"))
-		Expect(frame.Line).To(Equal(36))
+		Expect(frame.File).To(ContainSubstring("gobrake/notifier_test.go"))
+		Expect(frame.Line).To(Equal(37))
 		Expect(frame.Func).To(ContainSubstring("glob..func"))
 		Expect(frame.Code[33]).To(Equal(""))
 	})
@@ -142,13 +143,13 @@ var _ = Describe("Notifier", func() {
 		Expect(e.Message).To(Equal("Test"))
 
 		frame := e.Backtrace[0]
-		Expect(frame.File).To(ContainSubstring("airbrake/gobrake/internal/testpkg1/testhelper.go"))
+		Expect(frame.File).To(ContainSubstring("gobrake/internal/testpkg1/testhelper.go"))
 		Expect(frame.Line).To(Equal(10))
 		Expect(frame.Func).To(Equal("Bar"))
 		Expect(frame.Code[10]).To(Equal(`	return errors.New("Test")`))
 
 		frame = e.Backtrace[1]
-		Expect(frame.File).To(ContainSubstring("airbrake/gobrake/internal/testpkg1/testhelper.go"))
+		Expect(frame.File).To(ContainSubstring("gobrake/internal/testpkg1/testhelper.go"))
 		Expect(frame.Line).To(Equal(6))
 		Expect(frame.Func).To(Equal("Foo"))
 		Expect(frame.Code[6]).To(Equal("\treturn Bar()"))
@@ -472,9 +473,9 @@ var _ = Describe("Notifier request filter", func() {
 	})
 
 	It("sends route stat with route is /ping", func() {
-		_, metric := gobrake.NewRouteMetric(nil, "GET", "/ping")
+		_, metric := gobrake.NewRouteMetric(context.TODO(), "GET", "/ping")
 		metric.StatusCode = http.StatusOK
-		err := notifier.Routes.Notify(nil, metric)
+		err := notifier.Routes.Notify(context.TODO(), metric)
 		Expect(err).NotTo(HaveOccurred())
 
 		notifier.Routes.Flush()
@@ -488,9 +489,9 @@ var _ = Describe("Notifier request filter", func() {
 	})
 
 	It("ignores route stat with route is /pong", func() {
-		_, metric := gobrake.NewRouteMetric(nil, "GET", "/pong")
+		_, metric := gobrake.NewRouteMetric(context.TODO(), "GET", "/pong")
 		metric.StatusCode = http.StatusOK
-		err := notifier.Routes.Notify(nil, metric)
+		err := notifier.Routes.Notify(context.TODO(), metric)
 		Expect(err).NotTo(HaveOccurred())
 
 		notifier.Routes.Flush()

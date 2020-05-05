@@ -16,7 +16,10 @@ var _ = Describe("Notifier", func() {
 	BeforeEach(func() {
 		handler := func(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusCreated)
-			w.Write([]byte(`{"id":"123"}`))
+			_, err := w.Write([]byte(`{"id":"123"}`))
+			if err != nil {
+				panic(err)
+			}
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
 
