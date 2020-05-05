@@ -111,7 +111,7 @@ var _ = Describe("Notifier", func() {
 
 		frame := e.Backtrace[0]
 		Expect(frame.File).To(ContainSubstring("gobrake/notifier_test.go"))
-		Expect(frame.Line).To(Equal(36))
+		Expect(frame.Line).To(Equal(37))
 		Expect(frame.Func).To(ContainSubstring("glob..func"))
 		Expect(frame.Code[33]).To(Equal(""))
 	})
