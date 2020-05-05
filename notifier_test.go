@@ -2,6 +2,7 @@ package gobrake_test
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
@@ -472,9 +473,9 @@ var _ = Describe("Notifier request filter", func() {
 	})
 
 	It("sends route stat with route is /ping", func() {
-		_, metric := gobrake.NewRouteMetric(nil, "GET", "/ping")
+		_, metric := gobrake.NewRouteMetric(context.TODO(), "GET", "/ping")
 		metric.StatusCode = http.StatusOK
-		err := notifier.Routes.Notify(nil, metric)
+		err := notifier.Routes.Notify(context.TODO(), metric)
 		Expect(err).NotTo(HaveOccurred())
 
 		notifier.Routes.Flush()
@@ -488,9 +489,9 @@ var _ = Describe("Notifier request filter", func() {
 	})
 
 	It("ignores route stat with route is /pong", func() {
-		_, metric := gobrake.NewRouteMetric(nil, "GET", "/pong")
+		_, metric := gobrake.NewRouteMetric(context.TODO(), "GET", "/pong")
 		metric.StatusCode = http.StatusOK
-		err := notifier.Routes.Notify(nil, metric)
+		err := notifier.Routes.Notify(context.TODO(), metric)
 		Expect(err).NotTo(HaveOccurred())
 
 		notifier.Routes.Flush()
