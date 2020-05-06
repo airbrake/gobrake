@@ -1,0 +1,22 @@
+Gobrake Changelog
+=================
+
+### master
+
+### [v4.1.0][v4.1.0] (May 6, 2020)
+
+* README was rewritten from scratch, added new information and examples
+  ([#130](https://github.com/airbrake/gobrake/pull/130))
+* Changed license from BSD to MIT
+  ([#129](https://github.com/airbrake/gobrake/pull/129))
+* Added `DisableCodeHunks` option
+  ([#122](https://github.com/airbrake/gobrake/pull/122))
+* Added support for go1.13 and go1.14 (started testing against them)
+  ([#135](https://github.com/airbrake/gobrake/pull/135),
+  [#125](https://github.com/airbrake/gobrake/pull/125))
+* Improved error handling when the Airbrake API returns HTTP 400
+  ([#128](https://github.com/airbrake/gobrake/pull/128))
+* Started logging configuration errors
+  ([#133](https://github.com/airbrake/gobrake/pull/133))
+
+[v4.1.0]: https://github.com/airbrake/gobrake/releases/tag/v4.1.0
