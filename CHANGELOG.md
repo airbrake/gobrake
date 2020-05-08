@@ -3,6 +3,11 @@ Gobrake Changelog
 
 ### master
 
+* Bumped go-tdigest dependency to v3.1.0
+  ([#138](https://github.com/airbrake/gobrake/pull/138))
+* Bumped pkg/errors dependency to v0.9.1
+  ([#138](https://github.com/airbrake/gobrake/pull/138))
+
 ### [v4.1.0][v4.1.0] (May 6, 2020)
 
 * README was rewritten from scratch, added new information and examples
