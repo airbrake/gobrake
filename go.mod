@@ -3,7 +3,7 @@ module github.com/airbrake/gobrake/v4
 go 1.11
 
 require (
-	github.com/caio/go-tdigest v2.3.0+incompatible
+	github.com/caio/go-tdigest v3.1.0+incompatible
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/jonboulle/clockwork v0.1.1-0.20190114141812-62fb9bc030d1
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
