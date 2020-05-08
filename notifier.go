@@ -17,7 +17,7 @@ import (
 )
 
 const notifierName = "gobrake"
-const notifierVersion = "4.1.0"
+const notifierVersion = "4.1.1"
 const userAgent = notifierName + "/" + notifierVersion
 
 const waitTimeout = 5 * time.Second
