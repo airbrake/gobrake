@@ -162,7 +162,7 @@ opts := gobrake.NotifierOptions{
 }
 ```
 
-#### KeysBlacklist
+#### KeysBlocklist
 
 Specifies which keys in the payload (parameters, session data, environment data,
 etc) should be filtered. Before sending an error, filtered keys will be
@@ -178,13 +178,13 @@ secrets := []string{"mySecretKey"}
 // OR regexp keys
 // secrets := []*regexp.Regexp{regexp.MustCompile("mySecretKey")}
 
-blacklist := make([]interface{}, len(secrets))
+blocklist := make([]interface{}, len(secrets))
 for i, v := range secrets {
-	blacklist[i] = v
+	blocklist[i] = v
 }
 
 opts := gobrake.NotifierOptions{
-	KeysBlacklist: blacklist,
+	KeysBlocklist: blocklist,
 }
 ```
 

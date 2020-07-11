@@ -21,7 +21,7 @@ func newNotifierFilter(notifier *Notifier) func(*Notice) *Notice {
 	}
 }
 
-func NewBlacklistKeysFilter(keys ...interface{}) func(*Notice) *Notice {
+func NewBlocklistKeysFilter(keys ...interface{}) func(*Notice) *Notice {
 	return func(notice *Notice) *Notice {
 		for _, key := range keys {
 			notice.Env = filterByKey(notice.Env, key)

@@ -6,9 +6,9 @@ import (
 	"github.com/airbrake/gobrake/v4"
 )
 
-func ExampleNewBlacklistKeysFilter() {
+func ExampleNewBlocklistKeysFilter() {
 	notifier := gobrake.NewNotifier(1, "key")
-	filter := gobrake.NewBlacklistKeysFilter("password", regexp.MustCompile("(?i)(user)"))
+	filter := gobrake.NewBlocklistKeysFilter("password", regexp.MustCompile("(?i)(user)"))
 	notifier.AddFilter(filter)
 
 	notice := &gobrake.Notice{

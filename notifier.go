@@ -72,6 +72,9 @@ type NotifierOptions struct {
 	Revision string
 	// List of keys containing sensitive information that must be filtered out.
 	// Default is password, secret.
+	KeysBlocklist []interface{}
+	// Deprecated version of "KeysBlocklist". Still supported but will eventually
+	// be removed in a future release.
 	KeysBlacklist []interface{}
 	// Disables code hunks.
 	DisableCodeHunks bool
@@ -90,8 +93,12 @@ func (opt *NotifierOptions) init() {
 		opt.Revision = os.Getenv("SOURCE_VERSION")
 	}
 
-	if opt.KeysBlacklist == nil {
-		opt.KeysBlacklist = []interface{}{
+	if opt.KeysBlocklist == nil {
+		opt.KeysBlocklist = opt.KeysBlacklist
+	}
+
+	if opt.KeysBlocklist == nil {
+		opt.KeysBlocklist = []interface{}{
 			regexp.MustCompile("password"),
 			regexp.MustCompile("secret"),
 		}
@@ -190,8 +197,8 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 	}
 	n.AddFilter(gopathFilter)
 
-	if len(opt.KeysBlacklist) > 0 {
-		n.AddFilter(NewBlacklistKeysFilter(opt.KeysBlacklist...))
+	if len(opt.KeysBlocklist) > 0 {
+		n.AddFilter(NewBlocklistKeysFilter(opt.KeysBlocklist...))
 	}
 
 	return n
