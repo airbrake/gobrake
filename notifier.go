@@ -93,8 +93,9 @@ func (opt *NotifierOptions) init() {
 		opt.Revision = os.Getenv("SOURCE_VERSION")
 	}
 
-	if opt.KeysBlocklist == nil {
+	if len(opt.KeysBlacklist) > 0 {
 		opt.KeysBlocklist = opt.KeysBlacklist
+		logger.Printf("KeysBlacklist is a deprecated option. Use KeysBlocklist instead.")
 	}
 
 	if opt.KeysBlocklist == nil {
