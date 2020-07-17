@@ -74,8 +74,8 @@ var _ = Describe("Notifier", func() {
 		Expect(notifier.Close()).NotTo(HaveOccurred())
 	})
 
-	It("applies black list keys filter", func() {
-		filter := gobrake.NewBlacklistKeysFilter("password", regexp.MustCompile("(?i)(user)"))
+	It("applies block list keys filter", func() {
+		filter := gobrake.NewBlocklistKeysFilter("password", regexp.MustCompile("(?i)(user)"))
 		notifier.AddFilter(filter)
 
 		notice := &gobrake.Notice{
@@ -322,6 +322,81 @@ var _ = Describe("Notifier", func() {
 
 		Expect(buf.String()).To(
 			ContainSubstring("connect: connection refused"),
+		)
+	})
+})
+
+var _ = Describe("Deprecated filter keys option", func() {
+	var deprecatedKeysOption = []interface{}{
+		"thingOne",
+		"thingTwo",
+	}
+	var notifier *gobrake.Notifier
+	var sentNotice *gobrake.Notice
+
+	var opt *gobrake.NotifierOptions
+
+	BeforeEach(func() {
+		handler := func(w http.ResponseWriter, req *http.Request) {
+			b, err := ioutil.ReadAll(req.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			sentNotice = new(gobrake.Notice)
+			err = json.Unmarshal(b, sentNotice)
+			Expect(err).To(BeNil())
+
+			w.WriteHeader(http.StatusCreated)
+			_, err = w.Write([]byte(`{"id":"123"}`))
+			Expect(err).To(BeNil())
+		}
+		server := httptest.NewServer(http.HandlerFunc(handler))
+
+		opt = &gobrake.NotifierOptions{
+			ProjectId:     1,
+			ProjectKey:    "key",
+			Host:          server.URL,
+			KeysBlacklist: deprecatedKeysOption,
+		}
+	})
+
+	It("applies filters", func() {
+		origLogger := gobrake.GetLogger()
+		defer func() {
+			gobrake.SetLogger(origLogger)
+		}()
+
+		buf := new(bytes.Buffer)
+		l := log.New(buf, "", 0)
+		gobrake.SetLogger(l)
+
+		notifier = gobrake.NewNotifierWithOptions(opt)
+
+		notice := &gobrake.Notice{
+			Errors: []gobrake.Error{{
+				Type:    "type1",
+				Message: "msg1",
+			}},
+			Env: map[string]interface{}{
+				"thingOne": "please filter this",
+				"thingTwo": "and this too",
+				"email":    "john@example.com",
+			},
+		}
+		notifier.Notify(notice, nil)
+		notifier.Flush()
+
+		e := sentNotice.Errors[0]
+		Expect(e.Type).To(Equal("type1"))
+		Expect(e.Message).To(Equal("msg1"))
+		Expect(sentNotice.Env).To(Equal(map[string]interface{}{
+			"thingOne": "[Filtered]",
+			"thingTwo": "[Filtered]",
+			"email":    "john@example.com",
+		}))
+		Expect(buf.String()).To(
+			ContainSubstring("KeysBlacklist is a deprecated option. Use KeysBlocklist instead."),
 		)
 	})
 })
