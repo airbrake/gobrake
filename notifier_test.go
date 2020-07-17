@@ -361,11 +361,18 @@ var _ = Describe("Deprecated filter keys option", func() {
 		}
 	})
 
-	JustBeforeEach(func() {
-		notifier = gobrake.NewNotifierWithOptions(opt)
-	})
-
 	It("applies filters", func() {
+		origLogger := gobrake.GetLogger()
+		defer func() {
+			gobrake.SetLogger(origLogger)
+		}()
+
+		buf := new(bytes.Buffer)
+		l := log.New(buf, "", 0)
+		gobrake.SetLogger(l)
+
+		notifier = gobrake.NewNotifierWithOptions(opt)
+
 		notice := &gobrake.Notice{
 			Errors: []gobrake.Error{{
 				Type:    "type1",
@@ -388,6 +395,9 @@ var _ = Describe("Deprecated filter keys option", func() {
 			"thingTwo": "[Filtered]",
 			"email":    "john@example.com",
 		}))
+		Expect(buf.String()).To(
+			ContainSubstring("KeysBlacklist is a deprecated option. Use KeysBlocklist instead."),
+		)
 	})
 })
 
