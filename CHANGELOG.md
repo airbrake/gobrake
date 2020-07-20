@@ -3,6 +3,11 @@ Gobrake Changelog
 
 ### master
 
+### [v4.1.2][v4.1.2] (July 20, 2020)
+
+* Deprecated the `KeysBlacklist` option in favor of `KeysBlocklist`
+  ([#141](https://github.com/airbrake/gobrake/pull/141))
+
 ### [v4.1.1][v4.1.1] (May 8, 2020)
 
 * Bumped go-tdigest dependency to v3.1.0
@@ -28,3 +33,4 @@ Gobrake Changelog
 
 [v4.1.0]: https://github.com/airbrake/gobrake/releases/tag/v4.1.0
 [v4.1.1]: https://github.com/airbrake/gobrake/releases/tag/v4.1.1
+[v4.1.2]: https://github.com/airbrake/gobrake/releases/tag/v4.1.2
