@@ -10,10 +10,9 @@
 ## Introduction
 
 _Gobrake_ is the official notifier library for [Airbrake][airbrake.io] for the
-Go programming language, the leading exception reporting service. Gobrake
-provides a minimalist API that enables the ability to send _any_ Go error or
-panic to the Airbrake dashboard. The library is extremely lightweight, with
-minimal overhead.
+Go programming language. Gobrake provides a minimalist API that enables the
+ability to send _any_ Go error or panic to the Airbrake dashboard. The library
+is extremely lightweight, with minimal overhead.
 
 ## Key features
 
@@ -21,11 +20,12 @@ minimal overhead.
 * Asynchronous exception reporting
 * Flexible configuration options
 * Support for environments
+* Add extra context to errors before reporting them
 * Filters support (filter out sensitive or unwanted data that shouldn't be sent)
-* Ability to ignore certain errors
+* Ignore errors based on class, message, status, file, or any other filter
 * SSL support (all communication with Airbrake is encrypted by default)
-* Panic reporting support
-* Severity support
+* Notify Airbrake on panics
+* Set error severity to control notification thresholds
 * Support for code hunks (lines of code surrounding each backtrace frame)
 * Automatic deploy tracking
 * Performance monitoring features such as HTTP route statistics, SQL queries,
@@ -72,7 +72,7 @@ import (
 )
 
 var airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-	ProjectId:  <YOUR PROJECT ID>,
+	ProjectId: <YOUR PROJECT ID>,
 	ProjectKey: "<YOUR API KEY>",
 	Environment: "production",
 })
@@ -87,10 +87,7 @@ func main() {
 To find `<YOUR PROJECT ID>` and `<YOUR API KEY>` navigate to your project's
 Settings and copy the values from the right sidebar.
 
-
-
 ## Configuration
-
 
 There are two ways to configure Gobrake: quick and dirty & full.
 
@@ -113,7 +110,7 @@ recommended way to configure your notifier.
 
 ```go
 airbrake := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-	ProjectId:  <YOUR PROJECT ID>,
+	ProjectId: <YOUR PROJECT ID>,
 	ProjectKey: "<YOUR API KEY>",
 	Environment: "production",
 })
@@ -271,7 +268,7 @@ You can read more about our [Performance Monitoring offering in our docs][docs/p
 #### Sending routes stats
 
 In order to collect routes stats you can instrument your application
-using `notifier.Routes.Notify` API. 
+using `notifier.Routes.Notify` API.
 
 Below is an example using the net/http middleware. We also have HTTP middleware
 examples for [Gin](examples/gin), [Beego](examples/beego) and
