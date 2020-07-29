@@ -1,5 +1,4 @@
-Gobrake
-=======
+# Gobrake
 
 [![Circle Build Status](https://circleci.com/gh/airbrake/gobrake.svg?style=shield)](https://circleci.com/gh/airbrake/gobrake)
 
@@ -8,8 +7,7 @@ Gobrake
 * [Gobrake README][gobrake-github]
 * [pkg.go.dev documentation][docs]
 
-Introduction
-------------
+## Introduction
 
 _Gobrake_ is the official notifier library for [Airbrake][airbrake.io] for the
 Go programming language, the leading exception reporting service. Gobrake
@@ -17,8 +15,7 @@ provides a minimalist API that enables the ability to send _any_ Go error or
 panic to the Airbrake dashboard. The library is extremely lightweight, with
 minimal overhead.
 
-Key features
-------------
+## Key features
 
 * Simple, consistent and easy-to-use library API
 * Asynchronous exception reporting
@@ -32,12 +29,11 @@ Key features
 * Support for code hunks (lines of code surrounding each backtrace frame)
 * Automatic deploy tracking
 * Performance monitoring features such as HTTP route statistics, SQL queries,
-  and Job execution statistics
+	and Job execution statistics
 * Integrations with [Beego][beego] and [Gin][gin]
 * Last but not least, we follow [semantic versioning 2.0.0][semver2]
 
-Installation
-------------
+## Installation
 
 ### Go modules
 
@@ -62,8 +58,7 @@ go mod init airbrake_example
 go get github.com/airbrake/gobrake/v4
 ```
 
-Example
--------
+## Example
 
 This is the minimal example that you can use to test Gobrake with your project.
 
@@ -77,8 +72,9 @@ import (
 )
 
 var airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-	ProjectId:  105138,
-	ProjectKey: "fd04e13d806a90f96614ad8e529b2822",
+	ProjectId:  <YOUR PROJECT ID>,
+	ProjectKey: "<YOUR API KEY>",
+	Environment: "production",
 })
 
 func main() {
@@ -88,19 +84,24 @@ func main() {
 }
 ```
 
-Configuration
--------------
+To find `<YOUR PROJECT ID>` and `<YOUR API KEY>` navigate to your project's
+Settings and copy the values from the right sidebar.
+
+
+
+## Configuration
+
 
 There are two ways to configure Gobrake: quick and dirty & full.
 
 ### Quick and dirty configuration
 
 To configure a notifier quickly, you can call `gobrake.NewNotifier`, which
-accepts only two arguments: project id and project key. All of the other options
-will be set to default values.
+accepts only two arguments: `ProjectId` (`int64`) and `ProjectKey` (`string`).
+All of the other options will be set to default values.
 
 ```go
-airbrake := gobrake.NewNotifier(105138, "fd04e13d806a90f96614ad8e529b2822")
+airbrake := gobrake.NewNotifier(<YOUR PROJECT ID>, "<YOUR API KEY>")
 ```
 
 ### Full configuration
@@ -112,35 +113,26 @@ recommended way to configure your notifier.
 
 ```go
 airbrake := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-	ProjectId:  105138,
-	ProjectKey: "fd04e13d806a90f96614ad8e529b2822",
+	ProjectId:  <YOUR PROJECT ID>,
+	ProjectKey: "<YOUR API KEY>",
+	Environment: "production",
 })
 ```
+
+### NotifierOptions
 
 #### ProjectId & ProjectKey
 
 You **must** set both `ProjectId` & `ProjectKey`.
 
 To find your `ProjectId` (`int64`) and `ProjectKey` (`string`) navigate to your
-project's _General Settings_ and copy the values from the right sidebar.
+project's Settings and copy the values from the right sidebar:
 
 ![][project-idkey]
 
-#### Host
-
-By default, it is set to `https://api.airbrake.io`. A `host` (`string`) is a web
-address containing a scheme ("http" or "https"), a host and a port. You can omit
-the port (80 will be assumed) and the scheme ("https" will be assumed).
-
-```go
-opts := gobrake.NotifierOptions{
-	Host: "http://localhost:8080/api/",
-}
-```
-
 #### Environment
 
-Configures the environment the application is running in. Helps Airbrake
+Configures the environment the application is running in. It helps Airbrake
 dashboard to distinguish between exceptions occurring in different
 environments. By default, it's not set. Expects `string` type.
 
@@ -199,6 +191,18 @@ opts := gobrake.NotifierOptions{
 }
 ```
 
+#### Host
+
+By default, it is set to `https://api.airbrake.io`. A `host` (`string`) is a web
+address containing a scheme ("http" or "https"), a host and a port. You can omit
+the port (80 will be assumed) and the scheme ("https" will be assumed).
+
+```go
+opts := gobrake.NotifierOptions{
+	Host: "http://localhost:8080/api/",
+}
+```
+
 #### HTTPClient
 
 HTTP client that is used to send data to Airbrake API. Expects `*http.Client`
@@ -212,8 +216,7 @@ opts := gobrake.NotifierOptions{
 }
 ```
 
-API
----
+## API
 
 For complete API description please follow documentation on [pkg.go.dev
 documentation][docs].
@@ -261,42 +264,49 @@ notice.Context["severity"] = "critical"
 airbrake.Notify(notice, nil)
 ```
 
+### Performance Monitoring
+
+You can read more about our [Performance Monitoring offering in our docs](docs/performance).
+
 #### Sending routes stats
 
-In order to collect some basic routes stats you can instrument your application
-using `notifier.Routes.Notify` API. We also have prepared HTTP middleware examples for [Gin](examples/gin) and
-[Beego](examples/beego).  Here is an example using the net/http middleware.
+In order to collect routes stats you can instrument your application
+using `notifier.Routes.Notify` API. 
+
+Below is an example using the net/http middleware. We also have HTTP middleware
+examples for [Gin](examples/gin), [Beego](examples/beego) and
+[Negroni](examples/negroni).
 
 ```go
 package main
 
 import (
-  "fmt"
-  "net/http"
+	"fmt"
+	"net/http"
 
-  "github.com/airbrake/gobrake"
+	"github.com/airbrake/gobrake"
 )
 
 // Airbrake is used to report errors and track performance
 var Airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-  ProjectId:   123123,				// <-- Fill in this value
-  ProjectKey:  "YourProjectAPIKey", // <-- Fill in this value
-  Environment: "Production",
+	ProjectId:   <YOUR PROJECT ID>,				// <-- Fill in this value
+	ProjectKey:  "<YOUR API KEY>", // <-- Fill in this value
+	Environment: "production",
 })
 
 func indexHandler(w http.ResponseWriter, req *http.Request) {
-  fmt.Fprintf(w, "Hello, There!")
+	fmt.Fprintf(w, "Hello, There!")
 }
 
 func main() {
-  fmt.Println("Server listening at http://localhost:5555/")
-  // Wrap the indexHandler with Airbrake Performance Monitoring middleware:
-  http.HandleFunc(airbrakePerformance("/", indexHandler))
-  http.ListenAndServe(":5555", nil)
+	fmt.Println("Server listening at http://localhost:5555/")
+	// Wrap the indexHandler with Airbrake Performance Monitoring middleware:
+	http.HandleFunc(airbrakePerformance("/", indexHandler))
+	http.ListenAndServe(":5555", nil)
 }
 
 func airbrakePerformance(route string, h http.HandlerFunc) (string, http.HandlerFunc) {
-  handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	ctx, routeMetric := gobrake.NewRouteMetric(ctx, req.Method, route) // Starts the timing
 	arw := newAirbrakeResponseWriter(w)
@@ -306,24 +316,24 @@ func airbrakePerformance(route string, h http.HandlerFunc) (string, http.Handler
 	routeMetric.StatusCode = arw.statusCode
 	Airbrake.Routes.Notify(ctx, routeMetric) // Stops the timing and reports
 	fmt.Printf("code: %v, method: %v, route: %v\n", arw.statusCode, req.Method, route)
-  })
+	})
 
-  return route, handler
+	return route, handler
 }
 
 type airbrakeResponseWriter struct {
-  http.ResponseWriter
-  statusCode int
+	http.ResponseWriter
+	statusCode int
 }
 
 func newAirbrakeResponseWriter(w http.ResponseWriter) *airbrakeResponseWriter {
-  // Returns 200 OK if WriteHeader isn't called
-  return &airbrakeResponseWriter{w, http.StatusOK}
+	// Returns 200 OK if WriteHeader isn't called
+	return &airbrakeResponseWriter{w, http.StatusOK}
 }
 
 func (arw *airbrakeResponseWriter) WriteHeader(code int) {
-  arw.statusCode = code
-  arw.ResponseWriter.WriteHeader(code)
+	arw.statusCode = code
+	arw.ResponseWriter.WriteHeader(code)
 }
 ```
 
@@ -350,6 +360,8 @@ span.Finish()
 metric.StatusCode = http.StatusOK
 notifier.Routes.Notify(ctx, metric)
 ```
+
+#### Sending queries stats
 
 You can also collect stats about individual SQL queries performance using
 following API:
@@ -413,7 +425,7 @@ In case you have a problem, question or a bug report, feel free to:
 * [send us an email](mailto:support@airbrake.io)
 * [tweet at us][twitter]
 * chat with us (visit [airbrake.io][airbrake.io] and click on the round orange
-  button in the bottom right corner)
+	button in the bottom right corner)
 
 License
 -------
@@ -424,6 +436,7 @@ The project uses the MIT License. See LICENSE.md for details.
 [airbrake.io]: https://airbrake.io
 [gobrake-github]: https://github.com/airbrake/gobrake
 [docs]: https://pkg.go.dev/github.com/airbrake/gobrake?tab=doc
+[docs/performance]: https://airbrake.io/docs/performance-monitoring/go/
 [beego]: https://beego.me
 [gin]: https://github.com/gin-gonic/gin
 [semver2]: http://semver.org/spec/v2.0.0.html
