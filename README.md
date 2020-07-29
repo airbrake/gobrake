@@ -266,7 +266,7 @@ airbrake.Notify(notice, nil)
 
 ### Performance Monitoring
 
-You can read more about our [Performance Monitoring offering in our docs](docs/performance).
+You can read more about our [Performance Monitoring offering in our docs][docs/performance].
 
 #### Sending routes stats
 
