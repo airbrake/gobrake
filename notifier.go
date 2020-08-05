@@ -78,6 +78,8 @@ type NotifierOptions struct {
 	KeysBlacklist []interface{}
 	// Disables code hunks.
 	DisableCodeHunks bool
+	// Controls the error reporting feature.
+	DisableErrorNotifications bool
 
 	// http.Client that is used to interact with Airbrake API.
 	HTTPClient *http.Client
@@ -219,6 +221,14 @@ func (n *Notifier) AddFilter(fn func(*Notice) *Notice) {
 
 // Notify notifies Airbrake about the error.
 func (n *Notifier) Notify(e interface{}, req *http.Request) {
+	if n.opt.DisableErrorNotifications {
+		logger.Printf(
+			"error notifications are disabled, will not deliver notice=%q",
+			e,
+		)
+		return
+	}
+
 	notice := n.Notice(e, req, 1)
 	n.SendNoticeAsync(notice)
 }

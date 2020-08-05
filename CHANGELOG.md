@@ -3,6 +3,10 @@ Gobrake Changelog
 
 ### master
 
+* Added the `DisableErrorNotifications` option, which turns on/off notifications
+  sent via `airbrake.Notify()` calls
+  ([#147](https://github.com/airbrake/gobrake/pull/147))
+
 ### [v4.2.0][v4.2.0] (July 24, 2020)
 
 * Added support for APM for [Negroni](https://github.com/urfave/negroni)

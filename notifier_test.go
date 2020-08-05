@@ -129,6 +129,71 @@ var _ = Describe("Notifier", func() {
 		})
 	})
 
+	Context("DisableErrorNotifications", func() {
+		Context("when it is enabled", func() {
+			var origLogger *log.Logger
+
+			BeforeEach(func() {
+				origLogger = gobrake.GetLogger()
+				buf := new(bytes.Buffer)
+				l := log.New(buf, "", 0)
+				gobrake.SetLogger(l)
+
+				opt.DisableErrorNotifications = true
+			})
+
+			AfterEach(func() {
+				gobrake.SetLogger(origLogger)
+
+				opt.DisableErrorNotifications = false
+			})
+
+			It("doesn't send error notifications", func() {
+				sentNotice = nil
+				notify("hello", nil)
+				Expect(sentNotice).To(BeNil())
+			})
+
+			It("logs the error", func() {
+				origLogger := gobrake.GetLogger()
+				defer func() {
+					gobrake.SetLogger(origLogger)
+				}()
+
+				buf := new(bytes.Buffer)
+				l := log.New(buf, "", 0)
+				gobrake.SetLogger(l)
+
+				n := gobrake.NewNotifierWithOptions(
+					&gobrake.NotifierOptions{
+						ProjectId:                 1,
+						ProjectKey:                "abc",
+						DisableErrorNotifications: true,
+					},
+				)
+				n.Notify("oops", nil)
+				n.Close()
+
+				out := `error notifications are disabled, will not ` +
+					`deliver notice="oops"`
+				Expect(buf.String()).To(ContainSubstring(out))
+
+			})
+		})
+
+		Context("when it is disabled", func() {
+			BeforeEach(func() {
+				opt.DisableErrorNotifications = false
+			})
+
+			It("sends error notifications", func() {
+				sentNotice = nil
+				notify("hello", nil)
+				Expect(sentNotice).NotTo(BeNil())
+			})
+		})
+	})
+
 	It("reports error and backtrace when error is created with pkg/errors", func() {
 		err := testpkg1.Foo()
 		notify(err, nil)
