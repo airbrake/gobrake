@@ -149,6 +149,13 @@ func (s *queryStats) send(m map[queryKey]*tdigestStat) error {
 }
 
 func (s *queryStats) Notify(c context.Context, q *QueryInfo) error {
+	if s.opt.DisableAPM {
+		return fmt.Errorf(
+			"APM is disabled, query is not sent: %s (%s:%d)",
+			q.Query, q.File, q.Line,
+		)
+	}
+
 	key := queryKey{
 		Method: q.Method,
 		Route:  q.Route,

@@ -134,6 +134,13 @@ func (s *routeBreakdowns) send(m map[routeBreakdownKey]*routeBreakdown) error {
 }
 
 func (s *routeBreakdowns) Notify(c context.Context, metric *RouteMetric) error {
+	if s.opt.DisableAPM {
+		return fmt.Errorf(
+			"APM is disabled, route breakdown is not sent: %s %s (status %d)",
+			metric.Method, metric.Route, metric.StatusCode,
+		)
+	}
+
 	if metric.StatusCode < 200 || (metric.StatusCode >= 300 && metric.StatusCode < 400) {
 		// ignore
 		return nil

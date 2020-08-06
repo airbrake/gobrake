@@ -140,6 +140,12 @@ func (s *queueStats) send(m map[queueKey]*queueBreakdown) error {
 }
 
 func (s *queueStats) Notify(c context.Context, metric *QueueMetric) error {
+	if s.opt.DisableAPM {
+		return fmt.Errorf(
+			"APM is disabled, queue is not sent: %s", metric.Queue,
+		)
+	}
+
 	metric.finish()
 
 	total, err := metric.duration()
