@@ -578,6 +578,7 @@ var _ = Describe("Notifier request filter", func() {
 
 	var notifier *gobrake.Notifier
 	var stats *routeStats
+	var opt *gobrake.NotifierOptions
 
 	BeforeEach(func() {
 		stats = new(routeStats)
@@ -593,34 +594,22 @@ var _ = Describe("Notifier request filter", func() {
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
 
-		notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
+		opt = &gobrake.NotifierOptions{
 			ProjectId:  1,
 			ProjectKey: "key",
 			Host:       server.URL,
-		})
+		}
 
+	})
+
+	JustBeforeEach(func() {
+		notifier = gobrake.NewNotifierWithOptions(opt)
 		notifier.Routes.AddFilter(func(info *gobrake.RouteMetric) *gobrake.RouteMetric {
 			if info.Route == "/pong" {
 				return nil
 			}
 			return info
 		})
-	})
-
-	It("sends route stat with route is /ping", func() {
-		_, metric := gobrake.NewRouteMetric(context.TODO(), "GET", "/ping")
-		metric.StatusCode = http.StatusOK
-		err := notifier.Routes.Notify(context.TODO(), metric)
-		Expect(err).NotTo(HaveOccurred())
-
-		notifier.Routes.Flush()
-		Expect(stats.Routes).To(HaveLen(1))
-
-		route := stats.Routes[0]
-		Expect(route.Method).To(Equal("GET"))
-		Expect(route.Route).To(Equal("/ping"))
-		Expect(route.StatusCode).To(Equal(200))
-		Expect(route.Count).To(Equal(1))
 	})
 
 	It("ignores route stat with route is /pong", func() {
@@ -631,5 +620,44 @@ var _ = Describe("Notifier request filter", func() {
 
 		notifier.Routes.Flush()
 		Expect(stats.Routes).To(HaveLen(0))
+	})
+
+	Context("when DisableAPM is enabled", func() {
+		BeforeEach(func() {
+			opt.DisableAPM = true
+		})
+
+		It("returns an error", func() {
+			c, metric := gobrake.NewRouteMetric(context.TODO(), "GET", "/ping")
+			err := notifier.Routes.Notify(c, metric)
+
+			expectedErr := errors.New(
+				"APM is disabled, route is not sent: GET " +
+					"/ping (status 0)",
+			)
+			Expect(err).To(Equal(expectedErr))
+		})
+	})
+
+	Context("when DisableAPM is disabled", func() {
+		BeforeEach(func() {
+			opt.DisableAPM = false
+		})
+
+		It("sends route stat with route is /ping", func() {
+			_, metric := gobrake.NewRouteMetric(context.TODO(), "GET", "/ping")
+			metric.StatusCode = http.StatusOK
+			err := notifier.Routes.Notify(context.TODO(), metric)
+			Expect(err).NotTo(HaveOccurred())
+
+			notifier.Routes.Flush()
+			Expect(stats.Routes).To(HaveLen(1))
+
+			route := stats.Routes[0]
+			Expect(route.Method).To(Equal("GET"))
+			Expect(route.Route).To(Equal("/ping"))
+			Expect(route.StatusCode).To(Equal(200))
+			Expect(route.Count).To(Equal(1))
+		})
 	})
 })

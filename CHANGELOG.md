@@ -6,6 +6,10 @@ Gobrake Changelog
 * Added the `DisableErrorNotifications` option, which turns on/off notifications
   sent via `airbrake.Notify()` calls
   ([#147](https://github.com/airbrake/gobrake/pull/147))
+* Added the `DisableAPM` option, which turns on/off notifications
+  sent via `airbrake.Routes.Notify()`, `airbrake.Queues.Notify()`,
+  `airbrake.Queries.Notify()` calls
+  ([#148](https://github.com/airbrake/gobrake/pull/148))
 
 ### [v4.2.0][v4.2.0] (July 24, 2020)
 

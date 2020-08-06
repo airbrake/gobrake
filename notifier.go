@@ -80,6 +80,8 @@ type NotifierOptions struct {
 	DisableCodeHunks bool
 	// Controls the error reporting feature.
 	DisableErrorNotifications bool
+	// Controls the error reporting feature.
+	DisableAPM bool
 
 	// http.Client that is used to interact with Airbrake API.
 	HTTPClient *http.Client

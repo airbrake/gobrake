@@ -147,6 +147,13 @@ func (s *routeStats) send(m map[routeKey]*tdigestStat) error {
 
 // Notify adds new route stats.
 func (s *routeStats) Notify(c context.Context, req *RouteMetric) error {
+	if s.opt.DisableAPM {
+		return fmt.Errorf(
+			"APM is disabled, route is not sent: %s %s (status %d)",
+			req.Method, req.Route, req.StatusCode,
+		)
+	}
+
 	key := routeKey{
 		Method:     req.Method,
 		Route:      req.Route,
