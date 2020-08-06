@@ -341,9 +341,8 @@ specific operations:
 
 ```go
 metric := &gobrake.RouteMetric{
-	Method: c.Request.Method,
-	Route:	routeName,
-	StartTime:	time.Now(),
+	Method: "GET",
+	Route:	"/",
 }
 
 ctx, span := metric.Start(ctx, "sql")
@@ -364,22 +363,25 @@ You can also collect stats about individual SQL queries performance using
 following API:
 
 ```go
-notifier.Queries.Notify(&gobrake.QueryInfo{
-	Query:	   "SELECT * FROM users WHERE id = ?", // query must be normalized
-	Func:	   "fetchUser", // optional
-	File:	   "models/user.go", // optional
-	Line:	   123, // optional
-	StartTime: startTime,
-	EndTime:   time.Now(),
-})
+notifier.Queries.Notify(
+	context.TODO(),
+	&gobrake.QueryInfo{
+		Query:	   "SELECT * FROM users WHERE id = ?", // query must be normalized
+		Func:	   "fetchUser", // optional
+		File:	   "models/user.go", // optional
+		Line:	   123, // optional
+		StartTime: startTime,
+		EndTime:   time.Now(),
+	},
+)
 ```
 
 #### Sending queue stats
 
 ```go
 metric := &gobrake.QueueMetric{
-	Queue: "my-queue-name",
-	StartTime:	time.Now(),
+	Queue:   "my-queue-name",
+	Errored: true,
 }
 
 ctx, span := metric.Start(ctx, "sql")
