@@ -32,9 +32,7 @@ func (b *queueBreakdown) Add(total time.Duration, groups map[string]time.Duratio
 }
 
 type queueStats struct {
-	opt    *NotifierOptions
-	apiURL string
-
+	opt        *NotifierOptions
 	flushTimer *time.Timer
 	addWG      *sync.WaitGroup
 
@@ -45,8 +43,6 @@ type queueStats struct {
 func newQueueStats(opt *NotifierOptions) *queueStats {
 	return &queueStats{
 		opt: opt,
-		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/queues-stats",
-			opt.APMHost, opt.ProjectId),
 	}
 }
 
@@ -104,7 +100,12 @@ func (s *queueStats) send(m map[queueKey]*queueBreakdown) error {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", s.apiURL, buf)
+	req, err := http.NewRequest(
+		"PUT",
+		fmt.Sprintf("%s/api/v5/projects/%d/queues-stats",
+			s.opt.APMHost, s.opt.ProjectId),
+		buf,
+	)
 	if err != nil {
 		return err
 	}

@@ -37,9 +37,7 @@ type queryKeyStat struct {
 }
 
 type queryStats struct {
-	opt    *NotifierOptions
-	apiURL string
-
+	opt        *NotifierOptions
 	flushTimer *time.Timer
 	addWG      *sync.WaitGroup
 
@@ -50,8 +48,6 @@ type queryStats struct {
 func newQueryStats(opt *NotifierOptions) *queryStats {
 	return &queryStats{
 		opt: opt,
-		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/queries-stats",
-			opt.APMHost, opt.ProjectId),
 	}
 }
 
@@ -113,7 +109,12 @@ func (s *queryStats) send(m map[queryKey]*tdigestStat) error {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", s.apiURL, buf)
+	req, err := http.NewRequest(
+		"PUT",
+		fmt.Sprintf("%s/api/v5/projects/%d/queries-stats",
+			s.opt.APMHost, s.opt.ProjectId),
+		buf,
+	)
 	if err != nil {
 		return err
 	}

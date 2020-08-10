@@ -23,9 +23,7 @@ type routeBreakdown struct {
 }
 
 type routeBreakdowns struct {
-	opt    *NotifierOptions
-	apiURL string
-
+	opt        *NotifierOptions
 	flushTimer *time.Timer
 	addWG      *sync.WaitGroup
 
@@ -36,8 +34,6 @@ type routeBreakdowns struct {
 func newRouteBreakdowns(opt *NotifierOptions) *routeBreakdowns {
 	return &routeBreakdowns{
 		opt: opt,
-		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/routes-breakdowns",
-			opt.APMHost, opt.ProjectId),
 	}
 }
 
@@ -100,7 +96,12 @@ func (s *routeBreakdowns) send(m map[routeBreakdownKey]*routeBreakdown) error {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", s.apiURL, buf)
+	req, err := http.NewRequest(
+		"PUT",
+		fmt.Sprintf("%s/api/v5/projects/%d/routes-breakdowns",
+			s.opt.APMHost, s.opt.ProjectId),
+		buf,
+	)
 	if err != nil {
 		return err
 	}

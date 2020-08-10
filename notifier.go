@@ -177,9 +177,7 @@ func (rs *routes) Notify(c context.Context, metric *RouteMetric) error {
 }
 
 type Notifier struct {
-	opt             *NotifierOptions
-	createNoticeURL string
-
+	opt     *NotifierOptions
 	filters []filter
 
 	inFlight int32 // atomic
@@ -198,10 +196,7 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 	opt.init()
 
 	n := &Notifier{
-		opt: opt,
-		createNoticeURL: fmt.Sprintf("%s/api/v3/projects/%d/notices",
-			opt.Host, opt.ProjectId),
-
+		opt:   opt,
 		limit: make(chan struct{}, 2*runtime.NumCPU()),
 
 		Routes:  newRoutes(opt),
@@ -295,7 +290,12 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 		return "", errNoticeTooBig
 	}
 
-	req, err := http.NewRequest("POST", n.createNoticeURL, buf)
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf("%s/api/v3/projects/%d/notices",
+			n.opt.Host, n.opt.ProjectId),
+		buf,
+	)
 	if err != nil {
 		return "", err
 	}
