@@ -65,6 +65,8 @@ type NotifierOptions struct {
 	ProjectKey string
 	// Airbrake host name. Default is https://airbrake.io.
 	Host string
+	// Airbrake host name for sending APM data.
+	APMHost string
 
 	// Environment such as production or development.
 	Environment string
@@ -90,6 +92,10 @@ type NotifierOptions struct {
 func (opt *NotifierOptions) init() {
 	if opt.Host == "" {
 		opt.Host = "https://api.airbrake.io"
+	}
+
+	if opt.APMHost == "" {
+		opt.APMHost = opt.Host
 	}
 
 	if opt.Revision == "" {

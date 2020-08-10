@@ -46,7 +46,7 @@ func newQueueStats(opt *NotifierOptions) *queueStats {
 	return &queueStats{
 		opt: opt,
 		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/queues-stats",
-			opt.Host, opt.ProjectId),
+			opt.APMHost, opt.ProjectId),
 	}
 }
 

@@ -10,6 +10,8 @@ Gobrake Changelog
   sent via `airbrake.Routes.Notify()`, `airbrake.Queues.Notify()`,
   `airbrake.Queries.Notify()` calls
   ([#148](https://github.com/airbrake/gobrake/pull/148))
+* Added the `APMHost` option that sets the host to which APM data should be sent
+  to ([#150](https://github.com/airbrake/gobrake/pull/150))
 
 ### [v4.2.0][v4.2.0] (July 24, 2020)
 
