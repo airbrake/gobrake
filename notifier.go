@@ -61,27 +61,36 @@ type filter func(*Notice) *Notice
 type NotifierOptions struct {
 	// Airbrake project id.
 	ProjectId int64
+
 	// Airbrake project key.
 	ProjectKey string
+
 	// Airbrake host name. Default is https://airbrake.io.
 	Host string
+
 	// Airbrake host name for sending APM data.
 	APMHost string
 
 	// Environment such as production or development.
 	Environment string
+
 	// Git revision. Default is SOURCE_VERSION on Heroku.
 	Revision string
+
 	// List of keys containing sensitive information that must be filtered out.
 	// Default is password, secret.
 	KeysBlocklist []interface{}
+
 	// Deprecated version of "KeysBlocklist". Still supported but will eventually
 	// be removed in a future release.
 	KeysBlacklist []interface{}
+
 	// Disables code hunks.
 	DisableCodeHunks bool
+
 	// Controls the error reporting feature.
 	DisableErrorNotifications bool
+
 	// Controls the error reporting feature.
 	DisableAPM bool
 
