@@ -29,9 +29,7 @@ type routeFilter func(*RouteMetric) *RouteMetric
 // routeStats aggregates information about requests and periodically sends
 // collected data to Airbrake.
 type routeStats struct {
-	opt    *NotifierOptions
-	apiURL string
-
+	opt        *NotifierOptions
 	flushTimer *time.Timer
 	addWG      *sync.WaitGroup
 
@@ -42,8 +40,6 @@ type routeStats struct {
 func newRouteStats(opt *NotifierOptions) *routeStats {
 	return &routeStats{
 		opt: opt,
-		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/routes-stats",
-			opt.APMHost, opt.ProjectId),
 	}
 }
 
@@ -110,7 +106,12 @@ func (s *routeStats) send(m map[routeKey]*tdigestStat) error {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", s.apiURL, buf)
+	req, err := http.NewRequest(
+		"PUT",
+		fmt.Sprintf("%s/api/v5/projects/%d/routes-stats",
+			s.opt.APMHost, s.opt.ProjectId),
+		buf,
+	)
 	if err != nil {
 		return err
 	}
