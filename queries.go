@@ -51,7 +51,7 @@ func newQueryStats(opt *NotifierOptions) *queryStats {
 	return &queryStats{
 		opt: opt,
 		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/queries-stats",
-			opt.Host, opt.ProjectId),
+			opt.APMHost, opt.ProjectId),
 	}
 }
 

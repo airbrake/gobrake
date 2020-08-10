@@ -43,7 +43,7 @@ func newRouteStats(opt *NotifierOptions) *routeStats {
 	return &routeStats{
 		opt: opt,
 		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/routes-stats",
-			opt.Host, opt.ProjectId),
+			opt.APMHost, opt.ProjectId),
 	}
 }
 

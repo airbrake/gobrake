@@ -37,7 +37,7 @@ func newRouteBreakdowns(opt *NotifierOptions) *routeBreakdowns {
 	return &routeBreakdowns{
 		opt: opt,
 		apiURL: fmt.Sprintf("%s/api/v5/projects/%d/routes-breakdowns",
-			opt.Host, opt.ProjectId),
+			opt.APMHost, opt.ProjectId),
 	}
 }
 
