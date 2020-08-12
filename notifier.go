@@ -71,6 +71,9 @@ type NotifierOptions struct {
 	// Airbrake host name for sending APM data.
 	APMHost string
 
+	// The host name where the remote config is located.
+	RemoteConfigHost string
+
 	// Environment such as production or development.
 	Environment string
 
@@ -105,6 +108,10 @@ func (opt *NotifierOptions) init() {
 
 	if opt.APMHost == "" {
 		opt.APMHost = opt.Host
+	}
+
+	if opt.RemoteConfigHost == "" {
+		opt.RemoteConfigHost = "https://v1-staging-notifier-config.s3.amazonaws.com"
 	}
 
 	if opt.Revision == "" {
@@ -190,6 +197,8 @@ type Notifier struct {
 
 	rateLimitReset uint32 // atomic
 	_closed        uint32 // atomic
+
+	remoteConfig *remoteConfig
 }
 
 func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
@@ -202,6 +211,8 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 		Routes:  newRoutes(opt),
 		Queries: newQueryStats(opt),
 		Queues:  newQueueStats(opt),
+
+		remoteConfig: newRemoteConfig(opt),
 	}
 
 	n.AddFilter(httpUnsolicitedResponseFilter)
@@ -215,6 +226,8 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 	if len(opt.KeysBlocklist) > 0 {
 		n.AddFilter(NewBlocklistKeysFilter(opt.KeysBlocklist...))
 	}
+
+	n.remoteConfig.Poll()
 
 	return n
 }
@@ -411,6 +424,7 @@ func (n *Notifier) Flush() {
 }
 
 func (n *Notifier) Close() error {
+	n.remoteConfig.StopPolling()
 	return n.CloseTimeout(waitTimeout)
 }
 
