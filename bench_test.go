@@ -20,11 +20,13 @@ func BenchmarkSendNotice(b *testing.B) {
 		}
 	}
 	server := httptest.NewServer(http.HandlerFunc(handler))
+	configServer := newConfigServer()
 
 	notifier := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-		ProjectId:  1,
-		ProjectKey: "key",
-		Host:       server.URL,
+		ProjectId:        1,
+		ProjectKey:       "key",
+		Host:             server.URL,
+		RemoteConfigHost: configServer.URL,
 	})
 
 	b.ResetTimer()

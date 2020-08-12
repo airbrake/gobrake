@@ -28,6 +28,15 @@ func TestGobrake(t *testing.T) {
 	RunSpecs(t, "gobrake")
 }
 
+func newConfigServer() *httptest.Server {
+	handler := func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(`{}`))
+		Expect(err).To(BeNil())
+	}
+	return httptest.NewServer(http.HandlerFunc(handler))
+}
+
 var _ = Describe("Notifier", func() {
 	var notifier *gobrake.Notifier
 	var sentNotice *gobrake.Notice
@@ -58,11 +67,13 @@ var _ = Describe("Notifier", func() {
 			Expect(err).To(BeNil())
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
+		configServer := newConfigServer()
 
 		opt = &gobrake.NotifierOptions{
-			ProjectId:  1,
-			ProjectKey: "key",
-			Host:       server.URL,
+			ProjectId:        1,
+			ProjectKey:       "key",
+			Host:             server.URL,
+			RemoteConfigHost: configServer.URL,
 		}
 	})
 
@@ -351,10 +362,12 @@ var _ = Describe("Notifier", func() {
 		l := log.New(buf, "", 0)
 		gobrake.SetLogger(l)
 
+		configServer := newConfigServer()
 		n := gobrake.NewNotifierWithOptions(
 			&gobrake.NotifierOptions{
-				ProjectId:  1,
-				ProjectKey: "broken-key",
+				ProjectId:        1,
+				ProjectKey:       "broken-key",
+				RemoteConfigHost: configServer.URL,
 			},
 		)
 		n.Notify(errors.New("oops"), nil)
@@ -417,12 +430,14 @@ var _ = Describe("Deprecated filter keys option", func() {
 			Expect(err).To(BeNil())
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
+		configServer := newConfigServer()
 
 		opt = &gobrake.NotifierOptions{
-			ProjectId:     1,
-			ProjectKey:    "key",
-			Host:          server.URL,
-			KeysBlacklist: deprecatedKeysOption,
+			ProjectId:        1,
+			ProjectKey:       "key",
+			Host:             server.URL,
+			RemoteConfigHost: configServer.URL,
+			KeysBlacklist:    deprecatedKeysOption,
 		}
 	})
 
@@ -477,11 +492,13 @@ var _ = Describe("rate limiting", func() {
 			w.WriteHeader(429)
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
+		configServer := newConfigServer()
 
 		notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-			ProjectId:  1,
-			ProjectKey: "key",
-			Host:       server.URL,
+			ProjectId:        1,
+			ProjectKey:       "key",
+			Host:             server.URL,
+			RemoteConfigHost: configServer.URL,
 		})
 	})
 
@@ -509,11 +526,13 @@ var _ = Describe("Notice exceeds 64KB", func() {
 			w.WriteHeader(http.StatusCreated)
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
+		configServer := newConfigServer()
 
 		notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-			ProjectId:  1,
-			ProjectKey: "key",
-			Host:       server.URL,
+			ProjectId:        1,
+			ProjectKey:       "key",
+			Host:             server.URL,
+			RemoteConfigHost: configServer.URL,
 		})
 	})
 
@@ -542,11 +561,13 @@ var _ = Describe("server returns HTTP 400 error message", func() {
 			Expect(err).To(BeNil())
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
+		configServer := newConfigServer()
 
 		notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-			ProjectId:  1,
-			ProjectKey: "key",
-			Host:       server.URL,
+			ProjectId:        1,
+			ProjectKey:       "key",
+			Host:             server.URL,
+			RemoteConfigHost: configServer.URL,
 		})
 	})
 
@@ -593,11 +614,13 @@ var _ = Describe("Notifier request filter", func() {
 			w.WriteHeader(http.StatusCreated)
 		}
 		server := httptest.NewServer(http.HandlerFunc(handler))
+		configServer := newConfigServer()
 
 		opt = &gobrake.NotifierOptions{
-			ProjectId:  1,
-			ProjectKey: "key",
-			Host:       server.URL,
+			ProjectId:        1,
+			ProjectKey:       "key",
+			Host:             server.URL,
+			RemoteConfigHost: configServer.URL,
 		}
 
 	})
