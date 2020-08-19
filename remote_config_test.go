@@ -94,5 +94,25 @@ var _ = Describe("newRemoteConfig", func() {
 				Expect(logBuf.String()).To(BeEmpty())
 			})
 		})
+
+		Context("when the server returns unhandled code", func() {
+			BeforeEach(func() {
+				handler := func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusGone)
+					_, err := w.Write([]byte("{}"))
+					Expect(err).To(BeNil())
+				}
+				server := httptest.NewServer(http.HandlerFunc(handler))
+
+				opt.RemoteConfigHost = server.URL
+			})
+
+			It("logs the unhandled error", func() {
+				rc.Poll()
+				Expect(logBuf.String()).To(
+					ContainSubstring("unhandled status (410): {}"),
+				)
+			})
+		})
 	})
 })
