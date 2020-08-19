@@ -9,6 +9,9 @@ import (
 	"time"
 )
 
+// How frequently we should poll the config API.
+const defaultInterval = 10 * time.Minute
+
 type remoteConfig struct {
 	opt    *NotifierOptions
 	ticker *time.Ticker
@@ -34,30 +37,55 @@ type RemoteSettings struct {
 func newRemoteConfig(opt *NotifierOptions) *remoteConfig {
 	return &remoteConfig{
 		opt: opt,
+
+		JSON: &RemoteConfigJSON{},
 	}
 }
 
 func (rc *remoteConfig) Poll() {
-	_, err := fetchConfig(rc.configURL())
+	err := rc.tick()
 	if err != nil {
-		logger.Printf(fmt.Sprintf("fetchConfig failed: %s", err))
+		logger.Print(err)
 	}
-
 	rc.ticker = time.NewTicker(10 * time.Minute)
 	go func() {
 		for {
 			<-rc.ticker.C
-			_, err := fetchConfig(rc.configURL())
+			err := rc.tick()
 			if err != nil {
-				logger.Printf(fmt.Sprintf("fetchConfig failed: %s", err))
+				logger.Print(err)
 				continue
 			}
 		}
 	}()
 }
 
+func (rc *remoteConfig) tick() error {
+	body, err := fetchConfig(rc.configURL())
+	if err != nil {
+		return fmt.Errorf("fetchConfig failed: %s", err)
+	}
+
+	err = json.Unmarshal(body, rc.JSON)
+	if err != nil {
+		return fmt.Errorf("parseConfig failed: %s", err)
+	}
+
+	return nil
+}
+
 func (rc *remoteConfig) StopPolling() {
-	rc.ticker.Stop()
+	if rc.ticker != nil {
+		rc.ticker.Stop()
+	}
+}
+
+func (rc *remoteConfig) Interval() time.Duration {
+	if rc.JSON.PollSec > 0 {
+		return time.Duration(rc.JSON.PollSec) * time.Second
+	}
+
+	return defaultInterval
 }
 
 func (rc *remoteConfig) configURL() string {
@@ -65,7 +93,7 @@ func (rc *remoteConfig) configURL() string {
 		rc.opt.RemoteConfigHost, rc.opt.ProjectId)
 }
 
-func fetchConfig(url string) (*RemoteConfigJSON, error) {
+func fetchConfig(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -81,22 +109,9 @@ func fetchConfig(url string) (*RemoteConfigJSON, error) {
 	case http.StatusForbidden, http.StatusNotFound:
 		return nil, errors.New(string(body))
 	case http.StatusOK:
-		cfg, err := parseConfig(body)
-		if err != nil {
-			return nil, err
-		}
-		return cfg, nil
+		return body, nil
 	default:
 		return nil, fmt.Errorf("unhandled status (%d): %s",
 			resp.StatusCode, body)
 	}
-}
-
-func parseConfig(body []byte) (*RemoteConfigJSON, error) {
-	var j *RemoteConfigJSON
-	err := json.Unmarshal(body, &j)
-	if err != nil {
-		return nil, err
-	}
-	return j, nil
 }
