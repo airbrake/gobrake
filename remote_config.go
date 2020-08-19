@@ -61,7 +61,8 @@ func (rc *remoteConfig) fetchConfig() error {
 		return errors.New(string(body))
 	case http.StatusOK:
 		return nil
+	default:
+		return fmt.Errorf("unhandled status (%d): %s",
+			resp.StatusCode, body)
 	}
-
-	return nil
 }
