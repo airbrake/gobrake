@@ -78,20 +78,85 @@ var _ = Describe("newRemoteConfig", func() {
 		})
 
 		Context("when the server returns 200", func() {
-			BeforeEach(func() {
-				handler := func(w http.ResponseWriter, req *http.Request) {
-					w.WriteHeader(http.StatusOK)
-					_, err := w.Write([]byte("{}"))
-					Expect(err).To(BeNil())
-				}
-				server := httptest.NewServer(http.HandlerFunc(handler))
+			Context("and when it returns correct config JSON", func() {
+				BeforeEach(func() {
+					handler := func(w http.ResponseWriter, req *http.Request) {
+						w.WriteHeader(http.StatusOK)
+						_, err := w.Write([]byte("{}"))
+						Expect(err).To(BeNil())
+					}
+					server := httptest.NewServer(http.HandlerFunc(handler))
 
-				opt.RemoteConfigHost = server.URL
+					opt.RemoteConfigHost = server.URL
+				})
+
+				It("doesn't log any errors", func() {
+					rc.Poll()
+					Expect(logBuf.String()).To(BeEmpty())
+				})
 			})
 
-			It("doesn't log any errors", func() {
-				rc.Poll()
-				Expect(logBuf.String()).To(BeEmpty())
+			Context("and when it returns incorrect JSON config", func() {
+				BeforeEach(func() {
+					handler := func(w http.ResponseWriter, req *http.Request) {
+						w.WriteHeader(http.StatusOK)
+						_, err := w.Write([]byte("{"))
+						Expect(err).To(BeNil())
+					}
+					server := httptest.NewServer(http.HandlerFunc(handler))
+
+					opt.RemoteConfigHost = server.URL
+				})
+
+				It("logs the error", func() {
+					rc.Poll()
+					Expect(logBuf.String()).To(
+						ContainSubstring(
+							"fetchConfig failed: unexpected end of JSON input",
+						),
+					)
+				})
+			})
+
+			Context("and when it returns JSON with missing config fields", func() {
+				BeforeEach(func() {
+					handler := func(w http.ResponseWriter, req *http.Request) {
+						w.WriteHeader(http.StatusOK)
+						_, err := w.Write([]byte(`{"hello":"hi"}`))
+						Expect(err).To(BeNil())
+					}
+					server := httptest.NewServer(http.HandlerFunc(handler))
+
+					opt.RemoteConfigHost = server.URL
+				})
+
+				It("doesn't log any errors", func() {
+					rc.Poll()
+					Expect(logBuf.String()).To(BeEmpty())
+				})
+			})
+
+			Context("and when it returns JSON with current config fields", func() {
+				var body = `{"project_id":1,"updated_at":2,` +
+					`"poll_sec":3,"config_route":"abc/config.json",` +
+					`"settings":[{"name":"errors","enabled":false,` +
+					`"endpoint":null}]}`
+
+				BeforeEach(func() {
+					handler := func(w http.ResponseWriter, req *http.Request) {
+						w.WriteHeader(http.StatusOK)
+						_, err := w.Write([]byte(body))
+						Expect(err).To(BeNil())
+					}
+					server := httptest.NewServer(http.HandlerFunc(handler))
+
+					opt.RemoteConfigHost = server.URL
+				})
+
+				It("doesn't log any errors", func() {
+					rc.Poll()
+					Expect(logBuf.String()).To(BeEmpty())
+				})
 			})
 		})
 
