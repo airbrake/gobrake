@@ -6,11 +6,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
 // How frequently we should poll the config API.
 const defaultInterval = 10 * time.Minute
+
+// API version of the S3 API to poll.
+const apiVer = "2020-06-18"
+
+// What path to poll.
+const configRoutePattern = "%s/%s/config/%d/config.json"
 
 type remoteConfig struct {
 	opt    *NotifierOptions
@@ -65,7 +72,7 @@ func (rc *remoteConfig) Poll() {
 }
 
 func (rc *remoteConfig) tick() error {
-	body, err := fetchConfig(rc.configURL())
+	body, err := fetchConfig(rc.ConfigRoute(rc.opt.RemoteConfigHost))
 	if err != nil {
 		return fmt.Errorf("fetchConfig failed: %s", err)
 	}
@@ -92,9 +99,16 @@ func (rc *remoteConfig) Interval() time.Duration {
 	return defaultInterval
 }
 
-func (rc *remoteConfig) configURL() string {
-	return fmt.Sprintf("%s/2020-06-18/config/%d/config.json",
-		rc.opt.RemoteConfigHost, rc.opt.ProjectId)
+func (rc *remoteConfig) ConfigRoute(remoteConfigHost string) string {
+	if rc.JSON.ConfigRoute != "" {
+		return fmt.Sprintf("%s/%s",
+			strings.TrimSuffix(remoteConfigHost, "/"),
+			rc.JSON.ConfigRoute)
+	}
+
+	return fmt.Sprintf(configRoutePattern,
+		strings.TrimSuffix(remoteConfigHost, "/"),
+		apiVer, rc.opt.ProjectId)
 }
 
 func fetchConfig(url string) ([]byte, error) {
