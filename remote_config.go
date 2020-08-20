@@ -47,7 +47,9 @@ func (rc *remoteConfig) Poll() {
 	if err != nil {
 		logger.Print(err)
 	}
-	rc.ticker = time.NewTicker(10 * time.Minute)
+
+	rc.ticker = time.NewTicker(rc.Interval())
+
 	go func() {
 		for {
 			<-rc.ticker.C
@@ -56,6 +58,8 @@ func (rc *remoteConfig) Poll() {
 				logger.Print(err)
 				continue
 			}
+			rc.ticker.Stop()
+			rc.ticker = time.NewTicker(rc.Interval())
 		}
 	}()
 }

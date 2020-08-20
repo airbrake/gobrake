@@ -180,6 +180,28 @@ var _ = Describe("newRemoteConfig", func() {
 				)
 			})
 		})
+
+		Context("when the remote config alters poll_sec", func() {
+			var body = `{"poll_sec":1}`
+
+			BeforeEach(func() {
+				handler := func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(body))
+					Expect(err).To(BeNil())
+				}
+				server := httptest.NewServer(http.HandlerFunc(handler))
+
+				opt.RemoteConfigHost = server.URL
+			})
+
+			It("changes interval", func() {
+				Expect(rc.Interval()).NotTo(Equal(1 * time.Second))
+				rc.Poll()
+				rc.StopPolling()
+				Expect(rc.Interval()).To(Equal(1 * time.Second))
+			})
+		})
 	})
 
 	Describe("Interval", func() {
