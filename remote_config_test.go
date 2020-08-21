@@ -230,11 +230,17 @@ var _ = Describe("newRemoteConfig", func() {
 		})
 
 		Context("when the remote config enables errors", func() {
+			var body = `{"settings":[{"name":"errors","enabled":true}]}`
+
 			BeforeEach(func() {
-				rc.JSON.RemoteSettings = append(
-					rc.JSON.RemoteSettings,
-					&RemoteSettings{Name: "errors", Enabled: true},
-				)
+				handler := func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(body))
+					Expect(err).To(BeNil())
+				}
+				server := httptest.NewServer(http.HandlerFunc(handler))
+
+				opt.RemoteConfigHost = server.URL
 			})
 
 			Context("and when local error notifications are disabled", func() {
@@ -262,12 +268,57 @@ var _ = Describe("newRemoteConfig", func() {
 			})
 		})
 
-		Context("when the remote config enables APM", func() {
+		Context("when the remote config disables errors", func() {
+			var body = `{"settings":[{"name":"errors","enabled":false}]}`
+
 			BeforeEach(func() {
-				rc.JSON.RemoteSettings = append(
-					rc.JSON.RemoteSettings,
-					&RemoteSettings{Name: "apm", Enabled: true},
-				)
+				handler := func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(body))
+					Expect(err).To(BeNil())
+				}
+				server := httptest.NewServer(http.HandlerFunc(handler))
+
+				opt.RemoteConfigHost = server.URL
+			})
+
+			Context("and when local error notifications are disabled", func() {
+				BeforeEach(func() {
+					opt.DisableErrorNotifications = true
+				})
+
+				It("keeps error notifications disabled", func() {
+					rc.Poll()
+					rc.StopPolling()
+					Expect(opt.DisableErrorNotifications).To(BeTrue())
+				})
+			})
+
+			Context("and when local error notifications are enabled", func() {
+				BeforeEach(func() {
+					opt.DisableErrorNotifications = false
+				})
+
+				It("disables error notifications", func() {
+					rc.Poll()
+					rc.StopPolling()
+					Expect(opt.DisableErrorNotifications).To(BeTrue())
+				})
+			})
+		})
+
+		Context("when the remote config enables APM", func() {
+			var body = `{"settings":[{"name":"apm","enabled":true}]}`
+
+			BeforeEach(func() {
+				handler := func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(body))
+					Expect(err).To(BeNil())
+				}
+				server := httptest.NewServer(http.HandlerFunc(handler))
+
+				opt.RemoteConfigHost = server.URL
 			})
 
 			Context("and when local APM is disabled", func() {
@@ -282,7 +333,7 @@ var _ = Describe("newRemoteConfig", func() {
 				})
 			})
 
-			Context("and when local error notifications are enabled", func() {
+			Context("and when local APM is enabled", func() {
 				BeforeEach(func() {
 					opt.DisableAPM = false
 				})
@@ -291,6 +342,45 @@ var _ = Describe("newRemoteConfig", func() {
 					rc.Poll()
 					rc.StopPolling()
 					Expect(opt.DisableAPM).To(BeFalse())
+				})
+			})
+		})
+
+		Context("when the remote config disables APM", func() {
+			var body = `{"settings":[{"name":"apm","enabled":false}]}`
+
+			BeforeEach(func() {
+				handler := func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(body))
+					Expect(err).To(BeNil())
+				}
+				server := httptest.NewServer(http.HandlerFunc(handler))
+
+				opt.RemoteConfigHost = server.URL
+			})
+
+			Context("and when local APM is disabled", func() {
+				BeforeEach(func() {
+					opt.DisableAPM = true
+				})
+
+				It("keeps APM disabled", func() {
+					rc.Poll()
+					rc.StopPolling()
+					Expect(opt.DisableAPM).To(BeTrue())
+				})
+			})
+
+			Context("and when local APM is enabled", func() {
+				BeforeEach(func() {
+					opt.DisableAPM = false
+				})
+
+				It("disables APM", func() {
+					rc.Poll()
+					rc.StopPolling()
+					Expect(opt.DisableAPM).To(BeTrue())
 				})
 			})
 		})
