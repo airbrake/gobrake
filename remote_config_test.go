@@ -261,6 +261,39 @@ var _ = Describe("newRemoteConfig", func() {
 				})
 			})
 		})
+
+		Context("when the remote config enables APM", func() {
+			BeforeEach(func() {
+				rc.JSON.RemoteSettings = append(
+					rc.JSON.RemoteSettings,
+					&RemoteSettings{Name: "apm", Enabled: true},
+				)
+			})
+
+			Context("and when local APM is disabled", func() {
+				BeforeEach(func() {
+					opt.DisableAPM = true
+				})
+
+				It("keeps APM disabled", func() {
+					rc.Poll()
+					rc.StopPolling()
+					Expect(opt.DisableAPM).To(BeTrue())
+				})
+			})
+
+			Context("and when local error notifications are enabled", func() {
+				BeforeEach(func() {
+					opt.DisableAPM = false
+				})
+
+				It("enables APM", func() {
+					rc.Poll()
+					rc.StopPolling()
+					Expect(opt.DisableAPM).To(BeFalse())
+				})
+			})
+		})
 	})
 
 	Describe("Interval", func() {
@@ -381,6 +414,47 @@ var _ = Describe("newRemoteConfig", func() {
 
 			It("returns the value from local options", func() {
 				Expect(rc.ErrorNotifications()).To(BeTrue())
+			})
+		})
+	})
+
+	Describe("APM", func() {
+		Context("when JSON has the 'apm' setting", func() {
+			BeforeEach(func() {
+				rc.JSON.RemoteSettings = append(
+					rc.JSON.RemoteSettings,
+					&RemoteSettings{Name: "apm"},
+				)
+			})
+
+			Context("and when it is enabled", func() {
+				BeforeEach(func() {
+					rc.JSON.RemoteSettings[0].Enabled = true
+				})
+
+				It("returns true", func() {
+					Expect(rc.APM()).To(BeTrue())
+				})
+			})
+
+			Context("and when it is disabled", func() {
+				BeforeEach(func() {
+					rc.JSON.RemoteSettings[0].Enabled = false
+				})
+
+				It("returns false", func() {
+					Expect(rc.APM()).To(BeFalse())
+				})
+			})
+		})
+
+		Context("when JSON has NO 'errors' setting", func() {
+			BeforeEach(func() {
+				rc.JSON.RemoteSettings = make([]*RemoteSettings, 0)
+			})
+
+			It("returns the value from local options", func() {
+				Expect(rc.APM()).To(BeTrue())
 			})
 		})
 	})
