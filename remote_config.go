@@ -105,6 +105,10 @@ func (rc *remoteConfig) updateLocalConfig() {
 		rc.opt.Host = rc.ErrorHost()
 	}
 
+	if rc.APMHost() != "" {
+		rc.opt.APMHost = rc.APMHost()
+	}
+
 	rc.updateErrorNotifications()
 	rc.updateAPM()
 }
@@ -174,6 +178,16 @@ func (rc *remoteConfig) APM() bool {
 func (rc *remoteConfig) ErrorHost() string {
 	for _, s := range rc.JSON.RemoteSettings {
 		if s.Name == errorsSetting {
+			return s.Endpoint
+		}
+	}
+
+	return ""
+}
+
+func (rc *remoteConfig) APMHost() string {
+	for _, s := range rc.JSON.RemoteSettings {
+		if s.Name == apmSetting {
 			return s.Endpoint
 		}
 	}
