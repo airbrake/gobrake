@@ -294,6 +294,28 @@ var _ = Describe("newRemoteConfig", func() {
 				})
 			})
 		})
+
+		Context("when the remote config specifies an endpoint for 'errors'", func() {
+			var body = `{"settings":[{"name":"errors","endpoint":"http://foo.bar"}]}`
+
+			BeforeEach(func() {
+				handler := func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(body))
+					Expect(err).To(BeNil())
+				}
+				server := httptest.NewServer(http.HandlerFunc(handler))
+
+				opt.RemoteConfigHost = server.URL
+			})
+
+			It("changes config route", func() {
+				Expect(opt.Host).NotTo(Equal("http://foo.bar"))
+				rc.Poll()
+				rc.StopPolling()
+				Expect(opt.Host).To(Equal("http://foo.bar"))
+			})
+		})
 	})
 
 	Describe("Interval", func() {
@@ -455,6 +477,53 @@ var _ = Describe("newRemoteConfig", func() {
 
 			It("returns the value from local options", func() {
 				Expect(rc.APM()).To(BeTrue())
+			})
+		})
+	})
+
+	Describe("ErrorHost", func() {
+		Context("when JSON settings has the 'errors' setting", func() {
+			BeforeEach(func() {
+				rc.JSON.RemoteSettings = append(
+					rc.JSON.RemoteSettings,
+					&RemoteSettings{
+						Name: "errors",
+					},
+				)
+			})
+
+			Context("and when an endpoint is specified", func() {
+				BeforeEach(func() {
+					setting := rc.JSON.RemoteSettings[0]
+					setting.Endpoint = "http://api.newexample.com"
+				})
+
+				It("returns the endpoint", func() {
+					Expect(rc.ErrorHost()).To(
+						Equal("http://api.newexample.com"),
+					)
+				})
+			})
+
+			Context("and when an endpoint is NOT specified", func() {
+				BeforeEach(func() {
+					setting := rc.JSON.RemoteSettings[0]
+					setting.Endpoint = ""
+				})
+
+				It("returns an empty string", func() {
+					Expect(rc.ErrorHost()).To(BeEmpty())
+				})
+			})
+		})
+
+		Context("when JSON settings has no 'errors' setting", func() {
+			BeforeEach(func() {
+				rc.JSON.RemoteSettings = make([]*RemoteSettings, 0)
+			})
+
+			It("returns default host", func() {
+				Expect(rc.ErrorHost()).To(BeEmpty())
 			})
 		})
 	})
