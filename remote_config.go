@@ -101,6 +101,10 @@ func (rc *remoteConfig) tick() error {
 }
 
 func (rc *remoteConfig) updateLocalConfig() {
+	if rc.ErrorHost() != "" {
+		rc.opt.Host = rc.ErrorHost()
+	}
+
 	rc.updateErrorNotifications()
 	rc.updateAPM()
 }
@@ -165,6 +169,16 @@ func (rc *remoteConfig) APM() bool {
 	}
 
 	return true
+}
+
+func (rc *remoteConfig) ErrorHost() string {
+	for _, s := range rc.JSON.RemoteSettings {
+		if s.Name == errorsSetting {
+			return s.Endpoint
+		}
+	}
+
+	return ""
 }
 
 func fetchConfig(url string) ([]byte, error) {
