@@ -228,6 +228,39 @@ var _ = Describe("newRemoteConfig", func() {
 				))
 			})
 		})
+
+		Context("when the remote config enables errors", func() {
+			BeforeEach(func() {
+				rc.JSON.RemoteSettings = append(
+					rc.JSON.RemoteSettings,
+					&RemoteSettings{Name: "errors", Enabled: true},
+				)
+			})
+
+			Context("and when local error notifications are disabled", func() {
+				BeforeEach(func() {
+					opt.DisableErrorNotifications = true
+				})
+
+				It("keeps error notifications disabled", func() {
+					rc.Poll()
+					rc.StopPolling()
+					Expect(opt.DisableErrorNotifications).To(BeTrue())
+				})
+			})
+
+			Context("and when local error notifications are enabled", func() {
+				BeforeEach(func() {
+					opt.DisableErrorNotifications = false
+				})
+
+				It("enables error notifications", func() {
+					rc.Poll()
+					rc.StopPolling()
+					Expect(opt.DisableErrorNotifications).To(BeFalse())
+				})
+			})
+		})
 	})
 
 	Describe("Interval", func() {
@@ -307,6 +340,47 @@ var _ = Describe("newRemoteConfig", func() {
 				Expect(rc.ConfigRoute(host)).To(Equal(
 					"http://example.com/2020-06-18/config/1/config.json",
 				))
+			})
+		})
+	})
+
+	Describe("ErrorNotifications", func() {
+		Context("when JSON has the 'errors' setting", func() {
+			BeforeEach(func() {
+				rc.JSON.RemoteSettings = append(
+					rc.JSON.RemoteSettings,
+					&RemoteSettings{Name: "errors"},
+				)
+			})
+
+			Context("and when it is enabled", func() {
+				BeforeEach(func() {
+					rc.JSON.RemoteSettings[0].Enabled = true
+				})
+
+				It("returns true", func() {
+					Expect(rc.ErrorNotifications()).To(BeTrue())
+				})
+			})
+
+			Context("and when it is disabled", func() {
+				BeforeEach(func() {
+					rc.JSON.RemoteSettings[0].Enabled = false
+				})
+
+				It("returns false", func() {
+					Expect(rc.ErrorNotifications()).To(BeFalse())
+				})
+			})
+		})
+
+		Context("when JSON has NO 'errors' setting", func() {
+			BeforeEach(func() {
+				rc.JSON.RemoteSettings = make([]*RemoteSettings, 0)
+			})
+
+			It("returns the value from local options", func() {
+				Expect(rc.ErrorNotifications()).To(BeTrue())
 			})
 		})
 	})
