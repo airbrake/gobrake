@@ -19,8 +19,14 @@ const apiVer = "2020-06-18"
 // What path to poll.
 const configRoutePattern = "%s/%s/config/%d/config.json"
 
+// Setting names in JSON returned by the API.
+const errorsSetting = "errors"
+
 type remoteConfig struct {
-	opt    *NotifierOptions
+	opt *NotifierOptions
+	// opt copy to capture the initial state of the local config.
+	origOpt *NotifierOptions
+
 	ticker *time.Ticker
 
 	JSON *RemoteConfigJSON
@@ -42,8 +48,11 @@ type RemoteSettings struct {
 }
 
 func newRemoteConfig(opt *NotifierOptions) *remoteConfig {
+	optCopy := opt
+
 	return &remoteConfig{
-		opt: opt,
+		opt:     opt,
+		origOpt: optCopy,
 
 		JSON: &RemoteConfigJSON{},
 	}
@@ -54,6 +63,7 @@ func (rc *remoteConfig) Poll() {
 	if err != nil {
 		logger.Print(err)
 	}
+	rc.updateLocalConfig()
 
 	rc.ticker = time.NewTicker(rc.Interval())
 
@@ -66,6 +76,8 @@ func (rc *remoteConfig) Poll() {
 				continue
 			}
 			rc.ticker.Stop()
+			rc.updateLocalConfig()
+
 			rc.ticker = time.NewTicker(rc.Interval())
 		}
 	}()
@@ -83,6 +95,14 @@ func (rc *remoteConfig) tick() error {
 	}
 
 	return nil
+}
+
+func (rc *remoteConfig) updateLocalConfig() {
+	if rc.origOpt.DisableErrorNotifications {
+		return
+	}
+
+	rc.opt.DisableErrorNotifications = !rc.ErrorNotifications()
 }
 
 func (rc *remoteConfig) StopPolling() {
@@ -109,6 +129,16 @@ func (rc *remoteConfig) ConfigRoute(remoteConfigHost string) string {
 	return fmt.Sprintf(configRoutePattern,
 		strings.TrimSuffix(remoteConfigHost, "/"),
 		apiVer, rc.opt.ProjectId)
+}
+
+func (rc *remoteConfig) ErrorNotifications() bool {
+	for _, s := range rc.JSON.RemoteSettings {
+		if s.Name == errorsSetting {
+			return s.Enabled
+		}
+	}
+
+	return true
 }
 
 func fetchConfig(url string) ([]byte, error) {
