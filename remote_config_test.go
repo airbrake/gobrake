@@ -406,6 +406,28 @@ var _ = Describe("newRemoteConfig", func() {
 				Expect(opt.Host).To(Equal("http://foo.bar"))
 			})
 		})
+
+		Context("when the remote config specifies an endpoint for 'apm'", func() {
+			var body = `{"settings":[{"name":"apm","endpoint":"http://foo.bar"}]}`
+
+			BeforeEach(func() {
+				handler := func(w http.ResponseWriter, req *http.Request) {
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(body))
+					Expect(err).To(BeNil())
+				}
+				server := httptest.NewServer(http.HandlerFunc(handler))
+
+				opt.RemoteConfigHost = server.URL
+			})
+
+			It("changes config route", func() {
+				Expect(opt.APMHost).NotTo(Equal("http://foo.bar"))
+				rc.Poll()
+				rc.StopPolling()
+				Expect(opt.APMHost).To(Equal("http://foo.bar"))
+			})
+		})
 	})
 
 	Describe("Interval", func() {
@@ -614,6 +636,53 @@ var _ = Describe("newRemoteConfig", func() {
 
 			It("returns default host", func() {
 				Expect(rc.ErrorHost()).To(BeEmpty())
+			})
+		})
+	})
+
+	Describe("APMHost", func() {
+		Context("when JSON settings has the 'apm' setting", func() {
+			BeforeEach(func() {
+				rc.JSON.RemoteSettings = append(
+					rc.JSON.RemoteSettings,
+					&RemoteSettings{
+						Name: "apm",
+					},
+				)
+			})
+
+			Context("and when an endpoint is specified", func() {
+				BeforeEach(func() {
+					setting := rc.JSON.RemoteSettings[0]
+					setting.Endpoint = "http://api.newexample.com"
+				})
+
+				It("returns the endpoint", func() {
+					Expect(rc.APMHost()).To(
+						Equal("http://api.newexample.com"),
+					)
+				})
+			})
+
+			Context("and when an endpoint is NOT specified", func() {
+				BeforeEach(func() {
+					setting := rc.JSON.RemoteSettings[0]
+					setting.Endpoint = ""
+				})
+
+				It("returns an empty string", func() {
+					Expect(rc.APMHost()).To(BeEmpty())
+				})
+			})
+		})
+
+		Context("when JSON settings has no 'apm' setting", func() {
+			BeforeEach(func() {
+				rc.JSON.RemoteSettings = make([]*RemoteSettings, 0)
+			})
+
+			It("returns default host", func() {
+				Expect(rc.APMHost()).To(BeEmpty())
 			})
 		})
 	})
