@@ -362,11 +362,21 @@ var _ = Describe("Notifier", func() {
 		l := log.New(buf, "", 0)
 		gobrake.SetLogger(l)
 
+		// Return Unauthorized for the error API.
+		handler := func(w http.ResponseWriter, req *http.Request) {
+			w.WriteHeader(http.StatusUnauthorized)
+			_, err := w.Write([]byte(""))
+			Expect(err).To(BeNil())
+		}
+		errorServer := httptest.NewServer(http.HandlerFunc(handler))
+
 		configServer := newConfigServer()
+
 		n := gobrake.NewNotifierWithOptions(
 			&gobrake.NotifierOptions{
 				ProjectId:        1,
 				ProjectKey:       "broken-key",
+				Host:             errorServer.URL,
 				RemoteConfigHost: configServer.URL,
 			},
 		)
