@@ -20,7 +20,10 @@ const apiVer = "2020-06-18"
 const configRoutePattern = "%s/%s/config/%d/config.json"
 
 // Setting names in JSON returned by the API.
-const errorsSetting = "errors"
+const (
+	errorsSetting = "errors"
+	apmSetting    = "apm"
+)
 
 type remoteConfig struct {
 	opt *NotifierOptions
@@ -98,11 +101,24 @@ func (rc *remoteConfig) tick() error {
 }
 
 func (rc *remoteConfig) updateLocalConfig() {
+	rc.updateErrorNotifications()
+	rc.updateAPM()
+}
+
+func (rc *remoteConfig) updateErrorNotifications() {
 	if rc.origOpt.DisableErrorNotifications {
 		return
 	}
 
 	rc.opt.DisableErrorNotifications = !rc.ErrorNotifications()
+}
+
+func (rc *remoteConfig) updateAPM() {
+	if rc.origOpt.DisableAPM {
+		return
+	}
+
+	rc.opt.DisableAPM = !rc.APM()
 }
 
 func (rc *remoteConfig) StopPolling() {
@@ -134,6 +150,16 @@ func (rc *remoteConfig) ConfigRoute(remoteConfigHost string) string {
 func (rc *remoteConfig) ErrorNotifications() bool {
 	for _, s := range rc.JSON.RemoteSettings {
 		if s.Name == errorsSetting {
+			return s.Enabled
+		}
+	}
+
+	return true
+}
+
+func (rc *remoteConfig) APM() bool {
+	for _, s := range rc.JSON.RemoteSettings {
+		if s.Name == apmSetting {
 			return s.Enabled
 		}
 	}
