@@ -3,6 +3,7 @@ package gobrake
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"sync"
 	"time"
 
@@ -127,11 +128,22 @@ var _ = Describe("metric with fake clock", func() {
 })
 
 var _ = Describe("httpmetric", func() {
+	var server *httptest.Server
+
+	BeforeEach(func() {
+		handler := func(w http.ResponseWriter, req *http.Request) {
+			w.WriteHeader(http.StatusNotFound)
+			_, err := w.Write([]byte(""))
+			Expect(err).To(BeNil())
+		}
+		server = httptest.NewServer(http.HandlerFunc(handler))
+	})
+
 	It("measures timing until first response byte", func() {
 		c := context.Background()
 		c, metric := NewRouteMetric(c, "GET", "/api/v1/projects/:projectId")
 
-		req, _ := http.NewRequest("GET", "https://www.google.com/", nil)
+		req, _ := http.NewRequest("GET", server.URL, nil)
 		req = req.WithContext(c)
 
 		_, err := http.DefaultClient.Do(req)
