@@ -69,9 +69,7 @@ func (rc *remoteConfig) Poll() {
 	if err := loadConfig(rc.JSON); err == nil {
 		rc.updateLocalConfig()
 	}
-
-	err := rc.tick()
-	if err != nil {
+	if err := rc.tick(); err != nil {
 		logger.Print(err)
 	}
 	rc.updateLocalConfig()
@@ -81,11 +79,11 @@ func (rc *remoteConfig) Poll() {
 	go func() {
 		for {
 			<-rc.ticker.C
-			err := rc.tick()
-			if err != nil {
+			if err := rc.tick(); err != nil {
 				logger.Print(err)
 				continue
 			}
+
 			rc.ticker.Stop()
 			rc.updateLocalConfig()
 
@@ -99,9 +97,7 @@ func (rc *remoteConfig) tick() error {
 	if err != nil {
 		return fmt.Errorf("fetchConfig failed: %s", err)
 	}
-
-	err = json.Unmarshal(body, rc.JSON)
-	if err != nil {
+	if err = json.Unmarshal(body, rc.JSON); err != nil {
 		return fmt.Errorf("parseConfig failed: %s", err)
 	}
 
@@ -254,9 +250,7 @@ func dumpConfig(j *RemoteConfigJSON) error {
 
 func loadConfig(j *RemoteConfigJSON) error {
 	f, _ := ioutil.ReadFile(configPath)
-
-	err := json.Unmarshal(f, &j)
-	if err != nil {
+	if err := json.Unmarshal(f, &j); err != nil {
 		return err
 	}
 
