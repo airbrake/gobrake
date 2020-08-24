@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -202,8 +203,30 @@ func (rc *remoteConfig) APMHost() string {
 	return ""
 }
 
+func buildRequest(url string) (*http.Request, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	q := req.URL.Query()
+	q.Add("notifier_name", notifierName)
+	q.Add("notifier_version", notifierVersion)
+	q.Add("os", runtime.GOOS)
+	q.Add("language", runtime.Version())
+
+	req.URL.RawQuery = q.Encode()
+
+	return req, nil
+}
+
 func fetchConfig(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+	req, err := buildRequest(url)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := defaultHTTPClient().Do(req)
 	if err != nil {
 		return nil, err
 	}
