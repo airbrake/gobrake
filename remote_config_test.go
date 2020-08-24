@@ -5,17 +5,34 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
+func cleanupConfig() {
+	configPath := "config.json"
+
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return
+	}
+
+	if err := os.Remove(configPath); err != nil {
+		log.Fatal(err)
+	}
+}
+
 var _ = Describe("newRemoteConfig", func() {
 	var rc *remoteConfig
 	var opt *NotifierOptions
 	var origLogger *log.Logger
 	var logBuf *bytes.Buffer
+
+	AfterEach(func() {
+		cleanupConfig()
+	})
 
 	Describe("Poll", func() {
 		BeforeEach(func() {
