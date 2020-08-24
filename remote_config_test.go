@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"runtime"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -53,6 +54,58 @@ var _ = Describe("newRemoteConfig", func() {
 		AfterEach(func() {
 			SetLogger(origLogger)
 			rc.StopPolling()
+		})
+
+		Describe("GET request to S3", func() {
+			var req *http.Request
+
+			BeforeEach(func() {
+				handler := func(w http.ResponseWriter, r *http.Request) {
+					req = r
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(""))
+					Expect(err).To(BeNil())
+				}
+				server := httptest.NewServer(http.HandlerFunc(handler))
+
+				opt.RemoteConfigHost = server.URL
+			})
+
+			It("includes a notifier name", func() {
+				rc.Poll()
+				rc.StopPolling()
+
+				keys, ok := req.URL.Query()["notifier_name"]
+				Expect(ok).To(BeTrue())
+				Expect(keys[0]).To(Equal("gobrake"))
+			})
+
+			It("includes a notifier version", func() {
+				rc.Poll()
+				rc.StopPolling()
+
+				keys, ok := req.URL.Query()["notifier_version"]
+				Expect(ok).To(BeTrue())
+				Expect(keys[0]).To(ContainSubstring("4."))
+			})
+
+			It("includes os", func() {
+				rc.Poll()
+				rc.StopPolling()
+
+				keys, ok := req.URL.Query()["os"]
+				Expect(ok).To(BeTrue())
+				Expect(keys[0]).To(Equal(runtime.GOOS))
+			})
+
+			It("includes language", func() {
+				rc.Poll()
+				rc.StopPolling()
+
+				keys, ok := req.URL.Query()["language"]
+				Expect(ok).To(BeTrue())
+				Expect(keys[0]).To(Equal(runtime.Version()))
+			})
 		})
 
 		Context("when the server returns 404", func() {
