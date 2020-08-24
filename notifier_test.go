@@ -37,6 +37,18 @@ func newConfigServer() *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(handler))
 }
 
+func cleanupConfig() {
+	configPath := "config.json"
+
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return
+	}
+
+	if err := os.Remove(configPath); err != nil {
+		log.Fatal(err)
+	}
+}
+
 var _ = Describe("Notifier", func() {
 	var notifier *gobrake.Notifier
 	var sentNotice *gobrake.Notice

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -24,6 +25,9 @@ const (
 	errorsSetting = "errors"
 	apmSetting    = "apm"
 )
+
+// Path to the local config for dumping/loading.
+const configPath = "config.json"
 
 type remoteConfig struct {
 	opt *NotifierOptions
@@ -62,6 +66,10 @@ func newRemoteConfig(opt *NotifierOptions) *remoteConfig {
 }
 
 func (rc *remoteConfig) Poll() {
+	if err := loadConfig(rc.JSON); err == nil {
+		rc.updateLocalConfig()
+	}
+
 	err := rc.tick()
 	if err != nil {
 		logger.Print(err)
@@ -132,6 +140,9 @@ func (rc *remoteConfig) updateAPM() {
 func (rc *remoteConfig) StopPolling() {
 	if rc.ticker != nil {
 		rc.ticker.Stop()
+	}
+	if err := dumpConfig(rc.JSON); err != nil {
+		logger.Printf("dumpConfig failed: %s", err)
 	}
 }
 
@@ -216,4 +227,38 @@ func fetchConfig(url string) ([]byte, error) {
 		return nil, fmt.Errorf("unhandled status (%d): %s",
 			resp.StatusCode, body)
 	}
+}
+
+func dumpConfig(j *RemoteConfigJSON) error {
+	b, err := json.Marshal(j)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.OpenFile(configPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		return err
+	}
+
+	if _, err := f.Write(b); err != nil {
+		f.Close()
+		return err
+	}
+
+	if err := f.Close(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func loadConfig(j *RemoteConfigJSON) error {
+	f, _ := ioutil.ReadFile(configPath)
+
+	err := json.Unmarshal(f, &j)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
