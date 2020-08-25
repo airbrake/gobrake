@@ -35,7 +35,8 @@ type remoteConfig struct {
 	// opt copy to capture the initial state of the local config.
 	origOpt *NotifierOptions
 
-	ticker *time.Ticker
+	ticker   *time.Ticker
+	pollStop chan bool
 
 	JSON *RemoteConfigJSON
 }
@@ -67,28 +68,34 @@ func newRemoteConfig(opt *NotifierOptions) *remoteConfig {
 }
 
 func (rc *remoteConfig) Poll() {
-	if err := loadConfig(rc.JSON); err == nil {
-		rc.updateLocalConfig()
-	}
-	if err := rc.tick(); err != nil {
-		logger.Print(err)
-	}
-	rc.updateLocalConfig()
-
-	rc.ticker = time.NewTicker(rc.Interval())
+	rc.pollStop = make(chan bool)
 
 	go func() {
-		for {
-			<-rc.ticker.C
-			if err := rc.tick(); err != nil {
-				logger.Print(err)
-				continue
-			}
-
-			rc.ticker.Stop()
+		if err := loadConfig(rc.JSON); err == nil {
 			rc.updateLocalConfig()
+		}
+		if err := rc.tick(); err != nil {
+			logger.Print(err)
+		}
+		rc.updateLocalConfig()
 
-			rc.ticker = time.NewTicker(rc.Interval())
+		rc.ticker = time.NewTicker(rc.Interval())
+
+		for {
+			select {
+			case <-rc.ticker.C:
+				if err := rc.tick(); err != nil {
+					logger.Print(err)
+					continue
+				}
+
+				rc.ticker.Stop()
+				rc.updateLocalConfig()
+
+				rc.ticker = time.NewTicker(rc.Interval())
+			case <-rc.pollStop:
+				break
+			}
 		}
 	}()
 }
@@ -138,6 +145,10 @@ func (rc *remoteConfig) StopPolling() {
 	if rc.ticker != nil {
 		rc.ticker.Stop()
 	}
+	if rc.pollStop != nil {
+		rc.pollStop <- true
+	}
+
 	if err := dumpConfig(rc.JSON); err != nil {
 		logger.Printf("dumpConfig failed: %s", err)
 	}
