@@ -136,6 +136,25 @@ func (opt *NotifierOptions) init() {
 	}
 }
 
+// Makes a shallow copy (without copying slices or nested structs; because we
+// don't need it so far).
+func (opt *NotifierOptions) Copy() *NotifierOptions {
+	return &NotifierOptions{
+		ProjectId:                 opt.ProjectId,
+		ProjectKey:                opt.ProjectKey,
+		Host:                      opt.Host,
+		APMHost:                   opt.APMHost,
+		RemoteConfigHost:          opt.RemoteConfigHost,
+		Environment:               opt.Environment,
+		Revision:                  opt.Revision,
+		KeysBlocklist:             opt.KeysBlocklist,
+		DisableCodeHunks:          opt.DisableCodeHunks,
+		DisableErrorNotifications: opt.DisableErrorNotifications,
+		DisableAPM:                opt.DisableAPM,
+		HTTPClient:                opt.HTTPClient,
+	}
+}
+
 type routes struct {
 	filters []routeFilter
 

@@ -706,3 +706,78 @@ var _ = Describe("Notifier request filter", func() {
 		})
 	})
 })
+
+var _ = Describe("(*NotifierOptions).Copy()", func() {
+	var opt = &gobrake.NotifierOptions{
+		ProjectId:                 1,
+		ProjectKey:                "2",
+		Host:                      "error host",
+		APMHost:                   "apm host",
+		RemoteConfigHost:          "cfg host",
+		Environment:               "env",
+		Revision:                  "rev",
+		DisableCodeHunks:          true,
+		DisableErrorNotifications: true,
+		DisableAPM:                true,
+	}
+
+	It("copies ProjectId", func() {
+		copy := opt.Copy()
+		copy.ProjectId = 99
+		Expect(opt.ProjectId).To(Equal(int64(1)))
+	})
+
+	It("copies ProjectKey", func() {
+		copy := opt.Copy()
+		copy.ProjectKey = "99"
+		Expect(opt.ProjectKey).To(Equal("2"))
+	})
+
+	It("copies Host", func() {
+		copy := opt.Copy()
+		copy.Host = "aaa"
+		Expect(opt.Host).To(Equal("error host"))
+	})
+
+	It("copies APMHost", func() {
+		copy := opt.Copy()
+		copy.APMHost = "aaa"
+		Expect(opt.APMHost).To(Equal("apm host"))
+	})
+
+	It("copies RemoteConfigHost", func() {
+		copy := opt.Copy()
+		copy.RemoteConfigHost = "aaa"
+		Expect(opt.RemoteConfigHost).To(Equal("cfg host"))
+	})
+
+	It("copies Environment", func() {
+		copy := opt.Copy()
+		copy.Environment = "aaa"
+		Expect(opt.Environment).To(Equal("env"))
+	})
+
+	It("copies Revision", func() {
+		copy := opt.Copy()
+		copy.Revision = "aaa"
+		Expect(opt.Revision).To(Equal("rev"))
+	})
+
+	It("copies DisableCodeHunks", func() {
+		copy := opt.Copy()
+		copy.DisableCodeHunks = false
+		Expect(opt.DisableCodeHunks).To(BeTrue())
+	})
+
+	It("copies DisableErrorNotifications", func() {
+		copy := opt.Copy()
+		copy.DisableErrorNotifications = false
+		Expect(opt.DisableErrorNotifications).To(BeTrue())
+	})
+
+	It("copies DisableAPM", func() {
+		copy := opt.Copy()
+		copy.DisableAPM = false
+		Expect(opt.DisableAPM).To(BeTrue())
+	})
+})
