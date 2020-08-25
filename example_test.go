@@ -3,7 +3,7 @@ package gobrake_test
 import (
 	"regexp"
 
-	"github.com/airbrake/gobrake/v4"
+	"github.com/airbrake/gobrake/v5"
 )
 
 func ExampleNewBlocklistKeysFilter() {

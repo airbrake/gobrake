@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/airbrake/gobrake/v4"
+	"github.com/airbrake/gobrake/v5"
 	"github.com/urfave/negroni"
 )
 

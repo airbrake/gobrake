@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 
-	"github.com/airbrake/gobrake/v4"
-	beegobrake "github.com/airbrake/gobrake/v4/beego"
-	"github.com/airbrake/gobrake/v4/examples/beego/controllers"
+	"github.com/airbrake/gobrake/v5"
+	beegobrake "github.com/airbrake/gobrake/v5/beego"
+	"github.com/airbrake/gobrake/v5/examples/beego/controllers"
 
 	"github.com/astaxie/beego"
 )

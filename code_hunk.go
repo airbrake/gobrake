@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/airbrake/gobrake/v4/internal/lrucache"
+	"github.com/airbrake/gobrake/v5/internal/lrucache"
 )
 
 var cache = lrucache.New(1000)

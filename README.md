@@ -45,7 +45,7 @@ modules][go-mod].
 Just `go get` the library:
 
 ```sh
-go get github.com/airbrake/gobrake/v4
+go get github.com/airbrake/gobrake/v5
 ```
 
 #### Installing in a new project
@@ -55,7 +55,7 @@ Create a new directory, initialize a new module and `go get` the library:
 ```sh
 mkdir airbrake_example && cd airbrake_example
 go mod init airbrake_example
-go get github.com/airbrake/gobrake/v4
+go get github.com/airbrake/gobrake/v5
 ```
 
 ## Example
@@ -68,7 +68,7 @@ package main
 import (
 	"errors"
 
-	"github.com/airbrake/gobrake/v4"
+	"github.com/airbrake/gobrake/v5"
 )
 
 var airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{

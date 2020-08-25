@@ -1,8 +1,8 @@
 package gobrake
 
 import (
-	testpkg1 "github.com/airbrake/gobrake/v4/internal/testpkg1"
-	testpkg2 "github.com/airbrake/gobrake/v4/internal/testpkg2"
+	testpkg1 "github.com/airbrake/gobrake/v5/internal/testpkg1"
+	testpkg2 "github.com/airbrake/gobrake/v5/internal/testpkg2"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -16,13 +16,13 @@ var _ = Describe("backtraceFromErrorWithStackTrace", func() {
 			packageName string
 		}{{
 			err:         testpkg1.Foo(),
-			packageName: "github.com/airbrake/gobrake/v4/internal/testpkg1",
+			packageName: "github.com/airbrake/gobrake/v5/internal/testpkg1",
 		}, {
 			err:         testpkg1.Bar(),
-			packageName: "github.com/airbrake/gobrake/v4/internal/testpkg1",
+			packageName: "github.com/airbrake/gobrake/v5/internal/testpkg1",
 		}, {
 			err:         testpkg2.NewError(),
-			packageName: "github.com/airbrake/gobrake/v4/internal/testpkg2",
+			packageName: "github.com/airbrake/gobrake/v5/internal/testpkg2",
 		}}
 
 		type stackTracer interface {
