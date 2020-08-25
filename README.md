@@ -30,7 +30,7 @@ is extremely lightweight, with minimal overhead.
 * Automatic deploy tracking
 * Performance monitoring features such as HTTP route statistics, SQL queries,
 	and Job execution statistics
-* Integrations with [Beego][beego] and [Gin][gin]
+* Integrations with [Beego][beego], [Gin][gin] and [Negroni][negroni]
 * Last but not least, we follow [semantic versioning 2.0.0][semver2]
 
 ## Installation
@@ -438,6 +438,7 @@ The project uses the MIT License. See LICENSE.md for details.
 [docs/performance]: https://airbrake.io/docs/performance-monitoring/go/
 [beego]: https://beego.me
 [gin]: https://github.com/gin-gonic/gin
+[negroni]: https://github.com/urfave/negroni
 [semver2]: http://semver.org/spec/v2.0.0.html
 [go-mod]: https://github.com/golang/go/wiki/Modules
 [project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/airbrake-ruby/project-id-key.png
