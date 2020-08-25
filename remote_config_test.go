@@ -86,7 +86,7 @@ var _ = Describe("newRemoteConfig", func() {
 
 				keys, ok := req.URL.Query()["notifier_version"]
 				Expect(ok).To(BeTrue())
-				Expect(keys[0]).To(ContainSubstring("4."))
+				Expect(keys[0]).To(ContainSubstring("5."))
 			})
 
 			It("includes os", func() {

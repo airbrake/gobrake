@@ -3,6 +3,19 @@ Gobrake Changelog
 
 ### master
 
+### [v5.0.0][v5.0.0] (August 25, 2020)
+
+Breaking changes:
+
+* Deleted deprecated `KeysBlacklist` option
+  ([#174](https://github.com/airbrake/gobrake/pull/174))
+
+Bug fixes:
+
+* None
+
+Features:
+
 * Added the `DisableErrorNotifications` option, which turns on/off notifications
   sent via `airbrake.Notify()` calls
   ([#147](https://github.com/airbrake/gobrake/pull/147))
@@ -14,8 +27,6 @@ Gobrake Changelog
   to ([#150](https://github.com/airbrake/gobrake/pull/150))
 * Added support for remote configuration
 * Added support `go 1.15` ([#168](https://github.com/airbrake/gobrake/pull/168))
-* Deleted deprecated `KeysBlacklist` option
-  ([#174](https://github.com/airbrake/gobrake/pull/174))
 
 ### [v4.2.0][v4.2.0] (July 24, 2020)
 
