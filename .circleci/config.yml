@@ -55,6 +55,13 @@ jobs:
     steps:
       - <<: *repo_restore_cache
       - <<: *unit
+  "go1.15":
+    docker:
+      - image: circleci/golang:1.15
+    working_directory: ~/gobrake
+    steps:
+      - <<: *repo_restore_cache
+      - <<: *unit
 
 workflows:
   version: 2
@@ -71,5 +78,8 @@ workflows:
           requires:
             - golangci_lint
       - "go1.14":
+          requires:
+            - golangci_lint
+      - "go1.15":
           requires:
             - golangci_lint
