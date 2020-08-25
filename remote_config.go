@@ -57,11 +57,9 @@ type RemoteSettings struct {
 }
 
 func newRemoteConfig(opt *NotifierOptions) *remoteConfig {
-	optCopy := opt
-
 	return &remoteConfig{
 		opt:     opt,
-		origOpt: optCopy,
+		origOpt: opt.Copy(),
 
 		JSON: &RemoteConfigJSON{},
 	}
