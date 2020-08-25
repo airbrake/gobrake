@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	"log"
 	"net/http"
 
 	"github.com/airbrake/gobrake/v4"
 	ng "github.com/airbrake/gobrake/v4/negroni"
+
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 )
