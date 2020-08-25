@@ -84,10 +84,6 @@ type NotifierOptions struct {
 	// Default is password, secret.
 	KeysBlocklist []interface{}
 
-	// Deprecated version of "KeysBlocklist". Still supported but will eventually
-	// be removed in a future release.
-	KeysBlacklist []interface{}
-
 	// Disables code hunks.
 	DisableCodeHunks bool
 
@@ -117,11 +113,6 @@ func (opt *NotifierOptions) init() {
 	if opt.Revision == "" {
 		// https://devcenter.heroku.com/changelog-items/630
 		opt.Revision = os.Getenv("SOURCE_VERSION")
-	}
-
-	if len(opt.KeysBlacklist) > 0 {
-		opt.KeysBlocklist = opt.KeysBlacklist
-		logger.Printf("KeysBlacklist is a deprecated option. Use KeysBlocklist instead.")
 	}
 
 	if opt.KeysBlocklist == nil {

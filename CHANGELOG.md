@@ -14,6 +14,8 @@ Gobrake Changelog
   to ([#150](https://github.com/airbrake/gobrake/pull/150))
 * Added support for remote configuration
 * Added support `go 1.15` ([#168](https://github.com/airbrake/gobrake/pull/168))
+* Deleted deprecated `KeysBlacklist` option
+  ([#174](https://github.com/airbrake/gobrake/pull/174))
 
 ### [v4.2.0][v4.2.0] (July 24, 2020)
 
