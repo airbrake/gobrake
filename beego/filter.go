@@ -35,7 +35,7 @@ func afterExecFunc(notifier *gobrake.Notifier) func(c *context.Context) {
 			metric.StatusCode = 200
 		}
 
-		_ := notifier.Routes.Notify(goctx.TODO(), metric)
+		_ = notifier.Routes.Notify(goctx.TODO(), metric)
 	}
 }
 
