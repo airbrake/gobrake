@@ -111,7 +111,7 @@ func (opt *NotifierOptions) init() {
 	}
 
 	if opt.RemoteConfigHost == "" {
-		opt.RemoteConfigHost = "https://v1-staging-notifier-config.s3.amazonaws.com"
+		opt.RemoteConfigHost = "https://v1-production-notifier-configs.s3.amazonaws.com"
 	}
 
 	if opt.Revision == "" {
