@@ -122,6 +122,8 @@ var _ = Describe("newRemoteConfig", func() {
 
 			It("logs the error", func() {
 				rc.Poll()
+				rc.StopPolling()
+
 				Expect(logBuf.String()).To(
 					ContainSubstring("fetchConfig failed: not found"),
 				)
@@ -142,6 +144,8 @@ var _ = Describe("newRemoteConfig", func() {
 
 			It("logs the error", func() {
 				rc.Poll()
+				rc.StopPolling()
+
 				Expect(logBuf.String()).To(
 					ContainSubstring("fetchConfig failed: forbidden"),
 				)
@@ -163,6 +167,8 @@ var _ = Describe("newRemoteConfig", func() {
 
 				It("doesn't log any errors", func() {
 					rc.Poll()
+					rc.StopPolling()
+
 					Expect(logBuf.String()).To(BeEmpty())
 				})
 			})
@@ -181,6 +187,8 @@ var _ = Describe("newRemoteConfig", func() {
 
 				It("logs the error", func() {
 					rc.Poll()
+					rc.StopPolling()
+
 					Expect(logBuf.String()).To(
 						ContainSubstring(
 							"parseConfig failed: unexpected end of JSON input",
@@ -245,6 +253,8 @@ var _ = Describe("newRemoteConfig", func() {
 
 			It("logs the unhandled error", func() {
 				rc.Poll()
+				rc.StopPolling()
+
 				Expect(logBuf.String()).To(
 					ContainSubstring("unhandled status (410): {}"),
 				)
