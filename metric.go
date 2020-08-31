@@ -21,13 +21,24 @@ type Metric interface {
 func withMetric(c context.Context, t Metric) context.Context {
 	c = context.WithValue(c, metricCtxKey, t)
 
+	var mu sync.Mutex
 	var span Span
+	var finished bool
 	clientTrace := &httptrace.ClientTrace{
 		GetConn: func(hostPort string) {
-			_, span = t.Start(c, "http.client")
+			mu.Lock()
+			defer mu.Unlock()
+			if span == nil {
+				_, span = t.Start(c, "http.client")
+			}
 		},
 		GotFirstResponseByte: func() {
-			span.Finish()
+			mu.Lock()
+			defer mu.Unlock()
+			if !finished {
+				span.Finish()
+				finished = true
+			}
 		},
 	}
 	c = httptrace.WithClientTrace(c, clientTrace)
