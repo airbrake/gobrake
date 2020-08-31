@@ -1,7 +1,9 @@
 package gobrake
 
 import (
+	"bytes"
 	"context"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -151,6 +153,36 @@ var _ = Describe("httpmetric", func() {
 
 		Expect(metric.groups).To(HaveLen(1))
 		Expect(metric.groups["http.client"]).NotTo(BeZero())
+	})
+
+	It("doesn't attempt to finish the same span multiple times", func() {
+		origLogger := GetLogger()
+		defer func() {
+			SetLogger(origLogger)
+		}()
+
+		buf := new(bytes.Buffer)
+		l := log.New(buf, "", 0)
+		SetLogger(l)
+
+		c := context.Background()
+		c, _ = NewQueueMetric(c, "send-emails")
+
+		wg := &sync.WaitGroup{}
+		for i := 0; i < 3; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				req, _ := http.NewRequest("GET", server.URL, nil)
+				req = req.WithContext(c)
+				_, err := http.DefaultClient.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+			}()
+		}
+
+		wg.Wait()
+
+		Expect(buf.String()).To(BeEmpty())
 	})
 })
 

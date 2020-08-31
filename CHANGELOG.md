@@ -3,6 +3,11 @@ Gobrake Changelog
 
 ### master
 
+* Fixed bug where `gobrake: span="http.client" is already finished gets printed`
+  gets printed when a `New*Metric` method gets passed a `context.Context` which
+  is also being used in multiple parallel HTTP requests
+  ([#178](https://github.com/airbrake/gobrake/pull/178))
+
 ### [v5.0.0][v5.0.0] (August 25, 2020)
 
 Breaking changes:
