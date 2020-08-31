@@ -40,6 +40,7 @@ var _ = Describe("newRemoteConfig", func() {
 			opt = &NotifierOptions{
 				ProjectId:  1,
 				ProjectKey: "key",
+				HTTPClient: defaultHTTPClient(),
 			}
 
 			origLogger = GetLogger()

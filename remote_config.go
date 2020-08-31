@@ -99,7 +99,7 @@ func (rc *remoteConfig) Poll() {
 }
 
 func (rc *remoteConfig) tick() error {
-	body, err := fetchConfig(rc.ConfigRoute(rc.opt.RemoteConfigHost))
+	body, err := rc.fetchConfig(rc.ConfigRoute(rc.opt.RemoteConfigHost))
 	if err != nil {
 		return fmt.Errorf("fetchConfig failed: %s", err)
 	}
@@ -212,30 +212,13 @@ func (rc *remoteConfig) APMHost() string {
 	return ""
 }
 
-func buildRequest(url string) (*http.Request, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	q := req.URL.Query()
-	q.Add("notifier_name", notifierName)
-	q.Add("notifier_version", notifierVersion)
-	q.Add("os", runtime.GOOS)
-	q.Add("language", runtime.Version())
-
-	req.URL.RawQuery = q.Encode()
-
-	return req, nil
-}
-
-func fetchConfig(url string) ([]byte, error) {
+func (rc *remoteConfig) fetchConfig(url string) ([]byte, error) {
 	req, err := buildRequest(url)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := defaultHTTPClient().Do(req)
+	resp, err := rc.opt.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -255,6 +238,23 @@ func fetchConfig(url string) ([]byte, error) {
 		return nil, fmt.Errorf("unhandled status (%d): %s",
 			resp.StatusCode, body)
 	}
+}
+
+func buildRequest(url string) (*http.Request, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	q := req.URL.Query()
+	q.Add("notifier_name", notifierName)
+	q.Add("notifier_version", notifierVersion)
+	q.Add("os", runtime.GOOS)
+	q.Add("language", runtime.Version())
+
+	req.URL.RawQuery = q.Encode()
+
+	return req, nil
 }
 
 func dumpConfig(j *RemoteConfigJSON) error {

@@ -7,6 +7,8 @@ Gobrake Changelog
   gets printed when a `New*Metric` method gets passed a `context.Context` which
   is also being used in multiple parallel HTTP requests
   ([#178](https://github.com/airbrake/gobrake/pull/178))
+* Fixed bug where remote config doesn't respect the configured HTTP client
+  ([#179](https://github.com/airbrake/gobrake/pull/179))
 
 ### [v5.0.0][v5.0.0] (August 25, 2020)
 
