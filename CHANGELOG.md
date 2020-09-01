@@ -9,6 +9,10 @@ Gobrake Changelog
   ([#178](https://github.com/airbrake/gobrake/pull/178))
 * Fixed bug where remote config doesn't respect the configured HTTP client
   ([#179](https://github.com/airbrake/gobrake/pull/179))
+* Implemented a fallback mechanism for the case when remote config cannot be
+  dumped loaded from the standard location. The fallback path is
+  `/tmp/gobrake_remote_config.json`
+  ([#180](https://github.com/airbrake/gobrake/pull/180))
 
 ### [v5.0.0][v5.0.0] (August 25, 2020)
 
