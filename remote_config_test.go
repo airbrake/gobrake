@@ -125,9 +125,8 @@ var _ = Describe("newRemoteConfig", func() {
 				rc.Poll()
 				rc.StopPolling()
 
-				Expect(logBuf.String()).To(
-					ContainSubstring("fetchConfig failed: not found"),
-				)
+				Expect(logBuf.String()).To(ContainSubstring("fetchConfig failed"))
+				Expect(logBuf.String()).To(ContainSubstring("not found"))
 			})
 		})
 
@@ -147,9 +146,8 @@ var _ = Describe("newRemoteConfig", func() {
 				rc.Poll()
 				rc.StopPolling()
 
-				Expect(logBuf.String()).To(
-					ContainSubstring("fetchConfig failed: forbidden"),
-				)
+				Expect(logBuf.String()).To(ContainSubstring("fetchConfig failed"))
+				Expect(logBuf.String()).To(ContainSubstring("forbidden"))
 			})
 		})
 

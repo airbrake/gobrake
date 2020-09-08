@@ -3,6 +3,9 @@ Gobrake Changelog
 
 ### master
 
+* Remote config: improved error message when config cannot be requested from S3
+  ([#178](https://github.com/airbrake/gobrake/pull/178))
+
 ### [v5.0.1][v5.0.1] (September 1, 2020)
 
 * Fixed bug where `gobrake: span="http.client" is already finished gets printed`
