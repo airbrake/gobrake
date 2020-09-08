@@ -3,6 +3,8 @@ Gobrake Changelog
 
 ### master
 
+### [v5.0.2][v5.0.2] (September 8, 2020)
+
 * Remote config: improved error message when config cannot be requested from S3
   ([#178](https://github.com/airbrake/gobrake/pull/178))
 
@@ -83,3 +85,4 @@ Features:
 [v4.2.0]: https://github.com/airbrake/gobrake/releases/tag/v4.2.0
 [v5.0.0]: https://github.com/airbrake/gobrake/releases/tag/v5.0.0
 [v5.0.1]: https://github.com/airbrake/gobrake/releases/tag/v5.0.1
+[v5.0.2]: https://github.com/airbrake/gobrake/releases/tag/v5.0.2
