@@ -110,9 +110,12 @@ func (rc *remoteConfig) Poll() {
 }
 
 func (rc *remoteConfig) tick() error {
-	body, err := rc.fetchConfig(rc.ConfigRoute(rc.opt.RemoteConfigHost))
+	route := rc.ConfigRoute(rc.opt.RemoteConfigHost)
+	body, err := rc.fetchConfig(route)
 	if err != nil {
-		return fmt.Errorf("fetchConfig failed: %s", err)
+		return fmt.Errorf(
+			"fetchConfig failed for %s. Reason: %s", route, err,
+		)
 	}
 	if err = json.Unmarshal(body, rc.JSON); err != nil {
 		return fmt.Errorf("parseConfig failed: %s", err)
