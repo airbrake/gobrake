@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -26,12 +25,6 @@ const (
 	errorsSetting = "errors"
 	apmSetting    = "apm"
 )
-
-// Path to the local config for dumping/loading.
-const configPath = "config.json"
-
-// Path to the local config for dumping/loading if `configPath` is not writable.
-const tmpConfigPath = "/tmp/gobrake_remote_config.json"
 
 type remoteConfig struct {
 	opt *NotifierOptions
@@ -72,16 +65,7 @@ func (rc *remoteConfig) Poll() {
 	rc.pollStop = make(chan bool)
 
 	go func() {
-		// Load config from the standard location. If that fails, load
-		// from /tmp.
-		err := loadConfig(configPath, rc.JSON)
-		if err != nil {
-			if err = loadConfig(tmpConfigPath, rc.JSON); err == nil {
-				rc.updateLocalConfig()
-			}
-		} else {
-			rc.updateLocalConfig()
-		}
+		rc.updateLocalConfig()
 
 		if err := rc.tick(); err != nil {
 			logger.Print(err)
@@ -159,12 +143,6 @@ func (rc *remoteConfig) StopPolling() {
 	}
 	if rc.pollStop != nil {
 		rc.pollStop <- true
-	}
-
-	if err := dumpConfig(configPath, rc.JSON); err != nil {
-		if err := dumpConfig(tmpConfigPath, rc.JSON); err != nil {
-			logger.Printf("dumpConfig failed: %s", err)
-		}
 	}
 }
 
@@ -271,40 +249,4 @@ func buildRequest(url string) (*http.Request, error) {
 	req.URL.RawQuery = q.Encode()
 
 	return req, nil
-}
-
-func dumpConfig(path string, j *RemoteConfigJSON) error {
-	b, err := json.Marshal(j)
-	if err != nil {
-		return err
-	}
-
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
-	if err != nil {
-		return err
-	}
-
-	if _, err := f.Write(b); err != nil {
-		f.Close()
-		return err
-	}
-
-	if err := f.Close(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func loadConfig(path string, j *RemoteConfigJSON) error {
-	f, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(f, &j); err != nil {
-		return err
-	}
-
-	return nil
 }

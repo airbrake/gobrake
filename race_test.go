@@ -32,10 +32,6 @@ var _ = Describe("Notifier", func() {
 		})
 	})
 
-	AfterEach(func() {
-		cleanupConfig()
-	})
-
 	It("is race free", func() {
 		var wg sync.WaitGroup
 		for i := 0; i < 100; i++ {
