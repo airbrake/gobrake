@@ -3,6 +3,9 @@ Gobrake Changelog
 
 ### master
 
+* Deleted support for dumping/loading the remote config
+  ([#186](https://github.com/airbrake/gobrake/pull/186))
+
 ### [v5.0.2][v5.0.2] (September 8, 2020)
 
 * Remote config: improved error message when config cannot be requested from S3
