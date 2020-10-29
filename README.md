@@ -1,6 +1,7 @@
 # Gobrake
 
 [![Circle Build Status](https://circleci.com/gh/airbrake/gobrake.svg?style=shield)](https://circleci.com/gh/airbrake/gobrake)
+[![PkgGoDev](https://pkg.go.dev/badge/airbrake/gobrake)](https://pkg.go.dev/airbrake/gobrake)
 
 ![Gobrake][arthur-go]
 
@@ -29,7 +30,7 @@ is extremely lightweight, with minimal overhead.
 * Support for code hunks (lines of code surrounding each backtrace frame)
 * Automatic deploy tracking
 * Performance monitoring features such as HTTP route statistics, SQL queries,
-	and Job execution statistics
+  and Job execution statistics
 * Integrations with [Beego][beego], [Gin][gin] and [Negroni][negroni]
 * Last but not least, we follow [semantic versioning 2.0.0][semver2]
 
@@ -72,8 +73,8 @@ import (
 )
 
 var airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-	ProjectId: <YOUR PROJECT ID>,
-	ProjectKey: "<YOUR API KEY>",
+	ProjectId: 105138,
+	ProjectKey: "fd04e13d806a90f96614ad8e529b2822",
 	Environment: "production",
 })
 
@@ -84,34 +85,15 @@ func main() {
 }
 ```
 
-To find `<YOUR PROJECT ID>` and `<YOUR API KEY>` navigate to your project's
-Settings and copy the values from the right sidebar.
-
 ## Configuration
 
-There are two ways to configure Gobrake: quick and dirty & full.
-
-### Quick and dirty configuration
-
-To configure a notifier quickly, you can call `gobrake.NewNotifier`, which
-accepts only two arguments: `ProjectId` (`int64`) and `ProjectKey` (`string`).
-All of the other options will be set to default values.
-
-```go
-airbrake := gobrake.NewNotifier(<YOUR PROJECT ID>, "<YOUR API KEY>")
-```
-
-### Full configuration
-
-Full configuration is done through `gobrake.NotifierOptions` struct, which you
-are supposed to pass to `gobrake.NewNotifierWithOptions`. This way is much more
-flexible as it allows configuring all aspects of the notifier. It's the
-recommended way to configure your notifier.
+Configuration is done through the `gobrake.NotifierOptions` struct, which you
+are supposed to pass to `gobrake.NewNotifierWithOptions`.
 
 ```go
 airbrake := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-	ProjectId: <YOUR PROJECT ID>,
-	ProjectKey: "<YOUR API KEY>",
+	ProjectId: 105138,
+	ProjectKey: "fd04e13d806a90f96614ad8e529b2822",
 	Environment: "production",
 })
 ```
@@ -122,8 +104,9 @@ airbrake := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
 
 You **must** set both `ProjectId` & `ProjectKey`.
 
+
 To find your `ProjectId` (`int64`) and `ProjectKey` (`string`) navigate to your
-project's Settings and copy the values from the right sidebar:
+project's _Settings_ and copy the values from the right sidebar.
 
 ![][project-idkey]
 
@@ -441,7 +424,7 @@ The project uses the MIT License. See LICENSE.md for details.
 [negroni]: https://github.com/urfave/negroni
 [semver2]: http://semver.org/spec/v2.0.0.html
 [go-mod]: https://github.com/golang/go/wiki/Modules
-[project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/airbrake-ruby/project-id-key.png
+[project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/gobrake/project-id-key.png
 [issues]: https://github.com/airbrake/gobrake/issues
 [twitter]: https://twitter.com/airbrake
 [glog]: https://github.com/airbrake/glog
