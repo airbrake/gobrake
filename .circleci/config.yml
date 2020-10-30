@@ -18,6 +18,9 @@ jobs:
   golangci_lint:
     docker:
       - image: circleci/golang:1.14
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
     working_directory: ~/gobrake
     steps:
       - checkout
@@ -30,6 +33,9 @@ jobs:
   "go1.11":
     docker:
       - image: circleci/golang:1.11
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
     working_directory: ~/gobrake
     steps:
       - <<: *repo_restore_cache
@@ -37,6 +43,9 @@ jobs:
   "go1.12":
     docker:
       - image: circleci/golang:1.12
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
     working_directory: ~/gobrake
     steps:
       - <<: *repo_restore_cache
@@ -44,6 +53,9 @@ jobs:
   "go1.13":
     docker:
       - image: circleci/golang:1.13
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
     working_directory: ~/gobrake
     steps:
       - <<: *repo_restore_cache
@@ -51,6 +63,9 @@ jobs:
   "go1.14":
     docker:
       - image: circleci/golang:1.14
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
     working_directory: ~/gobrake
     steps:
       - <<: *repo_restore_cache
@@ -58,6 +73,9 @@ jobs:
   "go1.15":
     docker:
       - image: circleci/golang:1.15
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
     working_directory: ~/gobrake
     steps:
       - <<: *repo_restore_cache
