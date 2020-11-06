@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
+	beegobrake "github.com/airbrake/gobrake/beego"
 	"github.com/airbrake/gobrake/v5"
-	beegobrake "github.com/airbrake/gobrake/v5/beego"
 	"github.com/airbrake/gobrake/v5/examples/beego/controllers"
 
 	"github.com/astaxie/beego"
