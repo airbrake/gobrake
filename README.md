@@ -1,7 +1,7 @@
 # Gobrake
 
 [![Circle Build Status](https://circleci.com/gh/airbrake/gobrake.svg?style=shield)](https://circleci.com/gh/airbrake/gobrake)
-[![PkgGoDev](https://pkg.go.dev/badge/airbrake/gobrake)](https://pkg.go.dev/airbrake/gobrake)
+[![PkgGoDev](https://pkg.go.dev/badge/airbrake/gobrake)][docs]
 
 ![Gobrake][arthur-go]
 
@@ -417,7 +417,7 @@ The project uses the MIT License. See LICENSE.md for details.
 [arthur-go]: http://f.cl.ly/items/3J3h1L05222X3o1w2l2L/golang.jpg
 [airbrake.io]: https://airbrake.io
 [gobrake-github]: https://github.com/airbrake/gobrake
-[docs]: https://pkg.go.dev/github.com/airbrake/gobrake?tab=doc
+[docs]: https://pkg.go.dev/github.com/airbrake/gobrake/v5
 [docs/performance]: https://airbrake.io/docs/performance-monitoring/go/
 [beego]: https://beego.me
 [gin]: https://github.com/gin-gonic/gin
