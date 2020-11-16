@@ -5,6 +5,8 @@ Gobrake Changelog
 
 * Deleted support for dumping/loading the remote config
   ([#186](https://github.com/airbrake/gobrake/pull/186))
+* Remote config: changed default host to `https://notifier-configs.airbrake.io`
+  ([#191](https://github.com/airbrake/gobrake/pull/191))
 
 ### [v5.0.2][v5.0.2] (September 8, 2020)
 
