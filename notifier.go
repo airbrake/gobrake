@@ -107,7 +107,7 @@ func (opt *NotifierOptions) init() {
 	}
 
 	if opt.RemoteConfigHost == "" {
-		opt.RemoteConfigHost = "https://v1-production-notifier-configs.s3.amazonaws.com"
+		opt.RemoteConfigHost = "https://notifier-configs.airbrake.io"
 	}
 
 	if opt.Revision == "" {
