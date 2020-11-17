@@ -3,6 +3,8 @@ Gobrake Changelog
 
 ### master
 
+### [v5.0.3][v5.0.3] (November 17, 2020)
+
 * Deleted support for dumping/loading the remote config
   ([#186](https://github.com/airbrake/gobrake/pull/186))
 * Remote config: changed default host to `https://notifier-configs.airbrake.io`
@@ -91,3 +93,4 @@ Features:
 [v5.0.0]: https://github.com/airbrake/gobrake/releases/tag/v5.0.0
 [v5.0.1]: https://github.com/airbrake/gobrake/releases/tag/v5.0.1
 [v5.0.2]: https://github.com/airbrake/gobrake/releases/tag/v5.0.2
+[v5.0.3]: https://github.com/airbrake/gobrake/releases/tag/v5.0.3
