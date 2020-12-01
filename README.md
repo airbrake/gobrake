@@ -73,8 +73,8 @@ import (
 )
 
 var airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-	ProjectId: 105138,
-	ProjectKey: "fd04e13d806a90f96614ad8e529b2822",
+	ProjectId:   105138,
+	ProjectKey:  "fd04e13d806a90f96614ad8e529b2822",
 	Environment: "production",
 })
 
@@ -92,8 +92,8 @@ are supposed to pass to `gobrake.NewNotifierWithOptions`.
 
 ```go
 airbrake := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-	ProjectId: 105138,
-	ProjectKey: "fd04e13d806a90f96614ad8e529b2822",
+	ProjectId:   105138,
+	ProjectKey:  "fd04e13d806a90f96614ad8e529b2822",
 	Environment: "production",
 })
 ```
