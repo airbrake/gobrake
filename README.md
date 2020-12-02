@@ -1,9 +1,11 @@
+<p align="center">
+  <img src="https://airbrake-github-assets.s3.amazonaws.com/brand/airbrake-full-logo.png" width="200">
+</p>
+
 # Gobrake
 
 [![Circle Build Status](https://circleci.com/gh/airbrake/gobrake.svg?style=shield)](https://circleci.com/gh/airbrake/gobrake)
 [![PkgGoDev](https://pkg.go.dev/badge/airbrake/gobrake)][docs]
-
-![Gobrake][arthur-go]
 
 * [Gobrake README][gobrake-github]
 * [pkg.go.dev documentation][docs]
