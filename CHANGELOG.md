@@ -3,6 +3,9 @@ Gobrake Changelog
 
 ### master
 
+* Added the `DisableRemoteConfig` option. This option configures the remote
+  configuration feature ([#194](https://github.com/airbrake/gobrake/pull/194))
+
 ### [v5.0.3][v5.0.3] (November 17, 2020)
 
 * Deleted support for dumping/loading the remote config

@@ -74,6 +74,9 @@ type NotifierOptions struct {
 	// The host name where the remote config is located.
 	RemoteConfigHost string
 
+	// Controles the remote config feature.
+	DisableRemoteConfig bool
+
 	// Environment such as production or development.
 	Environment string
 
@@ -237,7 +240,9 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 		n.AddFilter(NewBlocklistKeysFilter(opt.KeysBlocklist...))
 	}
 
-	n.remoteConfig.Poll()
+	if !opt.DisableRemoteConfig {
+		n.remoteConfig.Poll()
+	}
 
 	return n
 }

@@ -205,6 +205,34 @@ var _ = Describe("Notifier", func() {
 		})
 	})
 
+	Context("DisableRemoteConfig", func() {
+		var notifierConfigReq *http.Request
+
+		BeforeEach(func() {
+			opt.DisableRemoteConfig = true
+
+			handler := func(w http.ResponseWriter, req *http.Request) {
+				notifierConfigReq = req
+				w.WriteHeader(http.StatusOK)
+				_, err := w.Write([]byte(`{}`))
+				Expect(err).To(BeNil())
+			}
+			configServer := httptest.NewServer(http.HandlerFunc(handler))
+
+			opt.RemoteConfigHost = configServer.URL
+			notifierConfigReq = nil
+		})
+
+		AfterEach(func() {
+			opt.DisableRemoteConfig = false
+		})
+
+		It("does not poll remote configuration", func() {
+			notifier.Close()
+			Expect(notifierConfigReq).To(BeNil())
+		})
+	})
+
 	It("reports error and backtrace when error is created with pkg/errors", func() {
 		err := testpkg1.Foo()
 		notify(err, nil)
