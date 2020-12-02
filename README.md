@@ -196,6 +196,17 @@ opts := gobrake.NotifierOptions{
 }
 ```
 
+#### DisableRemoteConfig
+
+Configures the remote configuration feature. At regular intervals the notifier
+will be making `GET` requests to Airbrake servers and fetching a JSON document
+containing configuration settings of the notifier. The notifier will apply these
+new settings at runtime. By default, this option is set to `false` (the feature
+is enabled).
+
+Note: it is not recommended to disable this feature. It might negatively impact
+how your notifier works. Please use this option with caution.
+
 ## API
 
 For complete API description please follow documentation on [pkg.go.dev
