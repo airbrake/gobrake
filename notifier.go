@@ -65,7 +65,7 @@ type NotifierOptions struct {
 	// Airbrake project key.
 	ProjectKey string
 
-	// Airbrake host name. Default is https://airbrake.io.
+	// Airbrake host name. Default is https://api.airbrake.io.
 	Host string
 
 	// Airbrake host name for sending APM data.
