@@ -252,7 +252,7 @@ redefine severity, simply overwrite `context/severity` of a notice object. For
 example:
 
 ``` go
-notice := airbrake.NewNotice("operation failed", nil, 0)
+notice := gobrake.NewNotice("operation failed", nil, 0)
 notice.Context["severity"] = "critical"
 airbrake.Notify(notice, nil)
 ```
