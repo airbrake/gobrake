@@ -4,7 +4,7 @@
 
 # Gobrake
 
-[![Circle Build Status](https://circleci.com/gh/airbrake/gobrake.svg?style=shield)](https://circleci.com/gh/airbrake/gobrake)
+[![.github/workflows/test.yml](https://github.com/airbrake/gobrake/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/airbrake/gobrake/actions/workflows/test.yml)
 [![PkgGoDev](https://pkg.go.dev/badge/airbrake/gobrake)][docs]
 
 * [Gobrake README][gobrake-github]
