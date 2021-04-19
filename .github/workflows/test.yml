@@ -1,0 +1,27 @@
+name: gobrake
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        go-version: [1.11, 1.12, 1.13, 1.14, 1.15, 1.16]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go ${{ matrix.go-version }}
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.python-version }}
+
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v2.5.1
+
+    - name: Test
+      run: go test
+      env:
+        GOPATH: /home/runner/go
