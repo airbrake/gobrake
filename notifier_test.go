@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"go/build"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -343,6 +344,9 @@ var _ = Describe("Notifier", func() {
 
 		hostname, _ := os.Hostname()
 		gopath := os.Getenv("GOPATH")
+		if gopath == "" {
+			gopath = build.Default.GOPATH
+		}
 		wd, _ := os.Getwd()
 
 		Expect(sentNotice.Context["language"]).To(Equal(runtime.Version()))
