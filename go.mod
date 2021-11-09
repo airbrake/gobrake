@@ -8,7 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.7.4
 	github.com/jonboulle/clockwork v0.2.2
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
-	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.16.0
 	github.com/pkg/errors v0.9.1
 	github.com/urfave/negroni v1.0.0
