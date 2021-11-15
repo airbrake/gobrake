@@ -2,9 +2,9 @@ package gobrake
 
 import (
 	"fmt"
+	"go/build"
 	"net/http"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -45,23 +45,10 @@ func getDefaultContext() map[string]interface{} {
 }
 
 func gopath() string {
-	path := os.Getenv("GOPATH")
-	if path != "" {
+	if path, ok := os.LookupEnv("GOPATH"); ok {
 		return path
 	}
-
-	path, ok := os.LookupEnv("HOME")
-	if ok {
-		return filepath.Join(path, "go")
-	}
-
-	return ""
-}
-
-type Error struct {
-	Type      string       `json:"type"`
-	Message   string       `json:"message"`
-	Backtrace []StackFrame `json:"backtrace"`
+	return build.Default.GOPATH
 }
 
 type StackFrame struct {
@@ -69,6 +56,12 @@ type StackFrame struct {
 	Line int            `json:"line"`
 	Func string         `json:"function"`
 	Code map[int]string `json:"code,omitempty"`
+}
+
+type Error struct {
+	Type      string       `json:"type"`
+	Message   string       `json:"message"`
+	Backtrace []StackFrame `json:"backtrace"`
 }
 
 type Notice struct {
