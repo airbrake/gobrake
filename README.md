@@ -225,7 +225,7 @@ unwanted or sensitive params or ignoring the whole notice completely.
 ```go
 // Filter out sensitive information such as credit cards.
 airbrake.AddFilter(func(n *gobrake.Notice) *gobrake.Notice {
-	if _, ok := n.Context["creditCard"] {
+	if _, ok := n.Context["creditCard"]; ok  {
 		n.Context["creditCard"] = "Filtered"
 	}
 	return n
