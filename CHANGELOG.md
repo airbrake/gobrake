@@ -1,24 +1,26 @@
-Gobrake Changelog
-=================
+# Gobrake Changelog
 
-### master
+## master
 
-* Added the `DisableRemoteConfig` option. This option configures the remote
-  configuration feature ([#194](https://github.com/airbrake/gobrake/pull/194))
+## [v5.0.4][v5.0.4] (November 18, 2021)
 
-### [v5.0.3][v5.0.3] (November 17, 2020)
+* notifier: add the DisableRemoteConfig option ([#194](https://github.com/airbrake/gobrake/pull/194))
+* Default Host is api.airbrake.io ([#195](https://github.com/airbrake/gobrake/pull/195))
+* Updated go version and merged mod files ([#215](https://github.com/airbrake/gobrake/pull/215))
+
+## [v5.0.3][v5.0.3] (November 17, 2020)
 
 * Deleted support for dumping/loading the remote config
   ([#186](https://github.com/airbrake/gobrake/pull/186))
 * Remote config: changed default host to `https://notifier-configs.airbrake.io`
   ([#191](https://github.com/airbrake/gobrake/pull/191))
 
-### [v5.0.2][v5.0.2] (September 8, 2020)
+## [v5.0.2][v5.0.2] (September 8, 2020)
 
 * Remote config: improved error message when config cannot be requested from S3
   ([#178](https://github.com/airbrake/gobrake/pull/178))
 
-### [v5.0.1][v5.0.1] (September 1, 2020)
+## [v5.0.1][v5.0.1] (September 1, 2020)
 
 * Fixed bug where `gobrake: span="http.client" is already finished gets printed`
   gets printed when a `New*Metric` method gets passed a `context.Context` which
@@ -31,7 +33,7 @@ Gobrake Changelog
   `/tmp/gobrake_remote_config.json`
   ([#180](https://github.com/airbrake/gobrake/pull/180))
 
-### [v5.0.0][v5.0.0] (August 25, 2020)
+## [v5.0.0][v5.0.0] (August 25, 2020)
 
 Breaking changes:
 
@@ -56,24 +58,24 @@ Features:
 * Added support for remote configuration
 * Added support `go 1.15` ([#168](https://github.com/airbrake/gobrake/pull/168))
 
-### [v4.2.0][v4.2.0] (July 24, 2020)
+## [v4.2.0][v4.2.0] (July 24, 2020)
 
 * Added support for APM for [Negroni](https://github.com/urfave/negroni)
   ([#143](https://github.com/airbrake/gobrake/pull/143))
 
-### [v4.1.2][v4.1.2] (July 20, 2020)
+## [v4.1.2][v4.1.2] (July 20, 2020)
 
 * Deprecated the `KeysBlacklist` option in favor of `KeysBlocklist`
   ([#141](https://github.com/airbrake/gobrake/pull/141))
 
-### [v4.1.1][v4.1.1] (May 8, 2020)
+## [v4.1.1][v4.1.1] (May 8, 2020)
 
 * Bumped go-tdigest dependency to v3.1.0
   ([#138](https://github.com/airbrake/gobrake/pull/138))
 * Bumped pkg/errors dependency to v0.9.1
   ([#138](https://github.com/airbrake/gobrake/pull/138))
 
-### [v4.1.0][v4.1.0] (May 6, 2020)
+## [v4.1.0][v4.1.0] (May 6, 2020)
 
 * README was rewritten from scratch, added new information and examples
   ([#130](https://github.com/airbrake/gobrake/pull/130))
@@ -97,3 +99,4 @@ Features:
 [v5.0.1]: https://github.com/airbrake/gobrake/releases/tag/v5.0.1
 [v5.0.2]: https://github.com/airbrake/gobrake/releases/tag/v5.0.2
 [v5.0.3]: https://github.com/airbrake/gobrake/releases/tag/v5.0.3
+[v5.0.4]: https://github.com/airbrake/gobrake/releases/tag/v5.0.4
