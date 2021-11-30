@@ -3,6 +3,7 @@ module github.com/airbrake/gobrake/v5
 go 1.16
 
 require (
+	github.com/apex/log v1.9.0
 	github.com/astaxie/beego v1.12.3
 	github.com/caio/go-tdigest v3.1.0+incompatible
 	github.com/gin-gonic/gin v1.7.4
