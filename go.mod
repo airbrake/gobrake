@@ -6,7 +6,7 @@ require (
 	github.com/apex/log v1.9.0
 	github.com/astaxie/beego v1.12.3
 	github.com/caio/go-tdigest v3.1.0+incompatible
-	github.com/gin-gonic/gin v1.7.4
+	github.com/gin-gonic/gin v1.7.7
 	github.com/jonboulle/clockwork v0.2.2
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
 	github.com/onsi/ginkgo v1.16.5
