@@ -2,6 +2,11 @@
 
 ## master
 
+## [v5.1.0][v5.1.0] (November 18, 2021)
+
+* Added [Apex/log](https://github.com/apex/log) integration ([#220](https://github.com/airbrake/gobrake/pull/220))
+* Bumped gin-gonic version ([#219](https://github.com/airbrake/gobrake/pull/219))
+
 ## [v5.0.4][v5.0.4] (November 18, 2021)
 
 * notifier: add the DisableRemoteConfig option ([#194](https://github.com/airbrake/gobrake/pull/194))
@@ -100,3 +105,4 @@ Features:
 [v5.0.2]: https://github.com/airbrake/gobrake/releases/tag/v5.0.2
 [v5.0.3]: https://github.com/airbrake/gobrake/releases/tag/v5.0.3
 [v5.0.4]: https://github.com/airbrake/gobrake/releases/tag/v5.0.4
+[v5.1.0]: https://github.com/airbrake/gobrake/releases/tag/v5.1.0
