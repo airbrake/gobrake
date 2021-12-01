@@ -2,7 +2,11 @@
 
 ## master
 
-## [v5.1.0][v5.1.0] (November 18, 2021)
+## [v5.1.1][v5.1.1] (December 1, 2021)
+
+* Updated notifier version
+
+## [v5.1.0][v5.1.0] (December 1, 2021)
 
 * Added [Apex/log](https://github.com/apex/log) integration ([#220](https://github.com/airbrake/gobrake/pull/220))
 * Bumped gin-gonic version ([#219](https://github.com/airbrake/gobrake/pull/219))
@@ -106,3 +110,4 @@ Features:
 [v5.0.3]: https://github.com/airbrake/gobrake/releases/tag/v5.0.3
 [v5.0.4]: https://github.com/airbrake/gobrake/releases/tag/v5.0.4
 [v5.1.0]: https://github.com/airbrake/gobrake/releases/tag/v5.1.0
+[v5.1.1]: https://github.com/airbrake/gobrake/releases/tag/v5.1.1
