@@ -9,8 +9,8 @@ import (
 	"github.com/apex/log"
 )
 
-var ProjectId int64 = 363389
-var ProjectKey string = "baa755018d5e35e07897ee0087fcce9c"
+var ProjectId int64 = 999999                               // Insert your Project Id here
+var ProjectKey string = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" // Insert your Project Key here
 
 func main() {
 	airbrake := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{

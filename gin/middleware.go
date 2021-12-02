@@ -9,6 +9,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// New returns a function that satisfies gin.HandlerFunc interface
+func New(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		_, metric := gobrake.NewRouteMetric(context.TODO(), c.Request.Method, c.FullPath())
+
+		c.Next()
+
+		metric.StatusCode = c.Writer.Status()
+		_ = notifier.Routes.Notify(context.TODO(), metric)
+	}
+}
+
+// This function is deprecated. Please use New() function instead
 func NewMiddleware(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		routeName := routeName(c, engine)
