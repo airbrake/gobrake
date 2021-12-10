@@ -1,64 +1,36 @@
 package apexlog
 
 import (
-	"fmt"
-
 	"github.com/airbrake/gobrake/v5"
 
 	"github.com/apex/log"
 )
 
-// severity identifies the sort of log: info, warn etc.
-type severity int
-
-// These constants identify the log levels in order of increasing severity.
-// A message written to a high-severity log file is also written to each
-// lower-severity log file.
-const (
-	DebugLog severity = iota
-	InfoLog
-	WarnLog
-	ErrorLog
-)
-
-var severityName = []string{
-	DebugLog: "debug",
-	InfoLog:  "info",
-	WarnLog:  "warn",
-	ErrorLog: "error",
-}
-
-// String implementation for severity.
-func (s severity) String() string {
-	return severityName[s]
-}
-
 // Handler implementation.
 type Handler struct {
 	Gobrake         *gobrake.Notifier
-	HandlerSeverity severity
+	HandlerSeverity log.Level
 }
 
-// New Apex Logs handler for airbrake.
-func New(notifier *gobrake.Notifier, s severity) *Handler {
-	h := Handler{notifier, s}
+// New returns a function that satisfies apex/log.Handler interface
+func New(notifier *gobrake.Notifier, level log.Level) *Handler {
+	h := Handler{notifier, level}
 	return &h
 }
 
 // HandleLog method is used for sending notices to airbrake.
 func (h *Handler) HandleLog(e *log.Entry) error {
-	h.notifyAirbrake(severity(e.Level), e.Message, e.Fields)
+	h.notifyAirbrake(e.Level, e.Message, e.Fields)
 	return nil
 }
 
-func (h *Handler) notifyAirbrake(s severity, arg interface{}, params log.Fields) {
-	if s < h.HandlerSeverity {
+func (h *Handler) notifyAirbrake(level log.Level, msg string, params log.Fields) {
+	if level < h.HandlerSeverity {
 		return
 	}
 
-	msg := fmt.Sprint(arg)
 	notice := gobrake.NewNotice(msg, nil, 0)
-	notice.Context["severity"] = s.String()
+	notice.Context["severity"] = level.String()
 	notice.Params = asParams(params)
 
 	h.Gobrake.Notify(notice, nil)

@@ -23,10 +23,9 @@ func main() {
 
 	// Create the airbrake handler for "github.com/apex/log"
 	// Insert the airbrake notifier instance and set the severity level.
-	// The acceptable severity levels are "DebugLog" "InfoLog", "WarnLog" and "ErrorLog".
-	// If the severity level is not recognized, "error" severity is used.
+	// The acceptable severity levels are "DebugLevel" "InfoLevel", "WarnLevel" and "ErrorLevel".
 	// Note: The severity is different from level used by log package to make sure that you can send logs to airbrake accordingly.
-	airbrakeHandler := apexlog.New(airbrake, apexlog.ErrorLog)
+	airbrakeHandler := apexlog.New(airbrake, log.ErrorLevel)
 
 	log.SetLevel(log.DebugLevel)
 
