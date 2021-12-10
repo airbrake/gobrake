@@ -2,6 +2,12 @@
 
 ## master
 
+## [v5.2.0][v5.2.0] (December 13, 2021)
+
+* Deprecated `NewMiddleware` func and replaced with `New` func in gin middleware ([#224](https://github.com/airbrake/gobrake/pull/224))
+
+* Used [Apex/log](https://github.com/apex/log) severity levels instead of custom defined severity levels ([#225](https://github.com/airbrake/gobrake/pull/225))
+
 ## [v5.1.1][v5.1.1] (December 1, 2021)
 
 * Updated notifier version
@@ -111,3 +117,4 @@ Features:
 [v5.0.4]: https://github.com/airbrake/gobrake/releases/tag/v5.0.4
 [v5.1.0]: https://github.com/airbrake/gobrake/releases/tag/v5.1.0
 [v5.1.1]: https://github.com/airbrake/gobrake/releases/tag/v5.1.1
+[v5.2.0]: https://github.com/airbrake/gobrake/releases/tag/v5.2.0
