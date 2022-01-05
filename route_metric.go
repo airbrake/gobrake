@@ -53,8 +53,7 @@ func (t *RouteMetric) finish() {
 func (t *RouteMetric) respType() string {
 	if t.StatusCode >= 500 {
 		return "5xx"
-	}
-	if t.StatusCode >= 400 {
+	} else if t.StatusCode >= 400 {
 		return "4xx"
 	}
 	if t.ContentType == "" {

@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -117,7 +116,7 @@ func gitRevision(dir string) (string, error) {
 	head = head[len(prefix):]
 
 	refFile := filepath.Join(dir, ".git", string(head))
-	rev, err := ioutil.ReadFile(refFile)
+	rev, err := os.ReadFile(refFile)
 	if err == nil {
 		return string(trimnl(rev)), nil
 	}
@@ -153,7 +152,7 @@ func gitRevision(dir string) (string, error) {
 
 func gitHead(dir string) ([]byte, error) {
 	headFile := filepath.Join(dir, ".git", "HEAD")
-	b, err := ioutil.ReadFile(headFile)
+	b, err := os.ReadFile(headFile)
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"go/build"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -54,7 +54,7 @@ var _ = Describe("Notifier", func() {
 		handler := func(w http.ResponseWriter, req *http.Request) {
 			sendNoticeReq = req
 
-			b, err := ioutil.ReadAll(req.Body)
+			b, err := io.ReadAll(req.Body)
 			if err != nil {
 				panic(err)
 			}
@@ -570,7 +570,7 @@ var _ = Describe("Notifier request filter", func() {
 		stats = new(routeStats)
 
 		handler := func(w http.ResponseWriter, req *http.Request) {
-			b, err := ioutil.ReadAll(req.Body)
+			b, err := io.ReadAll(req.Body)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = json.Unmarshal(b, &stats)

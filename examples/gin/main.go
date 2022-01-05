@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -47,7 +47,7 @@ func main() {
 	api := gin.Default()
 
 	// Initialise middlewares
-	api.Use(ginbrake.New(api, notifier))
+	api.Use(ginbrake.New(notifier))
 	api.Use(TokenAuthMiddleware())
 
 	// Initialise routes
@@ -87,7 +87,7 @@ func getWeather(c *gin.Context) {
 		c.JSON(http.StatusNoContent, weatherInfo)
 		return
 	}
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	byteValue, _ := io.ReadAll(jsonFile)
 	json.Unmarshal(byteValue, &weatherInfo)
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
@@ -115,12 +115,12 @@ func TokenAuthMiddleware() gin.HandlerFunc {
 		token := c.Request.Header.Get("api-key")
 
 		if token == "" {
-			respondWithError(c, 401, "API key required")
+			respondWithError(c, http.StatusUnauthorized, "API key required")
 			return
 		}
 
 		if token != requiredToken {
-			respondWithError(c, 401, "Invalid API key")
+			respondWithError(c, http.StatusUnauthorized, "Invalid API key")
 			return
 		}
 
