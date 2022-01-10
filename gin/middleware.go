@@ -9,7 +9,7 @@ import (
 )
 
 // New returns a function that satisfies gin.HandlerFunc interface
-func New(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.Context) {
+func New(notifier *gobrake.Notifier) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		_, metric := gobrake.NewRouteMetric(context.TODO(), c.Request.Method, c.FullPath())
 
@@ -22,5 +22,5 @@ func New(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.Context) {
 
 // This function is deprecated. Please use New() function instead
 func NewMiddleware(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.Context) {
-	return New(engine, notifier)
+	return New(notifier)
 }

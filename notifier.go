@@ -466,6 +466,6 @@ func (n *Notifier) waitTimeout(timeout time.Duration) error {
 	case <-done:
 		return nil
 	case <-time.After(timeout):
-		return fmt.Errorf("Wait timed out after %s", timeout)
+		return fmt.Errorf("wait timed out after %s", timeout)
 	}
 }

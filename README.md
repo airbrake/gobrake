@@ -69,21 +69,21 @@ This is the minimal example that you can use to test Gobrake with your project.
 package main
 
 import (
-	"errors"
+    "errors"
 
-	"github.com/airbrake/gobrake/v5"
+    "github.com/airbrake/gobrake/v5"
 )
 
 var airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-	ProjectId:   105138,
-	ProjectKey:  "fd04e13d806a90f96614ad8e529b2822",
-	Environment: "production",
+    ProjectId:   <YOUR PROJECT ID>, // <-- Fill in this value
+    ProjectKey:  "<YOUR API KEY>", // <-- Fill in this value
+    Environment: "production",
 })
 
 func main() {
-	defer airbrake.Close()
+    defer airbrake.Close()
 
-	airbrake.Notify(errors.New("operation failed"), nil)
+    airbrake.Notify(errors.New("operation failed"), nil)
 }
 ```
 
@@ -93,10 +93,10 @@ Configuration is done through the `gobrake.NotifierOptions` struct, which you
 are supposed to pass to `gobrake.NewNotifierWithOptions`.
 
 ```go
-airbrake := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-	ProjectId:   105138,
-	ProjectKey:  "fd04e13d806a90f96614ad8e529b2822",
-	Environment: "production",
+var airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
+    ProjectId:   <YOUR PROJECT ID>, // <-- Fill in this value
+    ProjectKey:  "<YOUR API KEY>", // <-- Fill in this value
+    Environment: "production",
 })
 ```
 
@@ -105,7 +105,6 @@ airbrake := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
 #### ProjectId & ProjectKey
 
 You **must** set both `ProjectId` & `ProjectKey`.
-
 
 To find your `ProjectId` (`int64`) and `ProjectKey` (`string`) navigate to your
 project's _Settings_ and copy the values from the right sidebar.
@@ -120,7 +119,7 @@ environments. By default, it's not set. Expects `string` type.
 
 ```go
 opts := gobrake.NotifierOptions{
-	Environment: "production",
+    Environment: "production",
 }
 ```
 
@@ -132,7 +131,7 @@ apps this option is not set. Expects `string` type.
 
 ```go
 opts := gobrake.NotifierOptions{
-	Revision: "d34db33f",
+    Revision: "d34db33f",
 }
 ```
 
@@ -154,11 +153,11 @@ secrets := []string{"mySecretKey"}
 
 blocklist := make([]interface{}, len(secrets))
 for i, v := range secrets {
-	blocklist[i] = v
+    blocklist[i] = v
 }
 
 opts := gobrake.NotifierOptions{
-	KeysBlocklist: blocklist,
+    KeysBlocklist: blocklist,
 }
 ```
 
@@ -169,7 +168,7 @@ backtrace frame. By default, it's set to `false`. Expects `bool` type.
 
 ```go
 opts := gobrake.NotifierOptions{
-	DisableCodeHunks: true,
+    DisableCodeHunks: true,
 }
 ```
 
@@ -181,7 +180,7 @@ the port (80 will be assumed) and the scheme ("https" will be assumed).
 
 ```go
 opts := gobrake.NotifierOptions{
-	Host: "http://localhost:8080/api/",
+    Host: "http://localhost:8080/api/",
 }
 ```
 
@@ -192,9 +191,9 @@ type. Normally, you shouldn't configure it.
 
 ```go
 opts := gobrake.NotifierOptions{
-	HTTPClient: &http.Client{
-		Timeout: 10 * time.Second,
-	},
+    HTTPClient: &http.Client{
+        Timeout: 10 * time.Second,
+    },
 }
 ```
 
@@ -214,21 +213,21 @@ how your notifier works. Please use this option with caution.
 For complete API description please follow documentation on [pkg.go.dev
 documentation][docs].
 
-#### AddFilter
+### AddFilter
 
 `AddFilter` accepts a callback function which will be executed every time a
 `gobrake.Notice` is sent. You can use that for two purposes: filtering of
 unwanted or sensitive params or ignoring the whole notice completely.
 
-##### Filtering unwanted params
+#### Filtering unwanted params
 
 ```go
 // Filter out sensitive information such as credit cards.
 airbrake.AddFilter(func(n *gobrake.Notice) *gobrake.Notice {
-	if _, ok := n.Context["creditCard"]; ok  {
-		n.Context["creditCard"] = "Filtered"
-	}
-	return n
+    if _, ok := n.Context["creditCard"]; ok  {
+        n.Context["creditCard"] = "Filtered"
+    }
+    return n
 })
 ```
 
@@ -237,16 +236,16 @@ airbrake.AddFilter(func(n *gobrake.Notice) *gobrake.Notice {
 ```go
 // Ignore all notices in development.
 airbrake.AddFilter(func(n *gobrake.Notice) *gobrake.Notice {
-	if n.Context["environment"] == "development" {
-		return nil
-	}
-	return n
+    if n.Context["environment"] == "development" {
+        return nil
+    }
+    return n
 })
 ```
 
 #### Setting severity
 
-[Severity](https://airbrake.io/docs/airbrake-faq/what-is-severity/) allows
+[Severity](https://docs.airbrake.io/docs/faq/what-is-severity/) allows
 categorizing how severe an error is. By default, it's set to `error`. To
 redefine severity, simply overwrite `context/severity` of a notice object. For
 example:
@@ -274,62 +273,61 @@ examples for [Gin](examples/gin), [Beego](examples/beego) and
 package main
 
 import (
-	"fmt"
-	"net/http"
+    "fmt"
+    "net/http"
 
-	"github.com/airbrake/gobrake"
+    "github.com/airbrake/gobrake"
 )
 
 // Airbrake is used to report errors and track performance
 var Airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-	ProjectId:   <YOUR PROJECT ID>,				// <-- Fill in this value
-	ProjectKey:  "<YOUR API KEY>", // <-- Fill in this value
-	Environment: "production",
+    ProjectId:   <YOUR PROJECT ID>, // <-- Fill in this value
+    ProjectKey:  "<YOUR API KEY>", // <-- Fill in this value
+    Environment: "production",
 })
 
 func indexHandler(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "Hello, There!")
+    fmt.Fprintf(w, "Hello, There!")
 }
 
 func main() {
-	fmt.Println("Server listening at http://localhost:5555/")
-	// Wrap the indexHandler with Airbrake Performance Monitoring middleware:
-	http.HandleFunc(airbrakePerformance("/", indexHandler))
-	http.ListenAndServe(":5555", nil)
+    fmt.Println("Server listening at http://localhost:5555/")
+    // Wrap the indexHandler with Airbrake Performance Monitoring middleware:
+    http.HandleFunc(airbrakePerformance("/", indexHandler))
+    http.ListenAndServe(":5555", nil)
 }
 
 func airbrakePerformance(route string, h http.HandlerFunc) (string, http.HandlerFunc) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-	ctx, routeMetric := gobrake.NewRouteMetric(ctx, req.Method, route) // Starts the timing
-	arw := newAirbrakeResponseWriter(w)
+    handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+        ctx := req.Context()
+        ctx, routeMetric := gobrake.NewRouteMetric(ctx, req.Method, route) // Starts the timing
+        arw := newAirbrakeResponseWriter(w)
 
-	h.ServeHTTP(arw, req)
+        h.ServeHTTP(arw, req)
 
-	routeMetric.StatusCode = arw.statusCode
-	Airbrake.Routes.Notify(ctx, routeMetric) // Stops the timing and reports
-	fmt.Printf("code: %v, method: %v, route: %v\n", arw.statusCode, req.Method, route)
-	})
+        routeMetric.StatusCode = arw.statusCode
+        Airbrake.Routes.Notify(ctx, routeMetric) // Stops the timing and reports
+        fmt.Printf("code: %v, method: %v, route: %v\n", arw.statusCode, req.Method, route)
+    })
 
-	return route, handler
+    return route, handler
 }
 
 type airbrakeResponseWriter struct {
-	http.ResponseWriter
-	statusCode int
+    http.ResponseWriter
+    statusCode int
 }
 
 func newAirbrakeResponseWriter(w http.ResponseWriter) *airbrakeResponseWriter {
-	// Returns 200 OK if WriteHeader isn't called
-	return &airbrakeResponseWriter{w, http.StatusOK}
+    // Returns 200 OK if WriteHeader isn't called
+    return &airbrakeResponseWriter{w, http.StatusOK}
 }
 
 func (arw *airbrakeResponseWriter) WriteHeader(code int) {
-	arw.statusCode = code
-	arw.ResponseWriter.WriteHeader(code)
+    arw.statusCode = code
+    arw.ResponseWriter.WriteHeader(code)
 }
 ```
-
 
 To get more detailed timing you can wrap important blocks of code into
 spans. For example, you can create 2 spans `sql` and `http` to measure timing of
@@ -337,8 +335,8 @@ specific operations:
 
 ```go
 metric := &gobrake.RouteMetric{
-	Method: "GET",
-	Route:	"/",
+    Method: "GET",
+    Route:  "/",
 }
 
 ctx, span := metric.Start(ctx, "sql")
@@ -360,15 +358,15 @@ following API:
 
 ```go
 notifier.Queries.Notify(
-	context.TODO(),
-	&gobrake.QueryInfo{
-		Query:	   "SELECT * FROM users WHERE id = ?", // query must be normalized
-		Func:	   "fetchUser", // optional
-		File:	   "models/user.go", // optional
-		Line:	   123, // optional
-		StartTime: startTime,
-		EndTime:   time.Now(),
-	},
+    context.TODO(),
+    &gobrake.QueryInfo{
+        Query:     "SELECT * FROM users WHERE id = ?", // query must be normalized
+        Func:      "fetchUser", // optional
+        File:      "models/user.go", // optional
+        Line:      123, // optional
+        StartTime: startTime,
+        EndTime:   time.Now(),
+    },
 )
 ```
 
@@ -376,8 +374,8 @@ notifier.Queries.Notify(
 
 ```go
 metric := &gobrake.QueueMetric{
-	Queue:   "my-queue-name",
-	Errored: true,
+    Queue:   "my-queue-name",
+    Errored: true,
 }
 
 ctx, span := metric.Start(ctx, "sql")
@@ -391,8 +389,7 @@ span.Finish()
 notifier.Queues.Notify(ctx, metric)
 ```
 
-Additional notes
-----------------
+## Additional notes
 
 ### Exception limit
 
@@ -405,14 +402,12 @@ There's a [glog fork][glog], which integrates with Gobrake. It provides all of
 original glog's functionality and adds the ability to send errors/logs to
 [Airbrake.io][airbrake.io].
 
-Supported Go versions
----------------------
+## Supported Go versions
 
-The library supports Go v1.11+. The CI file would be the best source of truth
+The library supports Go v1.15+. The CI file would be the best source of truth
 because it contains all Go versions that we test against.
 
-Contact
--------
+## Contact
 
 In case you have a problem, question or a bug report, feel free to:
 
@@ -420,17 +415,16 @@ In case you have a problem, question or a bug report, feel free to:
 * [send us an email](mailto:support@airbrake.io)
 * [tweet at us][twitter]
 * chat with us (visit [airbrake.io][airbrake.io] and click on the round orange
-	button in the bottom right corner)
+    button in the bottom right corner)
 
-License
--------
+## License
 
-The project uses the MIT License. See LICENSE.md for details.
+The project uses the MIT License. See [LICENSE.md](https://github.com/airbrake/gobrake/blob/master/LICENSE.md) for details.
 
 [airbrake.io]: https://airbrake.io
 [gobrake-github]: https://github.com/airbrake/gobrake
 [docs]: https://pkg.go.dev/github.com/airbrake/gobrake/v5
-[docs/performance]: https://airbrake.io/docs/performance-monitoring/go/
+[docs/performance]: https://docs.airbrake.io/docs/overview/apm/#monitoring-go-apps
 [beego]: https://beego.me
 [gin]: https://github.com/gin-gonic/gin
 [negroni]: https://github.com/urfave/negroni
