@@ -9,6 +9,7 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/gofiber/fiber/v2 v2.26.0
 	github.com/jonboulle/clockwork v0.2.2
+	github.com/labstack/echo/v4 v4.6.3 // indirect
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
