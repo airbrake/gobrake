@@ -11,7 +11,7 @@ require (
 	github.com/jonboulle/clockwork v0.2.2
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.17.0
+	github.com/onsi/gomega v1.18.0
 	github.com/pkg/errors v0.9.1
 	github.com/urfave/negroni v1.0.0
 	gonum.org/v1/gonum v0.8.1 // indirect
