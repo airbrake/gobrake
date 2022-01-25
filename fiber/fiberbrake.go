@@ -15,9 +15,8 @@ func New(notifier *gobrake.Notifier) fiber.Handler {
 		if notifier == nil {
 			return errors.New("airbrake notifier not defined")
 		}
-		err := c.Next()
 		_, metric := gobrake.NewRouteMetric(context.TODO(), c.Route().Method, c.Route().Path)
-
+		err := c.Next()
 		metric.StatusCode = c.Response().StatusCode()
 		_ = notifier.Routes.Notify(context.TODO(), metric)
 		return err
