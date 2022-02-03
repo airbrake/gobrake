@@ -12,6 +12,7 @@ type entry struct {
 	addedAt time.Time
 }
 
+// Cache is an LRU cache.
 type Cache struct {
 	mu sync.Mutex
 
@@ -21,6 +22,7 @@ type Cache struct {
 	maxLen int
 }
 
+// New creates a new LRU Cache.
 func New(maxLen int) *Cache {
 	return &Cache{
 		list:  list.New(),
@@ -30,6 +32,7 @@ func New(maxLen int) *Cache {
 	}
 }
 
+// Get looks up a key's value from the cache.
 func (c *Cache) Get(key string) (interface{}, bool) {
 	return c.get(key)
 }
@@ -50,6 +53,7 @@ func (c *Cache) get(key string) (interface{}, bool) {
 	return value, true
 }
 
+// Set adds a new value or promote the existing value in the cache.
 func (c *Cache) Set(key string, value interface{}) {
 	c.mu.Lock()
 	if el := c.table[key]; el != nil {

@@ -74,7 +74,7 @@ type NotifierOptions struct {
 	// The host name where the remote config is located.
 	RemoteConfigHost string
 
-	// Controles the remote config feature.
+	// Controls the remote config feature.
 	DisableRemoteConfig bool
 
 	// Environment such as production or development.
@@ -381,7 +381,7 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 }
 
 // SendNoticeAsync is like SendNotice, but sends notice asynchronously.
-// Pending notices can be flushed with Flush.
+// Pending notices can be flushed with Flush().
 func (n *Notifier) SendNoticeAsync(notice *Notice) {
 	if n.closed() {
 		notice.Error = errClosed
@@ -434,16 +434,18 @@ func (n *Notifier) NotifyOnPanic() {
 }
 
 // Flush waits for pending requests to finish.
+// It is recommended to be used with SendNoticeAsync().
 func (n *Notifier) Flush() {
 	_ = n.waitTimeout(waitTimeout)
 }
 
+// Close waits for pending requests to finish and then closes the notifier.
 func (n *Notifier) Close() error {
 	n.remoteConfig.StopPolling()
 	return n.CloseTimeout(waitTimeout)
 }
 
-// CloseTimeout waits for pending requests to finish and then closes the notifier.
+// CloseTimeout waits for pending requests to finish with a custom input timeout and then closes the notifier.
 func (n *Notifier) CloseTimeout(timeout time.Duration) error {
 	if !atomic.CompareAndSwapUint32(&n._closed, 0, 1) {
 		return nil
