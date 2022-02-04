@@ -44,6 +44,7 @@ func getDefaultContext() map[string]interface{} {
 	return defaultContext
 }
 
+// Returns the GOPATH of the application
 func gopath() string {
 	if path, ok := os.LookupEnv("GOPATH"); ok {
 		return path
