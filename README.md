@@ -12,7 +12,7 @@
 
 ## Introduction
 
-_Gobrake_ is the official notifier library for [Airbrake][airbrake.io] for the
+_Gobrake_ is the official notifier package for [Airbrake][airbrake.io] for the
 Go programming language. Gobrake provides a minimalist API that enables the
 ability to send _any_ Go error or panic to the Airbrake dashboard. The library
 is extremely lightweight, with minimal overhead.
@@ -33,7 +33,7 @@ is extremely lightweight, with minimal overhead.
 * Automatic deploy tracking
 * Performance monitoring features such as HTTP route statistics, SQL queries,
   and Job execution statistics
-* Integrations with [Beego][beego], [Gin][gin] and [Negroni][negroni]
+* Integrations with [Beego][beego], [Gin][gin] and [Negroni][negroni], [Fiber][fiber]
 * Last but not least, we follow [semantic versioning 2.0.0][semver2]
 
 ## Installation
@@ -266,8 +266,8 @@ In order to collect routes stats you can instrument your application
 using `notifier.Routes.Notify` API.
 
 Below is an example using the net/http middleware. We also have HTTP middleware
-examples for [Gin](examples/gin), [Beego](examples/beego) and
-[Negroni](examples/negroni).
+examples for [Gin](examples/gin), [Beego](examples/beego),
+[Negroni](examples/negroni) and [Fiber](examples/fiber).
 
 ```go
 package main
@@ -425,9 +425,10 @@ The project uses the MIT License. See [LICENSE.md](https://github.com/airbrake/g
 [gobrake-github]: https://github.com/airbrake/gobrake
 [docs]: https://pkg.go.dev/github.com/airbrake/gobrake/v5
 [docs/performance]: https://docs.airbrake.io/docs/overview/apm/#monitoring-go-apps
-[beego]: https://beego.me
+[beego]: https://github.com/beego/beego
 [gin]: https://github.com/gin-gonic/gin
 [negroni]: https://github.com/urfave/negroni
+[fiber]: https://github.com/gofiber/fiber
 [semver2]: http://semver.org/spec/v2.0.0.html
 [go-mod]: https://github.com/golang/go/wiki/Modules
 [project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/gobrake/project-id-key.png

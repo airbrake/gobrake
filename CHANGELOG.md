@@ -2,6 +2,11 @@
 
 ## master
 
+## [v5.3.0][v5.3.0] (february 7, 2022)
+
+* Added the [Fiber](https://github.com/gofiber/fiber) integration ([#227](https://github.com/airbrake/gobrake/pull/227)),
+([#232](https://github.com/airbrake/gobrake/pull/232))
+
 ## [v5.2.0][v5.2.0] (December 13, 2021)
 
 * Deprecated `NewMiddleware` func and replaced with `New` func in gin middleware ([#224](https://github.com/airbrake/gobrake/pull/224))
@@ -118,3 +123,4 @@ Features:
 [v5.1.0]: https://github.com/airbrake/gobrake/releases/tag/v5.1.0
 [v5.1.1]: https://github.com/airbrake/gobrake/releases/tag/v5.1.1
 [v5.2.0]: https://github.com/airbrake/gobrake/releases/tag/v5.2.0
+[v5.3.0]: https://github.com/airbrake/gobrake/releases/tag/v5.3.0
