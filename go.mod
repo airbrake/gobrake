@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/apex/log v1.9.0
-	github.com/astaxie/beego v1.12.3
+	github.com/beego/beego/v2 v2.0.2
 	github.com/caio/go-tdigest v3.1.0+incompatible
 	github.com/gin-gonic/gin v1.7.7
 	github.com/gofiber/fiber/v2 v2.28.0
@@ -19,7 +19,6 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
 	github.com/pkg/errors v0.9.1
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/urfave/negroni v1.0.0
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
