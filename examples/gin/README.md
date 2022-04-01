@@ -8,14 +8,14 @@ Insert your project ID and project key in the `main.go` file. You can find these
 
 Initialise mod file
 
-```bash
+```sh
 go mod init
 go mod tidy
 ```
 
 Run go application
 
-```bash
+```sh
 go run main.go
 ```
 
@@ -25,15 +25,15 @@ The example application provides three GET endpoints:
 2. `/locations` - gets the supported locations for use with the `/weather` endpoint
 3. `/weather/{locationName}` - gets the weather for a location; valid values for `locationName` can be found using the `/locations` endpoint
 
-Use the cURL commands below to interact with the endpoints. The endpoints require an `api-key` HTTP header.
+Use the cURL commands below to interact with the endpoints.
 
-```bash
-curl "http://localhost:3000/date" -H 'api-key: d4b371692d361869183d92d84caa5edb8835cf7d'
-curl "http://localhost:3000/locations" -H 'api-key: d4b371692d361869183d92d84caa5edb8835cf7d'
-curl "http://localhost:3000/weather/{austin/pune/santabarbara}" -H 'api-key: d4b371692d361869183d92d84caa5edb8835cf7d'
-curl "http://localhost:3000/weather/boston" -H 'api-key: d4b371692d361869183d92d84caa5edb8835cf7d'
+```sh
+curl "http://localhost:3000/date"
+curl "http://localhost:3000/locations"
+curl "http://localhost:3000/weather/{austin/pune/santabarbara}"
 ```
 
-The last cURL is to get the `404 Not Found` error
+To see how Airbrake error monitoring works, use an unsupported location, e.g. `boston`: `curl "http://localhost:3000/weather/boston"`.
+After issuing this request, the service will respond with a `404 Not Found` error.  Visit the Airbrake dashboard to see the error captured there.
 
 Once you call the API endpoints, view the Airbrake errors and performance dashboards for your project.

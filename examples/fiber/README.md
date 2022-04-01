@@ -8,14 +8,14 @@ Insert your project ID and project key in the `main.go` file. You can find these
 
 Initialise mod file
 
-```bash
+```sh
 go mod init
 go mod tidy
 ```
 
 Run go application
 
-```bash
+```sh
 go run main.go
 ```
 
@@ -27,7 +27,7 @@ The example application provides three GET endpoints:
 
 Use the cURL commands below to interact with the endpoints.
 
-```bash
+```sh
 curl "http://localhost:3000/date"
 curl "http://localhost:3000/locations"
 curl "http://localhost:3000/weather/{austin/pune/santabarbara}"
