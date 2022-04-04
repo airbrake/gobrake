@@ -214,6 +214,14 @@ type Notifier struct {
 	remoteConfig *remoteConfig
 }
 
+func (n *Notifier) Options() string {
+	return fmt.Sprintf(
+		"ProjectId: %d\nProjectKey: %s\n",
+		n.opt.ProjectId,
+		n.opt.ProjectKey,
+	)
+}
+
 func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 	opt.init()
 
