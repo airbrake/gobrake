@@ -6,18 +6,20 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [1.15, 1.16, 1.17]
+        go-version: [1.16, 1.17, 1.18]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Go ${{ matrix.go-version }}
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
 
     - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v2.5.2
+      uses: golangci/golangci-lint-action@v3.1.0
+      with:
+        args: --timeout=3m
 
     - name: Test
       run: go test
