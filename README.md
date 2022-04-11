@@ -48,7 +48,7 @@ import (
 
 With or without Go Modules, to use the latest version of the package, run:
 
-```bash
+```sh
 go get github.com/airbrake/gobrake/v5
 ```
 

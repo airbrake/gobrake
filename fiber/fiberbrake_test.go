@@ -42,7 +42,7 @@ func Test_Fiberbrake_Next(t *testing.T) {
 	})
 	resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
 	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusInternalServerError, resp.StatusCode)
+	utils.AssertEqual(t, fiber.StatusOK, resp.StatusCode)
 	body, _ := io.ReadAll(resp.Body)
-	utils.AssertEqual(t, "airbrake notifier not defined", string(body))
+	utils.AssertEqual(t, "Hello", string(body))
 }
