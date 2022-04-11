@@ -2,7 +2,7 @@ package fiber
 
 import (
 	"context"
-	"errors"
+	"log"
 
 	"github.com/airbrake/gobrake/v5"
 
@@ -13,7 +13,8 @@ import (
 func New(notifier *gobrake.Notifier) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if notifier == nil {
-			return errors.New("airbrake notifier not defined")
+			log.Println("airbrake notifier not defined")
+			return c.Next()
 		}
 
 		// Starts the timer.

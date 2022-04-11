@@ -1,6 +1,6 @@
-# Gin integration
+# Gorilla integration
 
-This is an example of a basic Gin app with Airbrake middleware that reports performance data (route stats).
+This is an example of a basic Gorilla app with Airbrake middleware that reports performance data (route stats).
 
 ## How to run Example API
 

@@ -44,7 +44,7 @@ func main() {
 
 	app := fiber.New()
 	app.Use(fiberbrake.New(notifier))
-	// Initialise routes
+	// Initialize routes
 	app.Get("/date", getDate)
 	app.Get("/locations", getLocations)
 	app.Get("/weather/:location", getWeather)

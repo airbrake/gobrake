@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -30,12 +30,6 @@ type WeatherInfo struct {
 	Daily          []interface{} `json:"daily,omitempty"`
 }
 
-var availableLocations = []string{
-	"austin",
-	"pune",
-	"santabarbara",
-}
-
 var notifier = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
 	ProjectId:   ProjectId,
 	ProjectKey:  ProjectKey,
@@ -46,16 +40,15 @@ func main() {
 
 	api := gin.Default()
 
-	// Initialise middlewares
+	// Initialize middlewares
 	api.Use(ginbrake.New(notifier))
-	api.Use(TokenAuthMiddleware())
 
-	// Initialise routes
+	// Initialize routes
 	api.GET("/date", getDate)
 	api.GET("/locations", getLocations)
 	api.GET("/weather/:location", getWeather)
 
-	// Initialise application
+	// Initialize application
 	api.Run(":3000")
 }
 
@@ -67,63 +60,75 @@ func getDate(c *gin.Context) {
 }
 
 func getLocations(c *gin.Context) {
+	availableLocations, err := locations()
+	if err != nil {
+		notifier.Notify(err, nil) // send error to airbrake
+		c.JSON(http.StatusNotFound, availableLocations)
+		return
+	}
 	c.JSON(http.StatusOK, availableLocations)
 }
 
 func getWeather(c *gin.Context) {
 	var weatherInfo WeatherInfo
 	location := strings.TrimSpace(c.Param("location")) // It lets you allow whitespaces but case-sensitive
-	if !contains(availableLocations, location) {
+	weatherResp, err := checkWeather(location)
+	json.Unmarshal(weatherResp, &weatherInfo)
+	if err != nil {
+		notifier.Notify(err, nil) // send error to airbrake
 		c.JSON(http.StatusNotFound, weatherInfo)
 		return
 	}
-	weatherInfoFile := location + ".json"
-	weatherInfoFilePath := filepath.Join("assets", weatherInfoFile)
-	// Open our jsonFile
-	jsonFile, err := os.Open(weatherInfoFilePath)
-	// if we os.Open returns an error then handle it
-	if err != nil {
-		notifier.Notify(err, nil)
-		c.JSON(http.StatusNoContent, weatherInfo)
-		return
-	}
-	byteValue, _ := io.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &weatherInfo)
-	// defer the closing of our jsonFile so that we can parse it later on
-	defer jsonFile.Close()
 	c.JSON(http.StatusOK, weatherInfo)
 }
 
-// Function to check whether it is a valid location
-func contains(a []string, x string) bool {
-	for _, n := range a {
-		if x == n {
-			return true
-		}
+func locations() ([]string, error) {
+	var locations []string
+	weatherInfoFile := "https://airbrake.github.io/weatherapi/locations"
+	client := &http.Client{}
+	req, err := http.NewRequest(http.MethodGet, weatherInfoFile, nil)
+	if err != nil {
+		return nil, err
 	}
-	return false
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, errors.New("locations not found")
+	}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	json.Unmarshal(bodyBytes, &locations)
+	return locations, nil
 }
 
-func respondWithError(c *gin.Context, code int, message interface{}) {
-	c.AbortWithStatusJSON(code, gin.H{"error": message})
-}
-
-func TokenAuthMiddleware() gin.HandlerFunc {
-	requiredToken := "d4b371692d361869183d92d84caa5edb8835cf7d"
-
-	return func(c *gin.Context) {
-		token := c.Request.Header.Get("api-key")
-
-		if token == "" {
-			respondWithError(c, http.StatusUnauthorized, "API key required")
-			return
-		}
-
-		if token != requiredToken {
-			respondWithError(c, http.StatusUnauthorized, "Invalid API key")
-			return
-		}
-
-		c.Next()
+func checkWeather(location string) ([]byte, error) {
+	weatherInfoFile := "https://airbrake.github.io/weatherapi/weather/" + location
+	client := &http.Client{}
+	req, err := http.NewRequest(http.MethodGet, weatherInfoFile, nil)
+	if err != nil {
+		return nil, err
 	}
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		errMsg := fmt.Sprintf("%s weather data not found", location)
+		return nil, errors.New(errMsg)
+	}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return bodyBytes, nil
 }

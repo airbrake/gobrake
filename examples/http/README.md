@@ -6,14 +6,14 @@ This is an example of a basic net/http app with Airbrake middleware that reports
 
 Insert your project ID and project key in the `main.go` file. You can find these values on the settings page for your project.
 
-Initialise mod file
+Initialize mod file
 
 ```sh
 go mod init
 go mod tidy
 ```
 
-Run go application
+Run Go application
 
 ```sh
 go run main.go
@@ -34,6 +34,6 @@ curl "http://localhost:3000/weather/{austin/pune/santabarbara}"
 ```
 
 To see how Airbrake error monitoring works, use an unsupported location, e.g. `boston`: `curl "http://localhost:3000/weather/boston"`.
-After issuing this request, the service will respond with a `404 Not Found` error.  Visit the Airbrake dashboard to see the error captured there.
+After issuing this request, the service will respond with a `404 Not Found` error. Visit the Airbrake dashboard to see the error captured there.
 
 Once you call the API endpoints, view the Airbrake errors and performance dashboards for your project.
