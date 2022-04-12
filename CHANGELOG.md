@@ -2,7 +2,23 @@
 
 ## master
 
-## [v5.3.0][v5.3.0] (february 7, 2022)
+## [v5.4.0][v5.4.0] (April 13, 2022)
+
+* Added the [Echo](https://github.com/labstack/echo) integration ([#239](https://github.com/airbrake/gobrake/pull/239))
+
+* Added the [Iris](https://github.com/kataras/iris) integration ([#241](https://github.com/airbrake/gobrake/pull/241))
+
+* Added the [Beego](https://github.com/beego/beego) integration ([#245](https://github.com/airbrake/gobrake/pull/245))
+
+* Added the [net/http](https://pkg.go.dev/net/http) integration ([#246](https://github.com/airbrake/gobrake/pull/246))
+
+* Added the [gorilla/mux](https://github.com/gorilla/mux) integration ([#249](https://github.com/airbrake/gobrake/pull/249))
+
+* Added the [fasthttp](https://github.com/valyala/fasthttp) integration ([#252](https://github.com/airbrake/gobrake/pull/252))
+
+* Added the [Buffalo](https://github.com/gobuffalo/buffalo) integration ([#256](https://github.com/airbrake/gobrake/pull/255))
+
+## [v5.3.0][v5.3.0] (February 7, 2022)
 
 * Added the [Fiber](https://github.com/gofiber/fiber) integration ([#227](https://github.com/airbrake/gobrake/pull/227)),
 ([#232](https://github.com/airbrake/gobrake/pull/232))
@@ -124,3 +140,4 @@ Features:
 [v5.1.1]: https://github.com/airbrake/gobrake/releases/tag/v5.1.1
 [v5.2.0]: https://github.com/airbrake/gobrake/releases/tag/v5.2.0
 [v5.3.0]: https://github.com/airbrake/gobrake/releases/tag/v5.3.0
+[v5.4.0]: https://github.com/airbrake/gobrake/releases/tag/v5.4.0

@@ -33,7 +33,8 @@ is extremely lightweight, with minimal overhead.
 * Automatic deploy tracking
 * Performance monitoring features such as HTTP route statistics, SQL queries,
   and Job execution statistics
-* Integrations with [Beego][beego], [Gin][gin], [Negroni][negroni] and [Fiber][fiber]
+* Integrations with [Beego][beego], [Buffalo][buffalo], [Echo][echo], [fasthttp][fasthttp], [Fiber][fiber],
+[Gin][gin], [gorilla/mux][gorilla], [Iris][iris], [Negroni][negroni] and [net/http][nethttp]
 * Last but not least, we follow [semantic versioning 2.0.0][semver2]
 
 ## Installation
@@ -109,10 +110,16 @@ documentation][docs].
 > **Note**: Gobrake provides middleware out of
 the box and you may find our example apps more helpful:
 
-* [Gin](examples/gin)
-* [Fiber](examples/fiber)
 * [Beego](examples/beego)
+* [Buffalo](examples/buffalo)
+* [Echo](examples/echo)
+* [fasthttp](examples/fasthttp)
+* [Fiber](examples/fiber)
+* [Gin](examples/gin)
+* [gorilla/mux](examples/gorilla)
+* [Iris](examples/iris)
 * [Negroni](examples/negroni)
+* [net/http](examples/http)
 
 ## Additional notes
 
@@ -132,7 +139,7 @@ original glog's functionality and adds the ability to send errors/logs to
 
 ## Supported Go versions
 
-The library supports Go v1.15+. The CI file would be the best source of truth
+The library supports Go v1.16+. The CI file would be the best source of truth
 because it contains all Go versions that we test against.
 
 ## Contact
@@ -154,9 +161,15 @@ The project uses the MIT License. See [LICENSE.md](https://github.com/airbrake/g
 [docs]: https://pkg.go.dev/github.com/airbrake/gobrake/v5
 [docs/performance]: https://docs.airbrake.io/docs/overview/apm/#monitoring-go-apps
 [beego]: https://github.com/beego/beego
-[gin]: https://github.com/gin-gonic/gin
-[negroni]: https://github.com/urfave/negroni
+[buffalo]: https://github.com/gobuffalo/buffalo
+[echo]: https://github.com/labstack/echo
+[fasthttp]: https://github.com/valyala/fasthttp
 [fiber]: https://github.com/gofiber/fiber
+[gin]: https://github.com/gin-gonic/gin
+[gorilla]: https://github.com/gorilla/mux
+[iris]: https://github.com/kataras/iris
+[negroni]: https://github.com/urfave/negroni
+[nethttp]: https://pkg.go.dev/net/http
 [semver2]: http://semver.org/spec/v2.0.0.html
 [go-mod]: https://github.com/golang/go/wiki/Modules
 [project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/gobrake/project-id-key.png
