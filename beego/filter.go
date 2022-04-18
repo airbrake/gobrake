@@ -29,7 +29,11 @@ func New(notifier *gobrake.Notifier) web.FilterChain {
 			}
 			_, metric := gobrake.NewRouteMetric(goctx.TODO(), ctx.Input.Method(), routerPattern)
 			next(ctx)
-			metric.StatusCode = ctx.ResponseWriter.Status
+			statusCode := ctx.ResponseWriter.Status
+			if statusCode == 0 {
+				statusCode = 200
+			}
+			metric.StatusCode = statusCode
 			_ = notifier.Routes.Notify(goctx.TODO(), metric)
 
 		}
