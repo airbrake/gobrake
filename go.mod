@@ -13,7 +13,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/imkira/go-interpol v1.1.0 // indirect
-	github.com/jonboulle/clockwork v0.2.3
+	github.com/jonboulle/clockwork v0.3.0
 	github.com/kataras/iris/v12 v12.1.8
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
