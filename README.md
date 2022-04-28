@@ -135,7 +135,7 @@ We support two major logging frameworks:
 * There's a [glog fork][glog], which integrates with Gobrake. It provides all of
 original glog's functionality and adds the ability to send errors/logs to
 [Airbrake.io][airbrake.io].
-* [apex/log][apexlog], to check how to integrate gobrake with apex/log, see [example](example/apexlog).
+* [apex/log][apexlog], to check how to integrate gobrake with apex/log, see [example](examples/apexlog).
 
 ## Supported Go versions
 
