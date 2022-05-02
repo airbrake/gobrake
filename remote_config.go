@@ -75,6 +75,7 @@ func (rc *remoteConfig) Poll() {
 		rc.ticker = time.NewTicker(rc.Interval())
 
 		for {
+		sel:
 			select {
 			case <-rc.ticker.C:
 				if err := rc.tick(); err != nil {
@@ -87,7 +88,7 @@ func (rc *remoteConfig) Poll() {
 
 				rc.ticker = time.NewTicker(rc.Interval())
 			case <-rc.pollStop:
-				break
+				break sel
 			}
 		}
 	}()

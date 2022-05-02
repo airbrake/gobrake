@@ -138,7 +138,7 @@ func (s *routeStats) send(m map[routeKey]*tdigestStat) error {
 	switch resp.StatusCode {
 	case http.StatusUnauthorized:
 		return errUnauthorized
-	case httpStatusTooManyRequests:
+	case http.StatusTooManyRequests:
 		return errIPRateLimited
 	}
 

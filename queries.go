@@ -141,7 +141,7 @@ func (s *queryStats) send(m map[queryKey]*tdigestStat) error {
 	switch resp.StatusCode {
 	case http.StatusUnauthorized:
 		return errUnauthorized
-	case httpStatusTooManyRequests:
+	case http.StatusTooManyRequests:
 		return errIPRateLimited
 	}
 
