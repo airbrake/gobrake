@@ -23,7 +23,6 @@ const userAgent = notifierName + "/" + notifierVersion
 const waitTimeout = 5 * time.Second
 
 const httpEnhanceYourCalm = 420
-const httpStatusTooManyRequests = 429
 
 const maxNoticeLen = 64 * 1024
 
@@ -355,7 +354,7 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 	switch resp.StatusCode {
 	case http.StatusUnauthorized:
 		return "", errUnauthorized
-	case httpStatusTooManyRequests:
+	case http.StatusTooManyRequests:
 		delayStr := resp.Header.Get("X-RateLimit-Delay")
 		delay, err := strconv.ParseInt(delayStr, 10, 64)
 		if err == nil {

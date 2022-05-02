@@ -132,7 +132,7 @@ func (s *queueStats) send(m map[queueKey]*queueBreakdown) error {
 	switch resp.StatusCode {
 	case http.StatusUnauthorized:
 		return errUnauthorized
-	case httpStatusTooManyRequests:
+	case http.StatusTooManyRequests:
 		return errIPRateLimited
 	}
 
