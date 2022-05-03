@@ -4,23 +4,30 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/airbrake/gobrake/v5"
 	"github.com/buger/jsonparser"
 	"github.com/rs/zerolog"
 )
 
-type Writer struct {
+type WriteCloser struct {
 	Gobrake *gobrake.Notifier
 }
 
-// New creates a new Writer
-func New(notifier *gobrake.Notifier) *Writer {
-	return &Writer{Gobrake: notifier}
+// Validates the WriteCloser matches the io.WriteCloser interface
+var _ io.WriteCloser = (*WriteCloser)(nil)
+
+// New creates a new WriteCloser
+func New(notifier *gobrake.Notifier) (io.WriteCloser, error) {
+	if notifier == nil {
+		return &WriteCloser{}, errors.New("airbrake notifier not provided")
+	}
+	return &WriteCloser{Gobrake: notifier}, nil
 }
 
-// Write
-func (w *Writer) Write(data []byte) (int, error) {
+// Write parses the log data and sends off error notices to airbrake
+func (w *WriteCloser) Write(data []byte) (int, error) {
 	lvlStr, err := jsonparser.GetUnsafeString(data, zerolog.LevelFieldName)
 	if err != nil {
 		return 0, fmt.Errorf("error getting zerolog level: %w", err)
@@ -35,8 +42,8 @@ func (w *Writer) Write(data []byte) (int, error) {
 		return len(data), nil
 	}
 
-	var userData interface{}
-	err = json.Unmarshal(data, &userData)
+	var logEntryData interface{}
+	err = json.Unmarshal(data, &logEntryData)
 	if err != nil {
 		return 0, fmt.Errorf("error unmarshalling logs: %w", err)
 	}
@@ -56,15 +63,21 @@ func (w *Writer) Write(data []byte) (int, error) {
 		return nil
 	})
 
+	// If gobrake was not setup but the writer was still used, ignore gobrake.
+	if w.Gobrake == nil {
+		return len(data), nil
+	}
+
 	notice := gobrake.NewNotice(ze.message, nil, 6)
 	notice.Context["severity"] = string(lvl)
-	notice.Params["userData"] = userData
+	notice.Params["logEntryData"] = logEntryData
 	notice.Error = errors.New(ze.error)
 	w.Gobrake.SendNoticeAsync(notice)
 	return len(data), nil
 }
 
-func (w *Writer) Close() error {
+// Close flushes any remaining notices left in gobrake queue
+func (w *WriteCloser) Close() error {
 	w.Gobrake.Flush()
 	return nil
 }

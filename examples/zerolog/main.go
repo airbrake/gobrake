@@ -7,16 +7,16 @@ import (
 	"os"
 
 	"github.com/airbrake/gobrake/v5"
-	airbrakeWriter "github.com/airbrake/gobrake/v5/zerolog"
+	zerobrake "github.com/airbrake/gobrake/v5/zerolog" // Named import so that we don't conflict with rs/zerolog
 	"github.com/rs/zerolog"
 )
 
-var ProjectId int64 = 999999                               // Insert your Project Id here
+var ProjectID int64 = 999999                               // Insert your Project ID here
 var ProjectKey string = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" // Insert your Project Key here
 
 func main() {
 	airbrake := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-		ProjectId:   ProjectId,
+		ProjectId:   ProjectID,
 		ProjectKey:  ProjectKey,
 		Environment: "production",
 	})
@@ -25,9 +25,15 @@ func main() {
 
 	// Note: This writer only accepts errors, fatal and panic logs, all others will be ignored.
 	// You can still send logs to stdout or another writer via io.MultiWriter
-	w := airbrakeWriter.New(airbrake)
+	w, err := zerobrake.New(airbrake)
+	if err != nil {
+		// The only way this error would be returned is if airbrake was not set up and passed in as a nil value
+		// Either stop the execution of the code or ignore it, as w is set to an empty writer that wont write to
+		// airbrake if a pointer to airbrake notifier is not provided.
+		panic("airbrake was not setup correctly")
+	}
 
-	// Insert the newly created airbrakeWriter into zerolog
+	// Insert the newly created writer (w) into zerolog
 	log := zerolog.New(io.MultiWriter(os.Stdout, w))
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
@@ -44,10 +50,11 @@ func main() {
 		Str("user", "tobi").
 		Logger()
 
-	fmt.Printf("Check your Airbrake dashboard at https://airbrake.io/projects/%v to see these log messages\n", ProjectId)
+	fmt.Printf("Check your Airbrake dashboard at https://YOUR_SUBDOMAIN.airbrake.io/projects/%v to see these error occurrences\n", ProjectID)
 
-	loggerWithData.Info().Msg("upload")       // will `not` be sent to airbrake but sent to stdout
-	loggerWithData.Warn().Msg("upload retry") // will `not` be sent to airbrake but sent to stdout
-	// This error will be sent both to stdout and to airbrake via the MultiWriter pipeline
-	loggerWithData.Error().Err(errors.New("unauthorized")).Msg("upload failed") // will `be` sent to airbrake & stdout
+	loggerWithData.Info().Msg("upload")       // Sends only to stdout because log level is Info
+	loggerWithData.Warn().Msg("upload retry") // Sends only to stdout because log level is Warn.
+
+	// This error is sent to Airbrake and stdout because the log level is Error
+	loggerWithData.Error().Err(errors.New("unauthorized")).Msg("upload failed")
 }
