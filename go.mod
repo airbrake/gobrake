@@ -6,6 +6,7 @@ require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/apex/log v1.9.0
 	github.com/beego/beego/v2 v2.0.2
+	github.com/buger/jsonparser v1.1.1
 	github.com/caio/go-tdigest v3.1.0+incompatible
 	github.com/gin-gonic/gin v1.7.7
 	github.com/gobuffalo/buffalo v0.18.5
@@ -21,6 +22,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
 	github.com/pkg/errors v0.9.1
+	github.com/rs/zerolog v1.26.1
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/urfave/negroni v1.0.0
 	github.com/valyala/fasthttp v1.35.0

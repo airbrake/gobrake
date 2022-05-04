@@ -9,12 +9,12 @@ import (
 	"github.com/apex/log"
 )
 
-var ProjectId int64 = 999999                               // Insert your Project Id here
+var ProjectID int64 = 999999                               // Insert your Project ID here
 var ProjectKey string = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" // Insert your Project Key here
 
 func main() {
 	airbrake := gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-		ProjectId:   ProjectId,
+		ProjectId:   ProjectID,
 		ProjectKey:  ProjectKey,
 		Environment: "production",
 	})
@@ -38,7 +38,7 @@ func main() {
 		"user": "tobi",
 	})
 
-	fmt.Printf("Check your Airbrake dashboard at https://airbrake.io/projects/%v to see these log messages\n", ProjectId)
+	fmt.Printf("Check your Airbrake dashboard at https://YOUR_SUBDOMAIN.airbrake.io/projects/%v to see these error occurrences\n", ProjectID)
 
 	ctx.Info("upload")
 	ctx.Info("upload complete")
