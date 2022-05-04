@@ -28,17 +28,12 @@ func New(notifier *gobrake.Notifier) (io.WriteCloser, error) {
 
 // Write parses the log data and sends off error notices to airbrake
 func (w *WriteCloser) Write(data []byte) (int, error) {
-	lvlStr, err := jsonparser.GetUnsafeString(data, zerolog.LevelFieldName)
+	lvl, err := jsonparser.GetUnsafeString(data, zerolog.LevelFieldName)
 	if err != nil {
 		return 0, fmt.Errorf("error getting zerolog level: %w", err)
 	}
 
-	lvl, err := zerolog.ParseLevel(lvlStr)
-	if err != nil {
-		return 0, fmt.Errorf("error parsing zerolog level: %w", err)
-	}
-
-	if lvl != zerolog.ErrorLevel {
+	if lvl != zerolog.ErrorLevel.String() {
 		return len(data), nil
 	}
 
@@ -69,7 +64,7 @@ func (w *WriteCloser) Write(data []byte) (int, error) {
 	}
 
 	notice := gobrake.NewNotice(ze.message, nil, 6)
-	notice.Context["severity"] = lvl.String()
+	notice.Context["severity"] = lvl
 	notice.Params["logEntryData"] = logEntryData
 	notice.Error = errors.New(ze.error)
 	w.Gobrake.SendNoticeAsync(notice)

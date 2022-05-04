@@ -23,7 +23,7 @@ func main() {
 
 	defer airbrake.Close()
 
-	// Note: This writer only accepts errors, fatal and panic logs, all others will be ignored.
+	// Note: This writer only accepts errors logs, all others will be ignored.
 	// You can still send logs to stdout or another writer via io.MultiWriter
 	w, err := zerobrake.New(airbrake)
 	if err != nil {
