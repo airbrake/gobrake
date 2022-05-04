@@ -38,7 +38,7 @@ func (w *WriteCloser) Write(data []byte) (int, error) {
 		return 0, fmt.Errorf("error parsing zerolog level: %w", err)
 	}
 
-	if lvl < zerolog.ErrorLevel || lvl > zerolog.PanicLevel {
+	if lvl != zerolog.ErrorLevel {
 		return len(data), nil
 	}
 
@@ -69,7 +69,7 @@ func (w *WriteCloser) Write(data []byte) (int, error) {
 	}
 
 	notice := gobrake.NewNotice(ze.message, nil, 6)
-	notice.Context["severity"] = string(lvl)
+	notice.Context["severity"] = lvl.String()
 	notice.Params["logEntryData"] = logEntryData
 	notice.Error = errors.New(ze.error)
 	w.Gobrake.SendNoticeAsync(notice)
