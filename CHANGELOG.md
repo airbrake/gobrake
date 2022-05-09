@@ -2,6 +2,32 @@
 
 ## master
 
+## [v5.5.1][v5.5.1] (May 9, 2022)
+
+* build(deps): bump github.com/valyala/fasthttp from 1.35.0 to 1.36.0 ([#267](https://github.com/airbrake/gobrake/pull/267))
+
+* build(deps): bump github.com/jonboulle/clockwork from 0.2.3 to 0.3.0 ([#266](https://github.com/airbrake/gobrake/pull/266))
+
+* Upgrade github.com/onsi/ginkgo to v2 ([#271](https://github.com/airbrake/gobrake/pull/271))
+
+* build(deps): bump github.com/gofiber/fiber/v2 from 2.31.0 to 2.33.0 ([#273](https://github.com/airbrake/gobrake/pull/273))
+
+* build(deps): bump github.com/gobuffalo/buffalo from 0.18.5 to 0.18.7 ([#272](https://github.com/airbrake/gobrake/pull/272))
+
+* Updated changelog, notifier version ([#274](https://github.com/airbrake/gobrake/pull/274))
+
+## [v5.5.0][v5.5.0] (May 4, 2022)
+
+* Updated changelog, notifier version and readme ([#262](https://github.com/airbrake/gobrake/pull/262))
+
+* Beego Status fix ([#264](https://github.com/airbrake/gobrake/pull/264))
+
+* Fix readme link ([#268](https://github.com/airbrake/gobrake/pull/268))
+
+* refactor status and label select statement ([#269](https://github.com/airbrake/gobrake/pull/269))
+
+* add in zerolog integration ([#270](https://github.com/airbrake/gobrake/pull/270))
+
 ## [v5.4.0][v5.4.0] (April 13, 2022)
 
 * Added the [Echo](https://github.com/labstack/echo) integration ([#239](https://github.com/airbrake/gobrake/pull/239))
@@ -141,3 +167,5 @@ Features:
 [v5.2.0]: https://github.com/airbrake/gobrake/releases/tag/v5.2.0
 [v5.3.0]: https://github.com/airbrake/gobrake/releases/tag/v5.3.0
 [v5.4.0]: https://github.com/airbrake/gobrake/releases/tag/v5.4.0
+[v5.5.0]: https://github.com/airbrake/gobrake/releases/tag/v5.5.0
+[v5.5.1]: https://github.com/airbrake/gobrake/releases/tag/v5.5.1
