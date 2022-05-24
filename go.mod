@@ -10,7 +10,7 @@ require (
 	github.com/caio/go-tdigest v3.1.0+incompatible
 	github.com/gin-gonic/gin v1.7.7
 	github.com/gobuffalo/buffalo v0.18.7
-	github.com/gofiber/fiber/v2 v2.33.0
+	github.com/gofiber/fiber/v2 v2.34.0
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/imkira/go-interpol v1.1.0 // indirect
