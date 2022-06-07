@@ -1,8 +1,6 @@
 version: 2
 updates:
-- package-ecosystem: gomod
-  directory: "/"
-  schedule:
-    interval: daily
-    time: "19:00"
-    timezone: US/Central
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: daily
