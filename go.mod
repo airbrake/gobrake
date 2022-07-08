@@ -22,7 +22,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.26.1
+	github.com/rs/zerolog v1.27.0
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/urfave/negroni v1.0.0
 	github.com/valyala/fasthttp v1.38.0
