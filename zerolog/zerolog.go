@@ -65,6 +65,25 @@ func (w *WriteCloser) Write(data []byte) (int, error) {
 
 	notice := gobrake.NewNotice(ze.message, nil, 6)
 	notice.Context["severity"] = lvl
+
+	// Check for the following 2 fields in logEntryData to see if they
+	// can be moved to the `Notice.Context`. Doing so would automatically link
+	// them in airbrake.io dashboards.
+	if asMap, ok := logEntryData.(map[string]interface{}); ok {
+		const HttpMethod = "httpMethod"
+		const Route = "route"
+
+		if method, ok := asMap[HttpMethod].(string); ok {
+			notice.Context[HttpMethod] = method
+			delete(asMap, HttpMethod)
+		}
+
+		if route, ok := asMap[Route].(string); ok {
+			notice.Context[Route] = route
+			delete(asMap, Route)
+		}
+	}
+
 	notice.Params["logEntryData"] = logEntryData
 	notice.Error = errors.New(ze.error)
 	w.Gobrake.SendNoticeAsync(notice)
