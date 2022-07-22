@@ -30,8 +30,15 @@ func (h *Handler) notifyAirbrake(level log.Level, msg string, params log.Fields)
 	}
 
 	notice := gobrake.NewNotice(msg, nil, 0)
+	parameters := asParams(params)
+	for key, parameter := range parameters {
+		if key == "httpMethod" || key == "route" {
+			notice.Context[key] = parameter
+			delete(parameters, key)
+		}
+	}
 	notice.Context["severity"] = level.String()
-	notice.Params = asParams(params)
+	notice.Params = parameters
 
 	h.Gobrake.Notify(notice, nil)
 }
