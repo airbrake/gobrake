@@ -9,7 +9,7 @@ require (
 	github.com/buger/jsonparser v1.1.1
 	github.com/caio/go-tdigest v3.1.0+incompatible
 	github.com/gin-gonic/gin v1.7.7
-	github.com/gobuffalo/buffalo v0.18.7
+	github.com/gobuffalo/buffalo v0.18.9
 	github.com/gofiber/fiber/v2 v2.35.0
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/mux v1.8.0
@@ -31,4 +31,5 @@ require (
 	github.com/yudai/gojsondiff v1.0.0 // indirect
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	gonum.org/v1/gonum v0.8.1 // indirect
+	gopkg.in/ini.v1 v1.62.0 // indirect
 )
