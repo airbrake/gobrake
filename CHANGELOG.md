@@ -2,6 +2,25 @@
 
 ## master
 
+## [v5.5.2][v5.5.2] (July 22, 2022)
+
+* dependency updates ([#275](https://github.com/airbrake/gobrake/pull/275)),
+([#277](https://github.com/airbrake/gobrake/pull/277)),
+([#278](https://github.com/airbrake/gobrake/pull/278)),
+([#279](https://github.com/airbrake/gobrake/pull/279)),
+([#280](https://github.com/airbrake/gobrake/pull/280)),
+([#282](https://github.com/airbrake/gobrake/pull/282)),
+([#283](https://github.com/airbrake/gobrake/pull/283)),
+([#284](https://github.com/airbrake/gobrake/pull/284)),
+([#285](https://github.com/airbrake/gobrake/pull/285)),
+([#286](https://github.com/airbrake/gobrake/pull/286)),
+([#287](https://github.com/airbrake/gobrake/pull/287)),
+([#289](https://github.com/airbrake/gobrake/pull/289))
+
+* Update Zerolog integration for automatic linking of errors to routes ([#276](https://github.com/airbrake/gobrake/pull/276))
+
+* Update apex/log handler for automatic linking of errors to routes ([#288](https://github.com/airbrake/gobrake/pull/288))
+
 ## [v5.5.1][v5.5.1] (May 9, 2022)
 
 * build(deps): bump github.com/valyala/fasthttp from 1.35.0 to 1.36.0 ([#267](https://github.com/airbrake/gobrake/pull/267))
@@ -169,3 +188,4 @@ Features:
 [v5.4.0]: https://github.com/airbrake/gobrake/releases/tag/v5.4.0
 [v5.5.0]: https://github.com/airbrake/gobrake/releases/tag/v5.5.0
 [v5.5.1]: https://github.com/airbrake/gobrake/releases/tag/v5.5.1
+[v5.5.2]: https://github.com/airbrake/gobrake/releases/tag/v5.5.2
