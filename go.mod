@@ -8,7 +8,7 @@ require (
 	github.com/beego/beego/v2 v2.0.3
 	github.com/buger/jsonparser v1.1.1
 	github.com/caio/go-tdigest v3.1.0+incompatible
-	github.com/gin-gonic/gin v1.7.7
+	github.com/gin-gonic/gin v1.8.1
 	github.com/gobuffalo/buffalo v0.18.9
 	github.com/gofiber/fiber/v2 v2.35.0
 	github.com/google/go-querystring v1.1.0 // indirect
