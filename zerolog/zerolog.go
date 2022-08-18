@@ -13,17 +13,23 @@ import (
 
 type WriteCloser struct {
 	Gobrake *gobrake.Notifier
+	depth   int
 }
 
 // Validates the WriteCloser matches the io.WriteCloser interface
 var _ io.WriteCloser = (*WriteCloser)(nil)
 
 // New creates a new WriteCloser
-func New(notifier *gobrake.Notifier) (io.WriteCloser, error) {
+func New(notifier *gobrake.Notifier) (*WriteCloser, error) {
 	if notifier == nil {
 		return &WriteCloser{}, errors.New("airbrake notifier not provided")
 	}
-	return &WriteCloser{Gobrake: notifier}, nil
+	return &WriteCloser{Gobrake: notifier, depth: 6}, nil
+}
+
+// SetDepth method is for setting the depth of the notices
+func (w *WriteCloser) SetDepth(depth int) {
+	w.depth = depth
 }
 
 // Write parses the log data and sends off error notices to airbrake
@@ -63,7 +69,7 @@ func (w *WriteCloser) Write(data []byte) (int, error) {
 		return len(data), nil
 	}
 
-	notice := gobrake.NewNotice(ze.message, nil, 6)
+	notice := gobrake.NewNotice(ze.message, nil, w.depth)
 	notice.Context["severity"] = lvl
 
 	// Check for the following 2 fields in logEntryData to see if they
