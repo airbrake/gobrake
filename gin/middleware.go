@@ -20,7 +20,8 @@ func New(notifier *gobrake.Notifier) gin.HandlerFunc {
 	}
 }
 
-// This function is deprecated. Please use New() function instead
+// This function is deprecated.
+// Deprecated: Use New() function instead
 func NewMiddleware(engine *gin.Engine, notifier *gobrake.Notifier) func(c *gin.Context) {
 	return New(notifier)
 }

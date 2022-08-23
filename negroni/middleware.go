@@ -9,6 +9,7 @@ import (
 )
 
 // NewMiddleware implements a middleware that can be used in Negroni
+// Deprecated: This middleware will be removed in the future release.
 func NewMiddleware(n *gobrake.Notifier) negroni.Handler {
 	if n == nil {
 		return negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) { next(w, r) })
