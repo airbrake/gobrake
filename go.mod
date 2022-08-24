@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/apex/log v1.9.0
-	github.com/beego/beego/v2 v2.0.4
+	github.com/beego/beego/v2 v2.0.5
 	github.com/buger/jsonparser v1.1.1
 	github.com/caio/go-tdigest v3.1.0+incompatible
 	github.com/gin-gonic/gin v1.8.1
