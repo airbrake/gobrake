@@ -136,7 +136,8 @@ We support two major logging frameworks:
 original glog's functionality and adds the ability to send errors/logs to
 [Airbrake.io][airbrake.io].
 * [apex/log][apexlog], to check how to integrate gobrake with apex/log, see [example](examples/apexlog).
-* [zerolog/log][zerolog], to check how to integrate gobrake with zerolog/log, see [example](examples/zerolog).
+* [zerolog][zerolog], to check how to integrate gobrake with zerolog, see [example](examples/zerolog).
+* [zap][zap], to check how to integrate gobrake with zap, see [example](examples/zap).
 
 ## Supported Go versions
 
@@ -179,3 +180,4 @@ The project uses the MIT License. See [LICENSE.md](https://github.com/airbrake/g
 [glog]: https://github.com/airbrake/glog
 [apexlog]: https://github.com/apex/log
 [zerolog]: https://github.com/rs/zerolog
+[zap]: https://github.com/uber-go/zap
