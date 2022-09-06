@@ -17,7 +17,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.20.0
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.27.0
+	github.com/rs/zerolog v1.28.0
 	github.com/urfave/negroni v1.0.0
 	github.com/valyala/fasthttp v1.39.0
 	go.uber.org/zap v1.23.0
