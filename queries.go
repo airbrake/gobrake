@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -143,6 +144,13 @@ func (s *queryStats) send(m map[queryKey]*tdigestStat) error {
 		return errUnauthorized
 	case http.StatusTooManyRequests:
 		return errIPRateLimited
+	case http.StatusBadRequest:
+		var sendResp sendResponse
+		err = json.NewDecoder(buf).Decode(&sendResp)
+		if err != nil {
+			return err
+		}
+		return errors.New(sendResp.Message)
 	}
 
 	err = fmt.Errorf("got unexpected response status=%q", resp.Status)
