@@ -19,7 +19,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.28.0
 	github.com/urfave/negroni v1.0.0
-	github.com/valyala/fasthttp v1.39.0
+	github.com/valyala/fasthttp v1.40.0
 	go.uber.org/zap v1.23.0
 )
 
