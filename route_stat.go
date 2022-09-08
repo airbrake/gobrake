@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
 	"time"
 )
-
-const flushPeriod = 15 * time.Second
 
 type routeKey struct {
 	Method     string    `json:"method"`
@@ -24,8 +23,6 @@ type routeKeyStat struct {
 	*tdigestStat
 }
 
-type routeFilter func(*RouteMetric) *RouteMetric
-
 // routeStats aggregates information about requests and periodically sends
 // collected data to Airbrake.
 type routeStats struct {
@@ -36,6 +33,8 @@ type routeStats struct {
 	mu sync.Mutex
 	m  map[routeKey]*tdigestStat
 }
+
+type routeFilter func(*RouteMetric) *RouteMetric
 
 func newRouteStats(opt *NotifierOptions) *routeStats {
 	return &routeStats{
@@ -140,6 +139,13 @@ func (s *routeStats) send(m map[routeKey]*tdigestStat) error {
 		return errUnauthorized
 	case http.StatusTooManyRequests:
 		return errIPRateLimited
+	case http.StatusBadRequest:
+		var sendResp sendResponse
+		err = json.NewDecoder(buf).Decode(&sendResp)
+		if err != nil {
+			return err
+		}
+		return errors.New(sendResp.Message)
 	}
 
 	err = fmt.Errorf("got unexpected response status=%q", resp.Status)

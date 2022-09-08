@@ -2,7 +2,6 @@ package gobrake
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,15 +15,15 @@ import (
 	"time"
 )
 
-const notifierName = "gobrake"
-const notifierVersion = "5.5.2"
-const userAgent = notifierName + "/" + notifierVersion
-
-const waitTimeout = 5 * time.Second
-
-const httpEnhanceYourCalm = 420
-
-const maxNoticeLen = 64 * 1024
+const (
+	notifierName        = "gobrake"
+	notifierVersion     = "5.5.2"
+	userAgent           = notifierName + "/" + notifierVersion
+	waitTimeout         = 5 * time.Second
+	flushPeriod         = 15 * time.Second
+	httpEnhanceYourCalm = 420
+	maxNoticeLen        = 64 * 1024
+)
 
 var (
 	errClosed             = errors.New("gobrake: notifier is closed")
@@ -146,53 +145,6 @@ func (opt *NotifierOptions) Copy() *NotifierOptions {
 		DisableAPM:                opt.DisableAPM,
 		HTTPClient:                opt.HTTPClient,
 	}
-}
-
-type routes struct {
-	filters []routeFilter
-
-	stats      *routeStats
-	breakdowns *routeBreakdowns
-}
-
-func newRoutes(opt *NotifierOptions) *routes {
-	return &routes{
-		stats:      newRouteStats(opt),
-		breakdowns: newRouteBreakdowns(opt),
-	}
-}
-
-// AddFilter adds filter that can change route stat or ignore it by returning nil.
-func (rs *routes) AddFilter(fn func(*RouteMetric) *RouteMetric) {
-	rs.filters = append(rs.filters, fn)
-}
-
-func (rs *routes) Flush() {
-	rs.stats.Flush()
-	rs.breakdowns.Flush()
-}
-
-func (rs *routes) Notify(c context.Context, metric *RouteMetric) error {
-	metric.finish()
-
-	for _, fn := range rs.filters {
-		metric = fn(metric)
-		if metric == nil {
-			return nil
-		}
-	}
-
-	err := rs.stats.Notify(c, metric)
-	if err != nil {
-		return err
-	}
-
-	err = rs.breakdowns.Notify(c, metric)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 type Notifier struct {
