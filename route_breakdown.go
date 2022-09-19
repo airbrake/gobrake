@@ -98,7 +98,7 @@ func (s *routeBreakdowns) send(m map[routeBreakdownKey]*routeBreakdown) error {
 	}
 
 	req, err := http.NewRequest(
-		"PUT",
+		http.MethodPut,
 		fmt.Sprintf("%s/api/v5/projects/%d/routes-breakdowns",
 			s.opt.APMHost, s.opt.ProjectId),
 		buf,
@@ -138,6 +138,8 @@ func (s *routeBreakdowns) send(m map[routeBreakdownKey]*routeBreakdown) error {
 			return err
 		}
 		return errors.New(sendResp.Message)
+	case 404, 408, 409, 410, 500, 502, 504:
+		setRouteBreakdownBacklog(out)
 	}
 
 	err = fmt.Errorf("got unexpected response status=%q", resp.Status)

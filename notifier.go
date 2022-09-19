@@ -96,6 +96,10 @@ type NotifierOptions struct {
 
 	// http.Client that is used to interact with Airbrake API.
 	HTTPClient *http.Client
+
+	// Controls the backlog reporting feature.
+	// Default is false
+	DisableBacklog bool
 }
 
 func (opt *NotifierOptions) init() {
@@ -144,6 +148,7 @@ func (opt *NotifierOptions) Copy() *NotifierOptions {
 		DisableErrorNotifications: opt.DisableErrorNotifications,
 		DisableAPM:                opt.DisableAPM,
 		HTTPClient:                opt.HTTPClient,
+		DisableBacklog:            opt.DisableBacklog,
 	}
 }
 
@@ -195,6 +200,7 @@ func NewNotifierWithOptions(opt *NotifierOptions) *Notifier {
 		n.remoteConfig.Poll()
 	}
 
+	newBacklog(opt)
 	return n
 }
 
@@ -270,7 +276,7 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 	}
 
 	req, err := http.NewRequest(
-		"POST",
+		http.MethodPost,
 		fmt.Sprintf("%s/api/v3/projects/%d/notices",
 			n.opt.Host, n.opt.ProjectId),
 		buf,
@@ -324,6 +330,8 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 			return "", err
 		}
 		return "", errors.New(sendResp.Message)
+	case 404, 408, 409, 410, 500, 502, 504:
+		setNoticeBacklog(notice)
 	}
 
 	err = fmt.Errorf("got unexpected response status=%q", resp.Status)
