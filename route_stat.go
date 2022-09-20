@@ -106,7 +106,7 @@ func (s *routeStats) send(m map[routeKey]*tdigestStat) error {
 	}
 
 	req, err := http.NewRequest(
-		"PUT",
+		http.MethodPut,
 		fmt.Sprintf("%s/api/v5/projects/%d/routes-stats",
 			s.opt.APMHost, s.opt.ProjectId),
 		buf,
@@ -146,6 +146,8 @@ func (s *routeStats) send(m map[routeKey]*tdigestStat) error {
 			return err
 		}
 		return errors.New(sendResp.Message)
+	case 404, 408, 409, 410, 500, 502, 504:
+		setRouteStatBacklog(out)
 	}
 
 	err = fmt.Errorf("got unexpected response status=%q", resp.Status)
