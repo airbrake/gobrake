@@ -2,6 +2,20 @@
 
 ## master
 
+## [v5.6.0][v5.6.0] (July 22, 2022)
+
+* Dependency updates
+
+* Add custom method to set the depth of notices in apex/log and zerolog integration ([#297](https://github.com/airbrake/gobrake/pull/297))
+
+* We have deprecated negroni middleware. It won't be maintained going forward ([#298](https://github.com/airbrake/gobrake/pull/298))
+
+* Add in zap integration ([#299](https://github.com/airbrake/gobrake/pull/299))
+
+* Updated minimum supported go version to 1.17 ([#300](https://github.com/airbrake/gobrake/pull/300))
+
+* Added the feature to retry sending Error and APM data in case of failures from Airbrake Server ([#314](https://github.com/airbrake/gobrake/pull/314))
+
 ## [v5.5.2][v5.5.2] (July 22, 2022)
 
 * dependency updates ([#275](https://github.com/airbrake/gobrake/pull/275)),
@@ -189,3 +203,4 @@ Features:
 [v5.5.0]: https://github.com/airbrake/gobrake/releases/tag/v5.5.0
 [v5.5.1]: https://github.com/airbrake/gobrake/releases/tag/v5.5.1
 [v5.5.2]: https://github.com/airbrake/gobrake/releases/tag/v5.5.2
+[v5.6.0]: https://github.com/airbrake/gobrake/releases/tag/v5.6.0
