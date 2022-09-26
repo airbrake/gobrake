@@ -130,7 +130,7 @@ will be truncated to fit the size.
 
 ### Logging
 
-We support two major logging frameworks:
+We support major logging frameworks:
 
 * There's a [glog fork][glog], which integrates with Gobrake. It provides all of
 original glog's functionality and adds the ability to send errors/logs to
@@ -141,7 +141,7 @@ original glog's functionality and adds the ability to send errors/logs to
 
 ## Supported Go versions
 
-The library supports Go v1.16+. The CI file would be the best source of truth
+The library supports Go v1.17+. The CI file would be the best source of truth
 because it contains all Go versions that we test against.
 
 ## Contact
@@ -161,7 +161,6 @@ The project uses the MIT License. See [LICENSE.md](https://github.com/airbrake/g
 [airbrake.io]: https://airbrake.io
 [docs-official]: https://docs.airbrake.io/docs/platforms/go-lang/
 [docs]: https://pkg.go.dev/github.com/airbrake/gobrake/v5
-[docs/performance]: https://docs.airbrake.io/docs/overview/apm/#monitoring-go-apps
 [beego]: https://github.com/beego/beego
 [buffalo]: https://github.com/gobuffalo/buffalo
 [echo]: https://github.com/labstack/echo
@@ -173,7 +172,6 @@ The project uses the MIT License. See [LICENSE.md](https://github.com/airbrake/g
 [negroni]: https://github.com/urfave/negroni
 [nethttp]: https://pkg.go.dev/net/http
 [semver2]: http://semver.org/spec/v2.0.0.html
-[go-mod]: https://github.com/golang/go/wiki/Modules
 [project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/gobrake/project-id-key.png
 [issues]: https://github.com/airbrake/gobrake/issues
 [twitter]: https://twitter.com/airbrake
