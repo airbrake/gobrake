@@ -12,16 +12,13 @@ import (
 // It can be used with Use() methods.
 func New(n *gobrake.Notifier) iris.Handler {
 	return func(ctx iris.Context) {
-		ctx.Next()
 		if n == nil {
 			log.Println("airbrake notifier not defined")
 			return
 		}
-
 		_, metric := gobrake.NewRouteMetric(context.TODO(), ctx.Method(), ctx.GetCurrentRoute().Path())
-
+		ctx.Next()
 		metric.StatusCode = ctx.GetStatusCode()
 		_ = n.Routes.Notify(context.TODO(), metric)
-
 	}
 }
