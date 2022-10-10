@@ -1,7 +1,6 @@
 package echo
 
 import (
-	"context"
 	"log"
 
 	"github.com/airbrake/gobrake/v5"
@@ -26,11 +25,12 @@ func (h *handler) handle(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Println("airbrake notifier not defined")
 			return next(c)
 		}
+		_, metric := gobrake.NewRouteMetric(c.Request().Context(), c.Request().Method, c.Path())
+
 		err := next(c)
-		_, metric := gobrake.NewRouteMetric(context.TODO(), c.Request().Method, c.Path())
 
 		metric.StatusCode = c.Response().Status
-		_ = h.notifier.Routes.Notify(context.TODO(), metric)
+		_ = h.notifier.Routes.Notify(c.Request().Context(), metric)
 		return err
 	}
 }
