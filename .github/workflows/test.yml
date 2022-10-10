@@ -16,10 +16,5 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          args: --timeout=3m
-
       - name: Test
         run: go test
