@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/jonboulle/clockwork v0.3.0
 	github.com/kataras/iris/v12 v12.1.8
-	github.com/labstack/echo/v4 v4.9.0
+	github.com/labstack/echo/v4 v4.9.1
 	github.com/onsi/ginkgo/v2 v2.3.1
 	github.com/onsi/gomega v1.22.1
 	github.com/pkg/errors v0.9.1
@@ -93,7 +93,7 @@ require (
 	github.com/kataras/sitemap v0.0.5 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.15.0 // indirect
-	github.com/labstack/gommon v0.3.1 // indirect
+	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/luna-duclos/instrumentedsql v1.1.3 // indirect
