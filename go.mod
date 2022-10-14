@@ -14,7 +14,7 @@ require (
 	github.com/jonboulle/clockwork v0.3.0
 	github.com/kataras/iris/v12 v12.1.8
 	github.com/labstack/echo/v4 v4.9.0
-	github.com/onsi/ginkgo/v2 v2.3.0
+	github.com/onsi/ginkgo/v2 v2.3.1
 	github.com/onsi/gomega v1.22.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.28.0
