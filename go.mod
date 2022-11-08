@@ -14,8 +14,8 @@ require (
 	github.com/jonboulle/clockwork v0.3.0
 	github.com/kataras/iris/v12 v12.1.8
 	github.com/labstack/echo/v4 v4.9.1
-	github.com/onsi/ginkgo/v2 v2.3.1
-	github.com/onsi/gomega v1.22.1
+	github.com/onsi/ginkgo/v2 v2.5.0
+	github.com/onsi/gomega v1.24.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.28.0
 	github.com/urfave/negroni v1.0.0
@@ -42,6 +42,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.10.0 // indirect
@@ -64,7 +65,7 @@ require (
 	github.com/goccy/go-json v0.9.7 // indirect
 	github.com/gofrs/uuid v4.3.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-cmp v0.5.8 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
@@ -136,11 +137,11 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
-	golang.org/x/net v0.0.0-20221002022538-bcab6841153b // indirect
+	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0 // indirect
-	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
-	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/term v0.1.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	gonum.org/v1/gonum v0.8.1 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
