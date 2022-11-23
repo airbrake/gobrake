@@ -6,7 +6,7 @@ require (
 	github.com/apex/log v1.9.0
 	github.com/beego/beego/v2 v2.0.6
 	github.com/buger/jsonparser v1.1.1
-	github.com/caio/go-tdigest v3.1.0+incompatible
+	github.com/caio/go-tdigest/v4 v4.0.1
 	github.com/gin-gonic/gin v1.8.1
 	github.com/gobuffalo/buffalo v1.0.1
 	github.com/gofiber/fiber/v2 v2.40.0
@@ -94,7 +94,6 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
-	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/luna-duclos/instrumentedsql v1.1.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -143,7 +142,6 @@ require (
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	gonum.org/v1/gonum v0.8.1 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
