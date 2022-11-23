@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	tdigest "github.com/caio/go-tdigest"
+	tdigest "github.com/caio/go-tdigest/v4"
 )
 
 type tdigestStat struct {
