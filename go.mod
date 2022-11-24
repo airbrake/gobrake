@@ -9,7 +9,7 @@ require (
 	github.com/caio/go-tdigest/v4 v4.0.1
 	github.com/gin-gonic/gin v1.8.1
 	github.com/gobuffalo/buffalo v1.0.1
-	github.com/gofiber/fiber/v2 v2.40.0
+	github.com/gofiber/fiber/v2 v2.40.1
 	github.com/gorilla/mux v1.8.0
 	github.com/jonboulle/clockwork v0.3.0
 	github.com/kataras/iris/v12 v12.1.8
