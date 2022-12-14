@@ -20,7 +20,7 @@ require (
 	github.com/rs/zerolog v1.28.0
 	github.com/urfave/negroni v1.0.0
 	github.com/valyala/fasthttp v1.43.0
-	go.uber.org/zap v1.23.0
+	go.uber.org/zap v1.24.0
 )
 
 require (
