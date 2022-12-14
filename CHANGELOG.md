@@ -2,7 +2,13 @@
 
 ## master
 
-## [v5.6.0][v5.6.0] (July 22, 2022)
+## [v5.6.1][v5.6.1] (December 14, 2022)
+
+* Dependency updates
+
+* Fixed metric logs ([#317](https://github.com/airbrake/gobrake/pull/317), [#321](https://github.com/airbrake/gobrake/pull/321))
+
+## [v5.6.0][v5.6.0] (September 26, 2022)
 
 * Dependency updates
 
@@ -204,3 +210,4 @@ Features:
 [v5.5.1]: https://github.com/airbrake/gobrake/releases/tag/v5.5.1
 [v5.5.2]: https://github.com/airbrake/gobrake/releases/tag/v5.5.2
 [v5.6.0]: https://github.com/airbrake/gobrake/releases/tag/v5.6.0
+[v5.6.1]: https://github.com/airbrake/gobrake/releases/tag/v5.6.0
