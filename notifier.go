@@ -17,7 +17,7 @@ import (
 
 const (
 	notifierName        = "gobrake"
-	notifierVersion     = "5.6.0"
+	notifierVersion     = "5.6.1"
 	userAgent           = notifierName + "/" + notifierVersion
 	waitTimeout         = 5 * time.Second
 	flushPeriod         = 15 * time.Second
