@@ -2,7 +2,7 @@
 
 ## master
 
-## [v5.6.1][v5.6.1] (December 14, 2022)
+## [v5.6.1][v5.6.1] (December 15, 2022)
 
 * Fixed metric logs ([#317](https://github.com/airbrake/gobrake/pull/317), [#321](https://github.com/airbrake/gobrake/pull/321))
 
