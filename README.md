@@ -43,7 +43,7 @@ When using Go Modules, you do not need to install anything to start using Airbra
 
 ```go
 import (
-  "github.com/airbrake/gobrake/v5"
+	"github.com/airbrake/gobrake/v5"
 )
 ```
 
@@ -71,21 +71,21 @@ This is the minimal example that you can use to test Gobrake with your project.
 package main
 
 import (
-    "errors"
+	"errors"
 
-    "github.com/airbrake/gobrake/v5"
+	"github.com/airbrake/gobrake/v5"
 )
 
 var airbrake = gobrake.NewNotifierWithOptions(&gobrake.NotifierOptions{
-    ProjectId:   <YOUR PROJECT ID>, // <-- Fill in this value
-    ProjectKey:  "<YOUR API KEY>", // <-- Fill in this value
-    Environment: "production",
+	ProjectId:   <YOUR PROJECT ID>, // <-- Fill in this value
+	ProjectKey:  "<YOUR API KEY>", // <-- Fill in this value
+	Environment: "production",
 })
 
 func main() {
-    defer airbrake.Close()
+	defer airbrake.Close()
 
-    airbrake.Notify(errors.New("operation failed"), nil)
+	airbrake.Notify(errors.New("operation failed"), nil)
 }
 ```
 
