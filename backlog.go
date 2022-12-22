@@ -96,9 +96,7 @@ func (nb *noticeBacklog) flushNoticeBacklog() {
 			continue
 		}
 
-		req.Header.Set("Authorization", "Bearer "+nb.opt.ProjectKey)
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("User-Agent", userAgent)
+		setRequestHeaders(req, nb.opt.ProjectKey)
 
 		resp, err := nb.opt.HTTPClient.Do(req)
 		if err != nil {
@@ -154,9 +152,7 @@ func (ab *apmBacklog) flushRouteStatBacklog() {
 			continue
 		}
 
-		req.Header.Set("Authorization", "Bearer "+ab.opt.ProjectKey)
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("User-Agent", userAgent)
+		setRequestHeaders(req, ab.opt.ProjectKey)
 
 		resp, err := ab.opt.HTTPClient.Do(req)
 		if err != nil {
@@ -213,9 +209,7 @@ func (ab *apmBacklog) flushRouteBreakdownBacklog() {
 			continue
 		}
 
-		req.Header.Set("Authorization", "Bearer "+ab.opt.ProjectKey)
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("User-Agent", userAgent)
+		setRequestHeaders(req, ab.opt.ProjectKey)
 
 		resp, err := ab.opt.HTTPClient.Do(req)
 		if err != nil {
@@ -271,9 +265,7 @@ func (ab *apmBacklog) flushQueryBacklog() {
 			continue
 		}
 
-		req.Header.Set("Authorization", "Bearer "+ab.opt.ProjectKey)
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("User-Agent", userAgent)
+		setRequestHeaders(req, ab.opt.ProjectKey)
 
 		resp, err := ab.opt.HTTPClient.Do(req)
 		if err != nil {
@@ -329,9 +321,7 @@ func (ab *apmBacklog) flushQueueBacklog() {
 			continue
 		}
 
-		req.Header.Set("Authorization", "Bearer "+ab.opt.ProjectKey)
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("User-Agent", userAgent)
+		setRequestHeaders(req, ab.opt.ProjectKey)
 
 		resp, err := ab.opt.HTTPClient.Do(req)
 		if err != nil {
@@ -348,4 +338,10 @@ func (ab *apmBacklog) flushQueueBacklog() {
 	}
 
 	ab.queues = nil
+}
+
+func setRequestHeaders(req *http.Request, projectKey string) {
+	req.Header.Set("Authorization", "Bearer "+projectKey)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", userAgent)
 }
