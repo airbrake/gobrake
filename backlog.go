@@ -77,11 +77,14 @@ func setNoticeBacklog(notice *Notice) {
 // flushNoticeBacklog sends the backlog notice after the backlog period is over.
 func (nb *noticeBacklog) flushNoticeBacklog() {
 	buf := buffers.Get().(*bytes.Buffer)
+
 	for _, notice := range nb.notices {
 		err := json.NewEncoder(buf).Encode(notice)
 		if err != nil {
 			logger.Printf("Backlog notice failed = %s", err)
+			continue
 		}
+
 		req, err := http.NewRequest(
 			http.MethodPost,
 			fmt.Sprintf("%s/api/v3/projects/%d/notices",
@@ -90,21 +93,27 @@ func (nb *noticeBacklog) flushNoticeBacklog() {
 		)
 		if err != nil {
 			logger.Printf("Backlog notice failed = %s", err)
+			continue
 		}
 
 		req.Header.Set("Authorization", "Bearer "+nb.opt.ProjectKey)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("User-Agent", userAgent)
+
 		resp, err := nb.opt.HTTPClient.Do(req)
 		if err != nil {
 			logger.Printf("Backlog notice failed = %s", err)
+			continue
 		}
 		defer resp.Body.Close()
+
 		if resp.StatusCode > 400 {
 			logger.Printf("Backlog notice failed = %q", resp.Status)
 		}
+
 		buf.Reset()
 	}
+
 	nb.notices = nil
 }
 
@@ -126,11 +135,14 @@ func setRouteStatBacklog(routeStat routesOut) {
 // flushRouteStatBacklog sends the backlog route stats after the backlog period is over.
 func (ab *apmBacklog) flushRouteStatBacklog() {
 	buf := buffers.Get().(*bytes.Buffer)
+
 	for _, routeStat := range ab.routeStats {
 		err := json.NewEncoder(buf).Encode(routeStat)
 		if err != nil {
 			logger.Printf("Backlog route stat failed = %s", err)
+			continue
 		}
+
 		req, err := http.NewRequest(
 			http.MethodPut,
 			fmt.Sprintf("%s/api/v5/projects/%d/routes-stats",
@@ -139,21 +151,27 @@ func (ab *apmBacklog) flushRouteStatBacklog() {
 		)
 		if err != nil {
 			logger.Printf("Backlog route stat failed = %s", err)
+			continue
 		}
 
 		req.Header.Set("Authorization", "Bearer "+ab.opt.ProjectKey)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("User-Agent", userAgent)
+
 		resp, err := ab.opt.HTTPClient.Do(req)
 		if err != nil {
 			logger.Printf("Backlog route stat failed = %s", err)
+			continue
 		}
 		defer resp.Body.Close()
+
 		if resp.StatusCode > 400 {
 			logger.Printf("Backlog route stat failed = %q", resp.Status)
 		}
+
 		buf.Reset()
 	}
+
 	ab.routeStats = nil
 	purge()
 }
@@ -176,11 +194,14 @@ func setRouteBreakdownBacklog(routeBreakdown breakdownsOut) {
 // flushBacklogRouteBreakdown sends the backlog route breakdowns after the backlog period is over.
 func (ab *apmBacklog) flushRouteBreakdownBacklog() {
 	buf := buffers.Get().(*bytes.Buffer)
+
 	for _, routeBreakdown := range ab.routeBreakdowns {
 		err := json.NewEncoder(buf).Encode(routeBreakdown)
 		if err != nil {
 			logger.Printf("Backlog route stat failed = %s", err)
+			continue
 		}
+
 		req, err := http.NewRequest(
 			http.MethodPut,
 			fmt.Sprintf("%s/api/v5/projects/%d/routes-breakdowns",
@@ -189,21 +210,27 @@ func (ab *apmBacklog) flushRouteBreakdownBacklog() {
 		)
 		if err != nil {
 			logger.Printf("Backlog route stat failed = %s", err)
+			continue
 		}
 
 		req.Header.Set("Authorization", "Bearer "+ab.opt.ProjectKey)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("User-Agent", userAgent)
+
 		resp, err := ab.opt.HTTPClient.Do(req)
 		if err != nil {
 			logger.Printf("Backlog route stat failed = %s", err)
+			continue
 		}
 		defer resp.Body.Close()
+
 		if resp.StatusCode > 400 {
 			logger.Printf("Backlog route stat failed = %q", resp.Status)
 		}
+
 		buf.Reset()
 	}
+
 	ab.routeBreakdowns = nil
 }
 
@@ -225,11 +252,14 @@ func setQueryBacklog(query queriesOut) {
 // flushQueryBacklog sends the backlog query after the backlog period is over.
 func (ab *apmBacklog) flushQueryBacklog() {
 	buf := buffers.Get().(*bytes.Buffer)
+
 	for _, query := range ab.queries {
 		err := json.NewEncoder(buf).Encode(query)
 		if err != nil {
 			logger.Printf("Backlog query failed = %s", err)
+			continue
 		}
+
 		req, err := http.NewRequest(
 			http.MethodPut,
 			fmt.Sprintf("%s/api/v5/projects/%d/queries-stats",
@@ -238,21 +268,27 @@ func (ab *apmBacklog) flushQueryBacklog() {
 		)
 		if err != nil {
 			logger.Printf("Backlog query failed = %s", err)
+			continue
 		}
 
 		req.Header.Set("Authorization", "Bearer "+ab.opt.ProjectKey)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("User-Agent", userAgent)
+
 		resp, err := ab.opt.HTTPClient.Do(req)
 		if err != nil {
 			logger.Printf("Backlog query failed = %s", err)
+			continue
 		}
 		defer resp.Body.Close()
+
 		if resp.StatusCode > 400 {
 			logger.Printf("Backlog query failed = %q", resp.Status)
 		}
+
 		buf.Reset()
 	}
+
 	ab.queries = nil
 }
 
@@ -274,11 +310,14 @@ func setQueueBacklog(queue queuesOut) {
 // flushQueueBacklog sends the queue backlog after the backlog period is over.
 func (ab *apmBacklog) flushQueueBacklog() {
 	buf := buffers.Get().(*bytes.Buffer)
+
 	for _, queue := range ab.queues {
 		err := json.NewEncoder(buf).Encode(queue)
 		if err != nil {
 			logger.Printf("Backlog queue failed = %s", err)
+			continue
 		}
+
 		req, err := http.NewRequest(
 			http.MethodPut,
 			fmt.Sprintf("%s/api/v5/projects/%d/queues-stats",
@@ -287,20 +326,26 @@ func (ab *apmBacklog) flushQueueBacklog() {
 		)
 		if err != nil {
 			logger.Printf("Backlog queue failed = %s", err)
+			continue
 		}
 
 		req.Header.Set("Authorization", "Bearer "+ab.opt.ProjectKey)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("User-Agent", userAgent)
+
 		resp, err := ab.opt.HTTPClient.Do(req)
 		if err != nil {
 			logger.Printf("Backlog queue failed = %s", err)
+			continue
 		}
 		defer resp.Body.Close()
+
 		if resp.StatusCode > 400 {
 			logger.Printf("Backlog queue failed = %q", resp.Status)
 		}
+
 		buf.Reset()
 	}
+
 	ab.queues = nil
 }
