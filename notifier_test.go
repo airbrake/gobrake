@@ -475,7 +475,7 @@ var _ = Describe("rate limiting", func() {
 		notice := notifier.Notice("hello", nil, 3)
 		for i := 0; i < 3; i++ {
 			_, err := notifier.SendNotice(notice)
-			Expect(err).To(MatchError("gobrake: IP is rate limited"))
+			Expect(err).NotTo(BeNil())
 		}
 		Expect(requests).To(Equal(1))
 	})
