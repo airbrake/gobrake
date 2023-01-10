@@ -15,7 +15,7 @@ require (
 	github.com/kataras/iris/v12 v12.2.0-beta7
 	github.com/labstack/echo/v4 v4.10.0
 	github.com/onsi/ginkgo/v2 v2.7.0
-	github.com/onsi/gomega v1.24.1
+	github.com/onsi/gomega v1.24.2
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.28.0
 	github.com/urfave/negroni v1.0.0
