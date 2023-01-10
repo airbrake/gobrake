@@ -318,7 +318,12 @@ func (n *Notifier) sendNotice(notice *Notice) (string, error) {
 		if err == nil {
 			atomic.StoreUint32(&n.rateLimitReset, uint32(time.Now().Unix()+delay))
 		}
-		return "", errIPRateLimited
+		var sendResp sendResponse
+		err = json.NewDecoder(buf).Decode(&sendResp)
+		if err != nil {
+			return "", err
+		}
+		return "", errors.New(sendResp.Message)
 	case httpEnhanceYourCalm:
 		return "", errAccountRateLimited
 	case http.StatusRequestEntityTooLarge:
