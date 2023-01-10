@@ -12,7 +12,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.40.1
 	github.com/gorilla/mux v1.8.0
 	github.com/jonboulle/clockwork v0.3.0
-	github.com/kataras/iris/v12 v12.2.0-beta6
+	github.com/kataras/iris/v12 v12.2.0-beta7
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/onsi/ginkgo/v2 v2.3.1
 	github.com/onsi/gomega v1.22.1
@@ -26,7 +26,7 @@ require (
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/CloudyKit/fastprinter v0.0.0-20200109182630-33d98a066a53 // indirect
-	github.com/CloudyKit/jet/v6 v6.1.0 // indirect
+	github.com/CloudyKit/jet/v6 v6.2.0 // indirect
 	github.com/Joker/jade v1.1.3 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/Shopify/goreferrer v0.0.0-20220729165902-8cddb4f5de06 // indirect
