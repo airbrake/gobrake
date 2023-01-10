@@ -4,6 +4,11 @@
 
 * Fixed a SIGSEGV that may occur when a backlogged notice is sent
   ([#352](https://github.com/airbrake/gobrake/issues/352))
+* Started handling HTTP response 429 from the Airbrake Notice API more
+  granularly. Previously, we would return `IP is rate limited` whenever the
+  Airbrake Notice API returned a 429. However, this response code may also
+  indicate an error cap hit
+  ([#356][https://github.com/airbrake/gobrake/pull/356/])
 
 ## [v5.6.1][v5.6.1] (December 15, 2022)
 
