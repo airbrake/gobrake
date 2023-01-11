@@ -9,7 +9,7 @@ require (
 	github.com/caio/go-tdigest/v4 v4.0.1
 	github.com/gin-gonic/gin v1.8.2
 	github.com/gobuffalo/buffalo v1.0.1
-	github.com/gofiber/fiber/v2 v2.40.1
+	github.com/gofiber/fiber/v2 v2.41.0
 	github.com/gorilla/mux v1.8.0
 	github.com/jonboulle/clockwork v0.3.0
 	github.com/kataras/iris/v12 v12.2.0-beta7
@@ -100,7 +100,7 @@ require (
 	github.com/mailgun/raymond/v2 v2.0.48 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mattn/go-sqlite3 v1.14.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
