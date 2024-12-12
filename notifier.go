@@ -390,7 +390,7 @@ func (n *Notifier) NotifyOnPanic() {
 				"SendNotice failed reporting notice=%q: %s",
 				notice, err,
 			)
-			return
+			panic(v)
 		}
 
 		panic(v)
