@@ -2,6 +2,10 @@
 
 ## master
 
+## [v5.6.2][v5.6.2] (February 17, 2024)
+
+* Avoid absorbing a panic in the case n.SendNotice() returns an error
+  ([#382](https://github.com/airbrake/gobrake/issues/382))
 * Fixed a SIGSEGV that may occur when a backlogged notice is sent
   ([#352](https://github.com/airbrake/gobrake/issues/352))
 * Started handling HTTP response 429 from the Airbrake Notice API more
@@ -217,3 +221,4 @@ Features:
 [v5.5.2]: https://github.com/airbrake/gobrake/releases/tag/v5.5.2
 [v5.6.0]: https://github.com/airbrake/gobrake/releases/tag/v5.6.0
 [v5.6.1]: https://github.com/airbrake/gobrake/releases/tag/v5.6.1
+[v5.6.2]: https://github.com/airbrake/gobrake/releases/tag/v5.6.2
