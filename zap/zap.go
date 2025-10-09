@@ -54,7 +54,27 @@ func (core *Core) With(fields []zapcore.Field) zapcore.Core {
 func (core *Core) Write(entry zapcore.Entry, fields []zapcore.Field) error {
 	parameters := make(map[string]interface{})
 	notice := gobrake.NewNotice(entry.Message, nil, core.depth)
+
+	// Process core fields (from .With())
 	for key, parameter := range core.coreFields {
+		if key == "httpMethod" || key == "route" {
+			notice.Context[key] = parameter
+		} else {
+			switch parameter := parameter.(type) {
+			case error:
+				parameters[key] = parameter.Error()
+			default:
+				parameters[key] = parameter
+			}
+		}
+	}
+
+	// Process fields passed directly to Write()
+	encoder := zapcore.NewMapObjectEncoder()
+	for _, field := range fields {
+		field.AddTo(encoder)
+	}
+	for key, parameter := range encoder.Fields {
 		if key == "httpMethod" || key == "route" {
 			notice.Context[key] = parameter
 		} else {
